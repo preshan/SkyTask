@@ -4,6 +4,7 @@ import '../../domain/entities/reminder.dart';
 import '../../domain/repositories/reminder_repository.dart';
 import '../mappers/reminder_mapper.dart';
 import '../../../../core/database/isar_collections.dart';
+import '../../../../core/services/voice_memo_service.dart';
 
 class ReminderRepositoryImpl implements ReminderRepository {
   ReminderRepositoryImpl(this._isar);
@@ -61,12 +62,15 @@ class ReminderRepositoryImpl implements ReminderRepository {
 
   @override
   Future<void> delete(String id) async {
+    String? voicePath;
     await _isar.writeTxn(() async {
       final existing =
           await _isar.reminderCollections.filter().uuidEqualTo(id).findFirst();
       if (existing != null) {
+        voicePath = existing.voicePath;
         await _isar.reminderCollections.delete(existing.id);
       }
     });
+    await VoiceMemoService.deleteIfExists(voicePath);
   }
 }

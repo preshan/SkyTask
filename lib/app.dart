@@ -29,9 +29,22 @@ class _SkyTaskAppState extends ConsumerState<SkyTaskApp>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.paused ||
-        state == AppLifecycleState.inactive) {
-      ref.read(privacyLockProvider.notifier).lock();
+    final lock = ref.read(privacyLockProvider.notifier);
+
+    switch (state) {
+      // Keyboard / permission / system sheets often use `inactive`.
+      // Do not lock here — it makes the app unusable.
+      case AppLifecycleState.inactive:
+        break;
+      case AppLifecycleState.paused:
+      case AppLifecycleState.hidden:
+        lock.markBackgrounded();
+        break;
+      case AppLifecycleState.resumed:
+        lock.evaluateLockOnResume();
+        break;
+      case AppLifecycleState.detached:
+        break;
     }
   }
 

@@ -21,21 +21,21 @@ lib/
 │   ├── di/              # Riverpod providers
 │   ├── router/          # go_router
 │   ├── services/        # Isar, notifications, alarms, background
-│   └── theme/           # Material 3 Sky Blue theme
+│   └── theme/           # Material 3 navy theme
 ├── features/
 │   ├── auth/            # Firebase Auth (Google, Email, Anonymous)
 │   ├── home/            # Dashboard
 │   ├── tasks/           # CRUD, search, filters, archive, pin
 │   ├── reminders/       # Offline-first reminder engine
 │   ├── ideas/           # Quick capture
-│   ├── notes/           # Long-form (Sprint 5)
+│   ├── notes/           # Long-form notes + voice
 │   ├── calendar/        # Device calendar (Phase 1)
 │   ├── privacy/         # Biometric app lock + private vault
 │   ├── settings/
 │   ├── splash/
 │   └── onboarding/
 └── shared/
-    └── widgets/         # GoldCheckbox, FAB, PrivateContentGate
+    └── widgets/         # GoldCheckbox, SkyIcon, voice, PrivateContentGate
 ```
 
 **Clean Architecture** per feature: `data/` → `domain/` → `presentation/`
@@ -65,17 +65,23 @@ Survives: offline, app closed, app killed, device reboot (via boot receiver + Wo
 | Local alerts | flutter_local_notifications + AlarmManager |
 | Background | WorkManager |
 | Calendar | device_calendar (Phase 1) |
-| Security | local_auth (biometric + PIN fallback) |
+| Security | local_auth + flutter_secure_storage + AES private fields |
+| Voice | record + audioplayers |
+| Icons | hugeicons |
 
 ## Brand
 
 | Token | Color |
 |-------|-------|
-| Primary | `#6EC6FF` |
-| Secondary | `#9BE7FF` |
-| Background | `#F5FBFF` |
+| Primary | `#000080` |
+| Secondary | `#191970` |
+| Background | `#F4F6F9` |
 | Gold Accent | `#F4C542` |
 | Completed Gold | `#D4AF37` |
+
+## Release
+
+See [CHANGELOG.md](CHANGELOG.md) and [docs/release/RELEASE_NOTES.md](docs/release/RELEASE_NOTES.md) for v1.1.0 notes, screenshots, and diagrams.
 
 ## Getting Started
 

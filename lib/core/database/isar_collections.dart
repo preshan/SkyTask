@@ -25,6 +25,7 @@ class TaskCollection {
   late bool pinned;
   late bool archived;
   late bool isPrivate;
+  String? voicePath;
 
   late DateTime createdAt;
   late DateTime updatedAt;
@@ -53,6 +54,7 @@ class ReminderCollection {
   String? googleEventId;
   late bool isPrivate;
   late bool isCompleted;
+  String? voicePath;
 
   late DateTime createdAt;
   late DateTime updatedAt;
@@ -69,6 +71,7 @@ class IdeaCollection {
   late String content;
   List<String> tags = [];
   late bool isPrivate;
+  String? voicePath;
 
   late DateTime createdAt;
   late DateTime updatedAt;
@@ -85,6 +88,7 @@ class NoteCollection {
   late String content;
   List<String> attachments = [];
   late bool isPrivate;
+  String? voicePath;
 
   late DateTime createdAt;
   late DateTime updatedAt;

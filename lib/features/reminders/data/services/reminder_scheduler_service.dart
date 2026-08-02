@@ -43,7 +43,10 @@ class ReminderSchedulerService {
       updatedAt: DateTime.now(),
     );
 
-    if (addToCalendar && calendarId != null) {
+    if (addToCalendar &&
+        calendarId != null &&
+        !reminder.isVoice &&
+        !reminder.isPrivate) {
       updated = await _syncCalendarEvent(
         updated,
         calendarId: calendarId,
@@ -110,19 +113,24 @@ class ReminderSchedulerService {
       updatedAt: DateTime.now(),
     );
 
-    if (syncCalendar && calendarId != null) {
+    if (syncCalendar &&
+        calendarId != null &&
+        !reminder.isVoice &&
+        !reminder.isPrivate) {
       updated = await _syncCalendarEvent(
         updated,
         calendarId: calendarId,
       );
-    } else if (!syncCalendar &&
+    } else if ((reminder.isVoice ||
+            reminder.isPrivate ||
+            !syncCalendar) &&
         updated.calendarEventId != null &&
         calendarId != null) {
       await _calendarService.deleteEvent(
         calendarId,
         updated.calendarEventId!,
       );
-      updated = updated.copyWith(calendarEventId: null);
+      updated = updated.copyWith(clearCalendarEventId: true);
     }
 
     await _repository.save(updated);

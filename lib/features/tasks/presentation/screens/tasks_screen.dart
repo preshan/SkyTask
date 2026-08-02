@@ -2,10 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
+import '../../../../shared/widgets/voice_play_button.dart';
+import '../../../../core/services/voice_memo_service.dart';
 import '../../domain/entities/task.dart';
 import '../widgets/task_form_sheet.dart';
 
@@ -19,7 +23,8 @@ class TasksScreen extends ConsumerStatefulWidget {
 class _TasksScreenState extends ConsumerState<TasksScreen> {
   String _query = '';
   String _sort = 'updated';
-  String _filter = 'all';
+  String _statusFilter = 'all';
+  TaskCategory? _categoryFilter;
 
   @override
   Widget build(BuildContext context) {
@@ -40,7 +45,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
-            onSelected: (v) => setState(() => _filter = v),
+            onSelected: (v) => setState(() => _statusFilter = v),
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'all', child: Text('All active')),
               PopupMenuItem(value: 'pinned', child: Text('Pinned')),
@@ -49,6 +54,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               PopupMenuItem(value: 'archived', child: Text('Archived')),
             ],
           ),
+          ...skyTaskAppBarActions(context),
         ],
       ),
       body: Column(
@@ -61,6 +67,28 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               leading: const Icon(Icons.search),
             ),
           ),
+          SizedBox(
+            height: 44,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              children: [
+                _CategoryChip(
+                  label: 'All',
+                  selected: _categoryFilter == null,
+                  onTap: () => setState(() => _categoryFilter = null),
+                ),
+                ...TaskCategory.values.map(
+                  (category) => _CategoryChip(
+                    label: _categoryLabel(category),
+                    selected: _categoryFilter == category,
+                    onTap: () => setState(() => _categoryFilter = category),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
           Expanded(
             child: tasksAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -74,7 +102,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                     child: Padding(
                       padding: const EdgeInsets.all(24),
                       child: Text(
-                        'No tasks found.\nTap + to create one.',
+                        'No tasks found.\nTap Create to add one.',
                         textAlign: TextAlign.center,
                         style: Theme.of(context).textTheme.bodyLarge,
                       ),
@@ -83,7 +111,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final task = filtered[index];
@@ -91,7 +119,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                       padding: const EdgeInsets.only(bottom: 8),
                       child: _TaskCard(
                         task: task,
-                        onTap: () => showTaskFormSheet(context, ref, task: task),
+                        onTap: () =>
+                            showTaskFormSheet(context, ref, task: task),
                       ),
                     );
                   },
@@ -100,10 +129,6 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ),
           ),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showTaskFormSheet(context, ref),
-        child: const Icon(Icons.add_task),
       ),
     );
   }
@@ -118,7 +143,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               (t.description?.toLowerCase().contains(q) ?? false))
           .toList();
     }
-    return switch (_filter) {
+    if (_categoryFilter != null) {
+      result = result.where((t) => t.category == _categoryFilter).toList();
+    }
+    return switch (_statusFilter) {
       'pinned' => result.where((t) => t.pinned && !t.archived).toList(),
       'completed' => result.where((t) => t.completed).toList(),
       'private' => result.where((t) => t.isPrivate).toList(),
@@ -148,6 +176,48 @@ final _tasksListProvider = FutureProvider<List<Task>>((ref) async {
   return repo.getAll(includeArchived: true);
 });
 
+String _categoryLabel(TaskCategory category) {
+  final name = category.name;
+  return '${name[0].toUpperCase()}${name.substring(1)}';
+}
+
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: FilterChip(
+        label: Text(label),
+        selected: selected,
+        showCheckmark: false,
+        onSelected: (_) => onTap(),
+        selectedColor: AppColors.primary.withValues(alpha: 0.25),
+        backgroundColor: AppColors.card,
+        side: BorderSide(
+          color: selected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.25),
+        ),
+        labelStyle: TextStyle(
+          color: AppColors.primaryText,
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+          fontSize: 13,
+        ),
+        visualDensity: VisualDensity.compact,
+        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
+    );
+  }
+}
+
 class _TaskCard extends ConsumerWidget {
   const _TaskCard({
     required this.task,
@@ -159,13 +229,12 @@ class _TaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final subtitle = task.isPrivate
-        ? '🔒 Hidden Content'
-        : [
-            task.category.name,
-            if (task.dueDate != null)
-              'Due ${DateFormat.MMMd().format(task.dueDate!)}',
-          ].join(' • ');
+    final subtitle = [
+      _categoryLabel(task.category),
+      if (task.dueDate != null)
+        'Due ${DateFormat.MMMd().format(task.dueDate!)}',
+      if (task.isVoice) 'Voice',
+    ].join(' • ');
 
     return AnimatedOpacity(
       opacity: task.completed ? 0.6 : 1,
@@ -173,7 +242,6 @@ class _TaskCard extends ConsumerWidget {
       child: Card(
         child: PrivateContentGate(
           isPrivate: task.isPrivate,
-          title: task.title,
           child: ListTile(
             onTap: onTap,
             leading: GoldCheckbox(
@@ -185,7 +253,11 @@ class _TaskCard extends ConsumerWidget {
               },
             ),
             title: Text(
-              task.isPrivate ? 'Private Item' : task.title,
+              displayItemTitle(
+                title: task.title,
+                isVoice: task.isVoice,
+                createdAt: task.createdAt,
+              ),
               style: task.completed
                   ? const TextStyle(decoration: TextDecoration.lineThrough)
                   : null,
@@ -194,8 +266,9 @@ class _TaskCard extends ConsumerWidget {
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (task.pinned)
-                  const Icon(Icons.push_pin, size: 18),
+                if (task.isVoice && task.voicePath != null)
+                  VoicePlayButton(path: task.voicePath!),
+                if (task.pinned) const Icon(Icons.push_pin, size: 18),
                 if (task.archived)
                   const Icon(Icons.inventory_2_outlined, size: 18),
                 const Icon(Icons.chevron_right),

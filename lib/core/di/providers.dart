@@ -140,17 +140,53 @@ class PrivacyLockNotifier extends StateNotifier<bool> {
 
   final SharedPreferences _prefs;
 
+  DateTime? _backgroundedAt;
+  bool _authInProgress = false;
+
   bool get isAppLockEnabled =>
       _prefs.getBool(AppConstants.appLockEnabledKey) ?? false;
 
-  void lock() {
-    if (isAppLockEnabled) state = true;
+  /// Call when the app truly goes to background (paused), not for brief overlays.
+  void markBackgrounded() {
+    if (!isAppLockEnabled || state || _authInProgress) return;
+    _backgroundedAt = DateTime.now();
   }
 
-  void unlock() => state = false;
+  /// On resume: lock only if backgrounded longer than the grace period.
+  void evaluateLockOnResume() {
+    if (!isAppLockEnabled || state || _authInProgress) {
+      _backgroundedAt = null;
+      return;
+    }
+
+    final leftAt = _backgroundedAt;
+    _backgroundedAt = null;
+    if (leftAt == null) return;
+
+    final elapsed = DateTime.now().difference(leftAt);
+    if (elapsed.inSeconds >= AppConstants.appLockGraceSeconds) {
+      state = true;
+    }
+  }
+
+  void lock() {
+    if (isAppLockEnabled && !_authInProgress) state = true;
+  }
+
+  void unlock() {
+    state = false;
+    _backgroundedAt = null;
+  }
+
+  void setAuthInProgress(bool inProgress) {
+    _authInProgress = inProgress;
+  }
 
   Future<void> setAppLockEnabled(bool enabled) async {
     await _prefs.setBool(AppConstants.appLockEnabledKey, enabled);
-    if (!enabled) state = false;
+    if (!enabled) {
+      state = false;
+      _backgroundedAt = null;
+    }
   }
 }

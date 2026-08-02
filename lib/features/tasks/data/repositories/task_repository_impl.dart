@@ -5,6 +5,7 @@ import '../../domain/entities/task.dart';
 import '../../domain/repositories/task_repository.dart';
 import '../mappers/task_mapper.dart';
 import '../../../../core/database/isar_collections.dart';
+import '../../../../core/services/voice_memo_service.dart';
 
 class TaskRepositoryImpl implements TaskRepository {
   TaskRepositoryImpl(this._isar);
@@ -90,11 +91,16 @@ class TaskRepositoryImpl implements TaskRepository {
 
   @override
   Future<void> delete(String id) async {
+    String? voicePath;
     await _isar.writeTxn(() async {
       final existing =
           await _isar.taskCollections.filter().uuidEqualTo(id).findFirst();
-      if (existing != null) await _isar.taskCollections.delete(existing.id);
+      if (existing != null) {
+        voicePath = existing.voicePath;
+        await _isar.taskCollections.delete(existing.id);
+      }
     });
+    await VoiceMemoService.deleteIfExists(voicePath);
   }
 
   @override

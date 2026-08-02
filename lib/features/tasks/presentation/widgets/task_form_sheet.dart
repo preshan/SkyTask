@@ -3,9 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
+import '../../../../shared/widgets/icon_toggle.dart';
+import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/sky_icon.dart';
+import '../../../../shared/widgets/voice_memo_recorder.dart';
 import '../../domain/entities/task.dart';
 
 Future<void> showTaskFormSheet(
@@ -36,11 +42,14 @@ class _TaskFormSheet extends ConsumerStatefulWidget {
 class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
+  late final FocusNode _descriptionFocus;
   late TaskPriority _priority;
   late TaskCategory _category;
   late bool _pinned;
   late bool _isPrivate;
   DateTime? _dueDate;
+  String? _voicePath;
+  final _voiceController = VoiceMemoController();
   bool _saving = false;
 
   bool get _isEditing => widget.task != null;
@@ -49,20 +58,33 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
   void initState() {
     super.initState();
     final t = widget.task;
-    _titleController = TextEditingController(text: t?.title ?? '');
+    final initialTitle = (t != null &&
+            t.isVoice &&
+            VoiceMemoService.isPlaceholderTitle(t.title))
+        ? ''
+        : (t?.title ?? '');
+    _titleController = TextEditingController(text: initialTitle);
     _descriptionController =
         TextEditingController(text: t?.description ?? '');
+    _descriptionFocus = FocusNode();
     _priority = t?.priority ?? TaskPriority.medium;
     _category = t?.category ?? TaskCategory.personal;
     _pinned = t?.pinned ?? false;
     _isPrivate = t?.isPrivate ?? false;
     _dueDate = t?.dueDate;
+    _voicePath = t?.voicePath;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _descriptionFocus.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _descriptionFocus.dispose();
     super.dispose();
   }
 
@@ -78,20 +100,25 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
   }
 
   Future<void> _save() async {
-    final title = _titleController.text.trim();
-    if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title is required')),
-      );
-      return;
-    }
-
     setState(() => _saving = true);
     final now = DateTime.now();
+    final voicePath = await _voiceController.finalize() ?? _voicePath;
+    _voicePath = voicePath;
+
     final repo = await ref.read(taskRepositoryProvider.future);
     final description = _descriptionController.text.trim();
+    final hasVoice = VoiceMemoService.hasVoice(voicePath);
+    final title = voiceAwareTitle(
+      rawTitle: _titleController.text,
+      hasVoice: hasVoice,
+      untitledFallback: 'Untitled task',
+      at: _isEditing ? widget.task!.createdAt : now,
+    );
 
     try {
+      final previousVoice =
+          _isEditing ? widget.task!.voicePath : null;
+
       final task = _isEditing
           ? widget.task!.copyWith(
               title: title,
@@ -101,6 +128,8 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
               dueDate: _dueDate,
               pinned: _pinned,
               isPrivate: _isPrivate,
+              voicePath: voicePath,
+              clearVoicePath: voicePath == null,
               updatedAt: now,
             )
           : Task(
@@ -112,11 +141,15 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
               dueDate: _dueDate,
               pinned: _pinned,
               isPrivate: _isPrivate,
+              voicePath: voicePath,
               createdAt: now,
               updatedAt: now,
             );
 
       await repo.save(task);
+      if (previousVoice != null && previousVoice != voicePath) {
+        await VoiceMemoService.deleteIfExists(previousVoice);
+      }
       refreshTasks(ref);
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -166,9 +199,9 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final dueLabel = _dueDate == null
-        ? 'No due date'
-        : DateFormat.yMMMd().format(_dueDate!);
+    final dueTooltip = _dueDate == null
+        ? 'Set due date'
+        : 'Due ${DateFormat.yMMMd().format(_dueDate!)} · long-press to clear';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -184,84 +217,154 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
           TextField(
             controller: _titleController,
             decoration: const InputDecoration(
-              labelText: 'Title',
+              labelText: 'Title (optional)',
               border: OutlineInputBorder(),
             ),
             textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
+            onSubmitted: (_) => _descriptionFocus.requestFocus(),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _descriptionController,
+            focusNode: _descriptionFocus,
+            autofocus: true,
             decoration: const InputDecoration(
               labelText: 'Description (optional)',
               border: OutlineInputBorder(),
             ),
             maxLines: 3,
+            textCapitalization: TextCapitalization.sentences,
           ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<TaskCategory>(
-            initialValue: _category,
-            decoration: const InputDecoration(
-              labelText: 'Category',
-              border: OutlineInputBorder(),
-            ),
-            items: TaskCategory.values
-                .map(
-                  (c) => DropdownMenuItem(
-                    value: c,
-                    child: Text(_label(c.name)),
-                  ),
-                )
-                .toList(),
-            onChanged: _saving ? null : (v) => setState(() => _category = v!),
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<TaskPriority>(
-            initialValue: _priority,
-            decoration: const InputDecoration(
-              labelText: 'Priority',
-              border: OutlineInputBorder(),
-            ),
-            items: TaskPriority.values
-                .map(
-                  (p) => DropdownMenuItem(
-                    value: p,
-                    child: Text(_label(p.name)),
-                  ),
-                )
-                .toList(),
-            onChanged: _saving ? null : (v) => setState(() => _priority = v!),
-          ),
+          const SizedBox(height: 16),
+          Text('Category', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.event),
-            title: const Text('Due date'),
-            subtitle: Text(dueLabel),
-            trailing: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_dueDate != null)
-                  IconButton(
-                    icon: const Icon(Icons.clear),
-                    onPressed: _saving ? null : () => setState(() => _dueDate = null),
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: TaskCategory.values.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final category = TaskCategory.values[index];
+                final selected = _category == category;
+                return FilterChip(
+                  label: Text(_label(category.name)),
+                  selected: selected,
+                  showCheckmark: false,
+                  onSelected: _saving
+                      ? null
+                      : (_) => setState(() => _category = category),
+                  selectedColor: AppColors.primary.withValues(alpha: 0.25),
+                  side: BorderSide(
+                    color: selected
+                        ? AppColors.primary
+                        : AppColors.primary.withValues(alpha: 0.25),
                   ),
-                const Icon(Icons.chevron_right),
-              ],
+                  labelStyle: TextStyle(
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 13,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                );
+              },
             ),
-            onTap: _saving ? null : _pickDueDate,
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Pin task'),
-            value: _pinned,
-            onChanged: _saving ? null : (v) => setState(() => _pinned = v),
+          const SizedBox(height: 16),
+          Text('Priority', style: Theme.of(context).textTheme.labelLarge),
+          const SizedBox(height: 8),
+          SizedBox(
+            height: 40,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: TaskPriority.values.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 8),
+              itemBuilder: (context, index) {
+                final priority = TaskPriority.values[index];
+                final selected = _priority == priority;
+                final color = _priorityColor(priority);
+                return FilterChip(
+                  label: Text(_label(priority.name)),
+                  selected: selected,
+                  showCheckmark: false,
+                  onSelected: _saving
+                      ? null
+                      : (_) => setState(() => _priority = priority),
+                  selectedColor: color.withValues(alpha: 0.25),
+                  side: BorderSide(
+                    color: selected
+                        ? color
+                        : AppColors.primary.withValues(alpha: 0.25),
+                  ),
+                  labelStyle: TextStyle(
+                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+                    fontSize: 13,
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                );
+              },
+            ),
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Private task'),
-            value: _isPrivate,
-            onChanged: _saving ? null : (v) => setState(() => _isPrivate = v),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              IconToggle(
+                active: _dueDate != null,
+                tooltip: dueTooltip,
+                onTap: _saving ? null : _pickDueDate,
+                onLongPress: _saving || _dueDate == null
+                    ? null
+                    : () => setState(() => _dueDate = null),
+                child: SkyIcon(
+                  SkyIcons.calendar,
+                  color: _dueDate != null
+                      ? AppColors.primary
+                      : AppColors.primaryText,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconToggle(
+                active: _pinned,
+                tooltip: _pinned ? 'Unpin' : 'Pin',
+                onTap: _saving
+                    ? null
+                    : () => setState(() => _pinned = !_pinned),
+                child: SkyIcon(
+                  SkyIcons.pin,
+                  color: _pinned ? AppColors.primary : AppColors.primaryText,
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 8),
+              PrivateIconToggle(
+                value: _isPrivate,
+                enabled: !_saving,
+                onChanged: (v) => setState(() => _isPrivate = v),
+              ),
+              if (_dueDate != null) ...[
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    DateFormat.MMMd().format(_dueDate!),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: AppColors.primaryText,
+                        ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ] else
+                const Spacer(),
+            ],
+          ),
+          const SizedBox(height: 12),
+          VoiceMemoRecorder(
+            controller: _voiceController,
+            initialPath: widget.task?.voicePath,
+            enabled: !_saving,
+            onChanged: (path) => setState(() => _voicePath = path),
           ),
           const SizedBox(height: 16),
           FilledButton(
@@ -296,6 +399,11 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
     );
   }
 
-  String _label(String raw) =>
-      raw[0].toUpperCase() + raw.substring(1);
+  String _label(String raw) => raw[0].toUpperCase() + raw.substring(1);
+
+  Color _priorityColor(TaskPriority priority) => switch (priority) {
+        TaskPriority.low => AppColors.success,
+        TaskPriority.medium => AppColors.warning,
+        TaskPriority.high => AppColors.error,
+      };
 }

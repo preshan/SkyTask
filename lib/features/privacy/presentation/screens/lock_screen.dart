@@ -31,20 +31,32 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   Future<void> _unlockWithBiometrics() async {
-    final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
-      reason: 'Unlock SkyTask',
-    );
-    if (ok) ref.read(privacyLockProvider.notifier).unlock();
+    final lock = ref.read(privacyLockProvider.notifier);
+    lock.setAuthInProgress(true);
+    try {
+      final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
+        reason: 'Unlock SkyTask',
+      );
+      if (ok) lock.unlock();
+    } finally {
+      lock.setAuthInProgress(false);
+    }
   }
 
   Future<void> _unlockWithPin(String pin) async {
-    final ok = await PrivacyAuthService.instance.verifyPin(pin);
-    if (!mounted) return;
-    if (ok) {
-      ref.read(privacyLockProvider.notifier).unlock();
-    } else {
-      setState(() => _error = 'Incorrect PIN. Try again.');
-      _pinPadKey.currentState?.clear();
+    final lock = ref.read(privacyLockProvider.notifier);
+    lock.setAuthInProgress(true);
+    try {
+      final ok = await PrivacyAuthService.instance.verifyPin(pin);
+      if (!mounted) return;
+      if (ok) {
+        lock.unlock();
+      } else {
+        setState(() => _error = 'Incorrect PIN. Try again.');
+        _pinPadKey.currentState?.clear();
+      }
+    } finally {
+      lock.setAuthInProgress(false);
     }
   }
 

@@ -4,6 +4,7 @@ import '../../domain/entities/idea.dart';
 import '../../domain/repositories/idea_repository.dart';
 import '../mappers/idea_mapper.dart';
 import '../../../../core/database/isar_collections.dart';
+import '../../../../core/services/voice_memo_service.dart';
 
 class IdeaRepositoryImpl implements IdeaRepository {
   IdeaRepositoryImpl(this._isar);
@@ -37,10 +38,15 @@ class IdeaRepositoryImpl implements IdeaRepository {
 
   @override
   Future<void> delete(String id) async {
+    String? voicePath;
     await _isar.writeTxn(() async {
       final existing =
           await _isar.ideaCollections.filter().uuidEqualTo(id).findFirst();
-      if (existing != null) await _isar.ideaCollections.delete(existing.id);
+      if (existing != null) {
+        voicePath = existing.voicePath;
+        await _isar.ideaCollections.delete(existing.id);
+      }
     });
+    await VoiceMemoService.deleteIfExists(voicePath);
   }
 }

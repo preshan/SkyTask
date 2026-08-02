@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
 import '../../core/constants/app_colors.dart';
 
@@ -96,7 +95,7 @@ class _GoldCheckboxState extends State<GoldCheckbox>
           );
         },
       ),
-    ).animate(target: widget.value ? 1 : 0).fade(duration: 200.ms);
+    );
   }
 }
 

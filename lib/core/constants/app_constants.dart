@@ -18,6 +18,10 @@ abstract final class AppConstants {
   static const String onboardingCompleteKey = 'onboarding_complete';
   static const String privacySetupCompleteKey = 'privacy_setup_complete';
 
+  /// Seconds the app can stay in background before requiring unlock.
+  /// Short overlays (keyboard, system sheets) usually return sooner.
+  static const int appLockGraceSeconds = 30;
+
   static const int pinLength = 4;
   static const String calendarSyncEnabledKey = 'calendar_sync_enabled';
   static const String defaultCalendarIdKey = 'default_calendar_id';

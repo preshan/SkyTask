@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/services/voice_memo_service.dart';
+
 enum TaskPriority { low, medium, high }
 
 enum TaskCategory {
@@ -25,6 +27,7 @@ class Task extends Equatable {
     this.pinned = false,
     this.archived = false,
     this.isPrivate = false,
+    this.voicePath,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -40,8 +43,11 @@ class Task extends Equatable {
   final bool pinned;
   final bool archived;
   final bool isPrivate;
+  final String? voicePath;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  bool get isVoice => VoiceMemoService.hasVoice(voicePath);
 
   Task copyWith({
     String? id,
@@ -55,6 +61,8 @@ class Task extends Equatable {
     bool? pinned,
     bool? archived,
     bool? isPrivate,
+    String? voicePath,
+    bool clearVoicePath = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -70,6 +78,7 @@ class Task extends Equatable {
       pinned: pinned ?? this.pinned,
       archived: archived ?? this.archived,
       isPrivate: isPrivate ?? this.isPrivate,
+      voicePath: clearVoicePath ? null : (voicePath ?? this.voicePath),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -88,6 +97,7 @@ class Task extends Equatable {
         pinned,
         archived,
         isPrivate,
+        voicePath,
         createdAt,
         updatedAt,
       ];

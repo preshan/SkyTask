@@ -4,7 +4,10 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
+import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/voice_memo_recorder.dart';
 import '../../domain/entities/note.dart';
 
 Future<void> showNoteFormSheet(
@@ -35,7 +38,10 @@ class _NoteFormSheet extends ConsumerStatefulWidget {
 class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
   late final TextEditingController _titleController;
   late final TextEditingController _contentController;
+  late final FocusNode _contentFocus;
   late bool _isPrivate;
+  String? _voicePath;
+  final _voiceController = VoiceMemoController();
   bool _saving = false;
 
   bool get _isEditing => widget.note != null;
@@ -44,37 +50,55 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
   void initState() {
     super.initState();
     final note = widget.note;
-    _titleController = TextEditingController(text: note?.title ?? '');
+    final initialTitle = (note != null &&
+            note.isVoice &&
+            VoiceMemoService.isPlaceholderTitle(note.title))
+        ? ''
+        : (note?.title ?? '');
+    _titleController = TextEditingController(text: initialTitle);
     _contentController = TextEditingController(text: note?.content ?? '');
+    _contentFocus = FocusNode();
     _isPrivate = note?.isPrivate ?? false;
+    _voicePath = note?.voicePath;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _contentFocus.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _contentController.dispose();
+    _contentFocus.dispose();
     super.dispose();
   }
 
   Future<void> _save() async {
-    final title = _titleController.text.trim();
-    if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title is required')),
-      );
-      return;
-    }
-
     setState(() => _saving = true);
     final now = DateTime.now();
+    final voicePath = await _voiceController.finalize() ?? _voicePath;
+    _voicePath = voicePath;
     final repo = await ref.read(noteRepositoryProvider.future);
+    final hasVoice = VoiceMemoService.hasVoice(voicePath);
+    final title = voiceAwareTitle(
+      rawTitle: _titleController.text,
+      hasVoice: hasVoice,
+      untitledFallback: 'Untitled note',
+      at: _isEditing ? widget.note!.createdAt : now,
+    );
 
     try {
+      final previousVoice = _isEditing ? widget.note!.voicePath : null;
+
       final note = _isEditing
           ? widget.note!.copyWith(
               title: title,
               content: _contentController.text.trim(),
               isPrivate: _isPrivate,
+              voicePath: voicePath,
+              clearVoicePath: voicePath == null,
               updatedAt: now,
             )
           : Note(
@@ -82,11 +106,15 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
               title: title,
               content: _contentController.text.trim(),
               isPrivate: _isPrivate,
+              voicePath: voicePath,
               createdAt: now,
               updatedAt: now,
             );
 
       await repo.save(note);
+      if (previousVoice != null && previousVoice != voicePath) {
+        await VoiceMemoService.deleteIfExists(previousVoice);
+      }
       refreshNotes(ref);
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -130,14 +158,18 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
           TextField(
             controller: _titleController,
             decoration: const InputDecoration(
-              labelText: 'Title',
+              labelText: 'Title (optional)',
               border: OutlineInputBorder(),
             ),
             textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
+            onSubmitted: (_) => _contentFocus.requestFocus(),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _contentController,
+            focusNode: _contentFocus,
+            autofocus: true,
             decoration: const InputDecoration(
               labelText: 'Note body',
               border: OutlineInputBorder(),
@@ -146,11 +178,21 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
             maxLines: 8,
             textCapitalization: TextCapitalization.sentences,
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Private note'),
-            value: _isPrivate,
-            onChanged: _saving ? null : (v) => setState(() => _isPrivate = v),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PrivateIconToggle(
+              value: _isPrivate,
+              enabled: !_saving,
+              onChanged: (v) => setState(() => _isPrivate = v),
+            ),
+          ),
+          const SizedBox(height: 12),
+          VoiceMemoRecorder(
+            controller: _voiceController,
+            initialPath: widget.note?.voicePath,
+            enabled: !_saving,
+            onChanged: (path) => setState(() => _voicePath = path),
           ),
           const SizedBox(height: 16),
           FilledButton(

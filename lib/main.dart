@@ -9,6 +9,7 @@ import 'core/services/alarm_service.dart';
 import 'core/services/background_task_service.dart';
 import 'core/services/isar_service.dart';
 import 'core/services/notification_service.dart';
+import 'core/services/private_crypto_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +22,7 @@ Future<void> main() async {
   );
 
   final prefs = await SharedPreferences.getInstance();
+  await PrivateCryptoService.instance.init();
   await IsarService.instance.db;
   await NotificationService.instance.initialize();
   await AlarmService.instance.initialize();

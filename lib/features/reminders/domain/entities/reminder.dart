@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/services/voice_memo_service.dart';
+
 enum RepeatType { none, daily, weekly, monthly, yearly }
 
 enum NotificationOffset {
@@ -25,6 +27,7 @@ class Reminder extends Equatable {
     this.googleEventId,
     this.isPrivate = false,
     this.isCompleted = false,
+    this.voicePath,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -41,8 +44,11 @@ class Reminder extends Equatable {
   final String? googleEventId;
   final bool isPrivate;
   final bool isCompleted;
+  final String? voicePath;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  bool get isVoice => VoiceMemoService.hasVoice(voicePath);
 
   /// Computed fire time based on notification offset.
   DateTime get fireDateTime {
@@ -71,6 +77,9 @@ class Reminder extends Equatable {
     String? googleEventId,
     bool? isPrivate,
     bool? isCompleted,
+    String? voicePath,
+    bool clearVoicePath = false,
+    bool clearCalendarEventId = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -83,10 +92,13 @@ class Reminder extends Equatable {
       notificationOffset: notificationOffset ?? this.notificationOffset,
       customOffsetMinutes: customOffsetMinutes ?? this.customOffsetMinutes,
       notificationId: notificationId ?? this.notificationId,
-      calendarEventId: calendarEventId ?? this.calendarEventId,
+      calendarEventId: clearCalendarEventId
+          ? null
+          : (calendarEventId ?? this.calendarEventId),
       googleEventId: googleEventId ?? this.googleEventId,
       isPrivate: isPrivate ?? this.isPrivate,
       isCompleted: isCompleted ?? this.isCompleted,
+      voicePath: clearVoicePath ? null : (voicePath ?? this.voicePath),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
@@ -106,6 +118,7 @@ class Reminder extends Equatable {
         googleEventId,
         isPrivate,
         isCompleted,
+        voicePath,
         createdAt,
         updatedAt,
       ];

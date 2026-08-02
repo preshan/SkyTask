@@ -3,6 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/voice_memo_service.dart';
+import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/private_content_gate.dart';
+import '../../../../shared/widgets/voice_play_button.dart';
 import '../../../reminders/presentation/widgets/reminder_form_sheet.dart';
 import '../../domain/calendar_entry.dart';
 import '../providers/calendar_providers.dart';
@@ -65,6 +69,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               icon: const Icon(Icons.chevron_right),
               onPressed: () => _shiftPeriod(1),
             ),
+          ...skyTaskAppBarActions(context),
         ],
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(48),
@@ -105,10 +110,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             Expanded(child: _buildView(entries)),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => showReminderFormSheet(context, ref),
-        child: const Icon(Icons.add_alarm),
       ),
     );
   }
@@ -428,37 +429,54 @@ class _CalendarEntryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final title = entry.isPrivate ? 'Private reminder' : entry.title;
+    final displayTitle = displayItemTitle(
+      title: entry.title,
+      isVoice: entry.reminder?.isVoice == true,
+      createdAt: entry.reminder?.createdAt ?? entry.start,
+    );
     final time = DateFormat.jm().format(entry.start);
     final isDevice = entry.source == CalendarEntrySource.deviceCalendar;
 
     return Card(
       margin: EdgeInsets.only(bottom: compact ? 6 : 10),
-      child: ListTile(
-        dense: compact,
-        leading: Icon(
-          isDevice ? Icons.event : Icons.alarm,
-          color: entry.isCompleted ? Colors.grey : AppColors.primary,
+      child: PrivateContentGate(
+        isPrivate: entry.isPrivate,
+        child: ListTile(
+          dense: compact,
+          leading: Icon(
+            entry.reminder?.isVoice == true
+                ? Icons.mic
+                : (isDevice ? Icons.event : Icons.alarm),
+            color: entry.isCompleted ? Colors.grey : AppColors.primary,
+          ),
+          title: Text(
+            displayTitle,
+            style: entry.isCompleted
+                ? const TextStyle(decoration: TextDecoration.lineThrough)
+                : null,
+          ),
+          subtitle: Text(
+            [
+              time,
+              if (entry.reminder?.isVoice == true) 'Voice',
+              if (entry.hasCalendarSync) 'Synced to calendar',
+              if (isDevice) 'Device calendar',
+              if (entry.description != null) entry.description!,
+            ].join(' • '),
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (entry.reminder?.isVoice == true &&
+                  entry.reminder?.voicePath != null)
+                VoicePlayButton(path: entry.reminder!.voicePath!),
+              if (onTap != null) const Icon(Icons.chevron_right),
+            ],
+          ),
+          onTap: onTap,
         ),
-        title: Text(
-          title,
-          style: entry.isCompleted
-              ? const TextStyle(decoration: TextDecoration.lineThrough)
-              : null,
-        ),
-        subtitle: Text(
-          [
-            time,
-            if (entry.hasCalendarSync) 'Synced to calendar',
-            if (isDevice) 'Device calendar',
-            if (entry.description != null && !entry.isPrivate)
-              entry.description!,
-          ].join(' • '),
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-        trailing: onTap != null ? const Icon(Icons.chevron_right) : null,
-        onTap: onTap,
       ),
     );
   }

@@ -75,14 +75,45 @@ class NotificationService {
 
   /// Schedules a zoned notification for [reminder] at the computed fire time.
   Future<int> scheduleReminder(Reminder reminder) async {
+    // AlarmManager / WorkManager callbacks run in a separate isolate and must
+    // initialize timezones before using tz.local.
+    await initialize();
+
     final notificationId = reminder.notificationId ?? reminder.id.hashCode;
     final fireAt = reminder.fireDateTime;
+    final scheduled = tz.TZDateTime.from(fireAt, tz.local);
+    final now = tz.TZDateTime.now(tz.local);
+    final title =
+        reminder.isPrivate ? 'Private reminder' : reminder.title;
+    final body = reminder.isPrivate ? null : reminder.description;
+
+    // Past-due reminders (e.g. alarm callback after fire time) show immediately.
+    if (!scheduled.isAfter(now)) {
+      await _plugin.show(
+        notificationId,
+        title,
+        body,
+        const NotificationDetails(
+          android: AndroidNotificationDetails(
+            AppConstants.reminderChannelId,
+            AppConstants.reminderChannelName,
+            channelDescription: AppConstants.reminderChannelDescription,
+            importance: Importance.max,
+            priority: Priority.high,
+            fullScreenIntent: true,
+            category: AndroidNotificationCategory.alarm,
+          ),
+        ),
+        payload: reminder.id,
+      );
+      return notificationId;
+    }
 
     await _plugin.zonedSchedule(
       notificationId,
-      reminder.title,
-      reminder.description,
-      tz.TZDateTime.from(fireAt, tz.local),
+      title,
+      body,
+      scheduled,
       const NotificationDetails(
         android: AndroidNotificationDetails(
           AppConstants.reminderChannelId,

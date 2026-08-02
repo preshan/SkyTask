@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-/// SkyTask brand palette — calm, premium sky-blue theme.
+/// SkyTask brand palette — calm, premium navy theme.
 abstract final class AppColors {
-  static const Color primary = Color(0xFF6EC6FF);
-  static const Color secondary = Color(0xFF9BE7FF);
-  static const Color background = Color(0xFFF5FBFF);
+  static const Color primary = Color(0xFF000080);
+  static const Color secondary = Color(0xFF191970);
+  static const Color background = Color(0xFFF4F6F9);
   static const Color card = Color(0xFFFFFFFF);
   static const Color goldAccent = Color(0xFFF4C542);
   static const Color completedGold = Color(0xFFD4AF37);

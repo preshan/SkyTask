@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/services/voice_memo_service.dart';
+
 class Note extends Equatable {
   const Note({
     required this.id,
@@ -7,6 +9,7 @@ class Note extends Equatable {
     this.content = '',
     this.attachments = const [],
     this.isPrivate = false,
+    this.voicePath,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -16,8 +19,11 @@ class Note extends Equatable {
   final String content;
   final List<String> attachments;
   final bool isPrivate;
+  final String? voicePath;
   final DateTime createdAt;
   final DateTime updatedAt;
+
+  bool get isVoice => VoiceMemoService.hasVoice(voicePath);
 
   Note copyWith({
     String? id,
@@ -25,6 +31,8 @@ class Note extends Equatable {
     String? content,
     List<String>? attachments,
     bool? isPrivate,
+    String? voicePath,
+    bool clearVoicePath = false,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -34,12 +42,21 @@ class Note extends Equatable {
       content: content ?? this.content,
       attachments: attachments ?? this.attachments,
       isPrivate: isPrivate ?? this.isPrivate,
+      voicePath: clearVoicePath ? null : (voicePath ?? this.voicePath),
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   @override
-  List<Object?> get props =>
-      [id, title, content, attachments, isPrivate, createdAt, updatedAt];
+  List<Object?> get props => [
+        id,
+        title,
+        content,
+        attachments,
+        isPrivate,
+        voicePath,
+        createdAt,
+        updatedAt,
+      ];
 }

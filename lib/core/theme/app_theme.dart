@@ -105,9 +105,9 @@ abstract final class AppTheme {
 
   static ColorScheme _darkScheme() {
     return const ColorScheme.dark(
-      primary: AppColors.primary,
-      onPrimary: AppColors.primaryText,
-      secondary: AppColors.secondary,
+      primary: AppColors.secondary,
+      onPrimary: Colors.white,
+      secondary: AppColors.primary,
       surface: Color(0xFF1E293B),
       onSurface: Color(0xFFE2E8F0),
       error: AppColors.error,

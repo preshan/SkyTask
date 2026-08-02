@@ -8,7 +8,11 @@ import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
+import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/section_header.dart';
+import '../../../../shared/widgets/voice_play_button.dart';
+import '../../../../core/services/voice_memo_service.dart';
 import '../../../notes/domain/entities/note.dart';
 import '../../../tasks/domain/entities/task.dart';
 
@@ -25,12 +29,7 @@ class HomeScreen extends ConsumerWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('SkyTask'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.notifications_outlined),
-            onPressed: () => context.go(AppRoutes.calendar),
-          ),
-        ],
+        actions: skyTaskAppBarActions(context),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
@@ -66,11 +65,28 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     for (final r in reminders.take(3))
-                      ListTile(
-                        leading: const Icon(Icons.alarm, color: AppColors.primary),
-                        title: Text(r.title),
-                        subtitle: Text(
-                          DateFormat.MMMd().add_jm().format(r.reminderDateTime),
+                      PrivateContentGate(
+                        isPrivate: r.isPrivate,
+                        child: ListTile(
+                          leading: Icon(
+                            r.isVoice ? Icons.mic : Icons.alarm,
+                            color: AppColors.primary,
+                          ),
+                          title: Text(
+                            displayItemTitle(
+                              title: r.title,
+                              isVoice: r.isVoice,
+                              createdAt: r.createdAt,
+                            ),
+                          ),
+                          subtitle: Text(
+                            DateFormat.MMMd()
+                                .add_jm()
+                                .format(r.reminderDateTime),
+                          ),
+                          trailing: r.isVoice && r.voicePath != null
+                              ? VoicePlayButton(path: r.voicePath!)
+                              : null,
                         ),
                       ),
                   ],
@@ -98,18 +114,32 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     for (final idea in ideas.take(3))
-                      ListTile(
-                        leading: const Icon(Icons.lightbulb_outline),
-                        title: Text(
-                          idea.isPrivate ? 'Private Item' : idea.title,
+                      PrivateContentGate(
+                        isPrivate: idea.isPrivate,
+                        child: ListTile(
+                          leading: Icon(
+                            idea.isVoice
+                                ? Icons.mic
+                                : Icons.lightbulb_outline,
+                          ),
+                          title: Text(
+                            displayItemTitle(
+                              title: idea.title,
+                              isVoice: idea.isVoice,
+                              createdAt: idea.createdAt,
+                            ),
+                          ),
+                          subtitle: Text(
+                            idea.isVoice && idea.content.isEmpty
+                                ? 'Voice memo'
+                                : idea.content,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: idea.isVoice && idea.voicePath != null
+                              ? VoicePlayButton(path: idea.voicePath!)
+                              : null,
                         ),
-                        subtitle: idea.isPrivate
-                            ? const Text('🔒 Hidden Content')
-                            : Text(
-                                idea.content,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
                       ),
                   ],
                 ),
@@ -136,18 +166,30 @@ class HomeScreen extends ConsumerWidget {
                 child: Column(
                   children: [
                     for (final note in notes.take(3))
-                      ListTile(
-                        leading: const Icon(Icons.note_outlined),
-                        title: Text(
-                          note.isPrivate ? 'Private Item' : note.title,
+                      PrivateContentGate(
+                        isPrivate: note.isPrivate,
+                        child: ListTile(
+                          leading: Icon(
+                            note.isVoice ? Icons.mic : Icons.note_outlined,
+                          ),
+                          title: Text(
+                            displayItemTitle(
+                              title: note.title,
+                              isVoice: note.isVoice,
+                              createdAt: note.createdAt,
+                            ),
+                          ),
+                          subtitle: Text(
+                            note.isVoice && note.content.isEmpty
+                                ? 'Voice memo'
+                                : note.content,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          trailing: note.isVoice && note.voicePath != null
+                              ? VoicePlayButton(path: note.voicePath!)
+                              : null,
                         ),
-                        subtitle: note.isPrivate
-                            ? const Text('🔒 Hidden Content')
-                            : Text(
-                                note.content,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
                       ),
                   ],
                 ),

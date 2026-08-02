@@ -4,6 +4,9 @@ import 'package:uuid/uuid.dart';
 
 import '../../../calendar/presentation/providers/calendar_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../core/services/voice_memo_service.dart';
+import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/voice_memo_recorder.dart';
 import '../../domain/entities/reminder.dart';
 
 Future<void> showReminderFormSheet(
@@ -34,9 +37,12 @@ class _ReminderFormSheet extends ConsumerStatefulWidget {
 class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
   late final TextEditingController _titleController;
   late final TextEditingController _descriptionController;
+  late final FocusNode _descriptionFocus;
   late DateTime _dateTime;
   late NotificationOffset _offset;
   late bool _isPrivate;
+  String? _voicePath;
+  final _voiceController = VoiceMemoController();
   bool _saving = false;
 
   bool get _isEditing => widget.reminder != null;
@@ -45,19 +51,32 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
   void initState() {
     super.initState();
     final existing = widget.reminder;
-    _titleController = TextEditingController(text: existing?.title ?? '');
+    final initialTitle = (existing != null &&
+            existing.isVoice &&
+            VoiceMemoService.isPlaceholderTitle(existing.title))
+        ? ''
+        : (existing?.title ?? '');
+    _titleController = TextEditingController(text: initialTitle);
     _descriptionController =
         TextEditingController(text: existing?.description ?? '');
+    _descriptionFocus = FocusNode();
     _dateTime = existing?.reminderDateTime ??
         DateTime.now().add(const Duration(hours: 1));
     _offset = existing?.notificationOffset ?? NotificationOffset.atTime;
     _isPrivate = existing?.isPrivate ?? false;
+    _voicePath = existing?.voicePath;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _descriptionFocus.requestFocus();
+    });
   }
 
   @override
   void dispose() {
     _titleController.dispose();
     _descriptionController.dispose();
+    _descriptionFocus.dispose();
     super.dispose();
   }
 
@@ -88,34 +107,42 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
   }
 
   Future<void> _save() async {
-    final title = _titleController.text.trim();
-    if (title.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Title is required')),
-      );
-      return;
-    }
-
     setState(() => _saving = true);
     final now = DateTime.now();
+    final voicePath = await _voiceController.finalize() ?? _voicePath;
+    _voicePath = voicePath;
     final settings = ref.read(calendarSettingsProvider);
     final scheduler = await ref.read(reminderSchedulerProvider.future);
+    final hasVoice = VoiceMemoService.hasVoice(voicePath);
+    final title = voiceAwareTitle(
+      rawTitle: _titleController.text,
+      hasVoice: hasVoice,
+      untitledFallback: 'Untitled reminder',
+      at: _isEditing ? widget.reminder!.createdAt : now,
+    );
+    final description = _descriptionController.text.trim().isEmpty
+        ? null
+        : _descriptionController.text.trim();
 
     try {
+      final previousVoice =
+          _isEditing ? widget.reminder!.voicePath : null;
+
       if (_isEditing) {
         final updated = widget.reminder!.copyWith(
           title: title,
-          description: _descriptionController.text.trim().isEmpty
-              ? null
-              : _descriptionController.text.trim(),
+          description: description,
           reminderDateTime: _dateTime,
           notificationOffset: _offset,
           isPrivate: _isPrivate,
+          voicePath: voicePath,
+          clearVoicePath: voicePath == null,
           updatedAt: now,
         );
         await scheduler.update(
           reminder: updated,
-          syncCalendar: settings.canSyncToCalendar,
+          syncCalendar:
+              settings.canSyncToCalendar && !updated.isVoice && !updated.isPrivate,
           calendarId: settings.defaultCalendarId,
         );
       } else {
@@ -123,20 +150,23 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           reminder: Reminder(
             id: const Uuid().v4(),
             title: title,
-            description: _descriptionController.text.trim().isEmpty
-                ? null
-                : _descriptionController.text.trim(),
+            description: description,
             reminderDateTime: _dateTime,
             notificationOffset: _offset,
             isPrivate: _isPrivate,
+            voicePath: voicePath,
             createdAt: now,
             updatedAt: now,
           ),
-          addToCalendar: settings.canSyncToCalendar,
+          addToCalendar:
+              settings.canSyncToCalendar && !hasVoice && !_isPrivate,
           calendarId: settings.defaultCalendarId,
         );
       }
 
+      if (previousVoice != null && previousVoice != voicePath) {
+        await VoiceMemoService.deleteIfExists(previousVoice);
+      }
       refreshReminders(ref);
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -226,19 +256,24 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           TextField(
             controller: _titleController,
             decoration: const InputDecoration(
-              labelText: 'Title',
+              labelText: 'Title (optional)',
               border: OutlineInputBorder(),
             ),
             textCapitalization: TextCapitalization.sentences,
+            textInputAction: TextInputAction.next,
+            onSubmitted: (_) => _descriptionFocus.requestFocus(),
           ),
           const SizedBox(height: 12),
           TextField(
             controller: _descriptionController,
+            focusNode: _descriptionFocus,
+            autofocus: true,
             decoration: const InputDecoration(
               labelText: 'Description (optional)',
               border: OutlineInputBorder(),
             ),
             maxLines: 2,
+            textCapitalization: TextCapitalization.sentences,
           ),
           const SizedBox(height: 12),
           ListTile(
@@ -268,20 +303,41 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
                 ? null
                 : (v) => setState(() => _offset = v ?? _offset),
           ),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Private reminder'),
-            subtitle: const Text('Hide content behind app lock'),
-            value: _isPrivate,
-            onChanged: _saving ? null : (v) => setState(() => _isPrivate = v),
+          const SizedBox(height: 8),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: PrivateIconToggle(
+              value: _isPrivate,
+              enabled: !_saving,
+              onChanged: (v) => setState(() => _isPrivate = v),
+            ),
           ),
-          if (settings.canSyncToCalendar)
+          const SizedBox(height: 12),
+          VoiceMemoRecorder(
+            controller: _voiceController,
+            initialPath: widget.reminder?.voicePath,
+            enabled: !_saving,
+            onChanged: (path) => setState(() => _voicePath = path),
+          ),
+          if (settings.canSyncToCalendar &&
+              !VoiceMemoService.hasVoice(_voicePath) &&
+              !_isPrivate)
             ListTile(
               contentPadding: EdgeInsets.zero,
               leading: const Icon(Icons.calendar_month_outlined),
               title: const Text('Sync to device calendar'),
               subtitle: Text(settings.defaultCalendarName ?? 'Calendar'),
               trailing: const Icon(Icons.check_circle, color: Colors.green),
+            ),
+          if (VoiceMemoService.hasVoice(_voicePath) || _isPrivate)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Text(
+                _isPrivate
+                    ? 'Private reminders are not added to calendar'
+                    : 'Voice reminders are not added to calendar',
+                style: Theme.of(context).textTheme.bodySmall,
+              ),
             ),
           const SizedBox(height: 16),
           FilledButton(

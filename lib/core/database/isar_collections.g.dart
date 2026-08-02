@@ -83,6 +83,11 @@ const TaskCollectionSchema = CollectionSchema(
       id: 12,
       name: r'uuid',
       type: IsarType.string,
+    ),
+    r'voicePath': PropertySchema(
+      id: 13,
+      name: r'voicePath',
+      type: IsarType.string,
     )
   },
   estimateSize: _taskCollectionEstimateSize,
@@ -134,6 +139,12 @@ int _taskCollectionEstimateSize(
   }
   bytesCount += 3 + object.title.length * 3;
   bytesCount += 3 + object.uuid.length * 3;
+  {
+    final value = object.voicePath;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -156,6 +167,7 @@ void _taskCollectionSerialize(
   writer.writeString(offsets[10], object.title);
   writer.writeDateTime(offsets[11], object.updatedAt);
   writer.writeString(offsets[12], object.uuid);
+  writer.writeString(offsets[13], object.voicePath);
 }
 
 TaskCollection _taskCollectionDeserialize(
@@ -183,6 +195,7 @@ TaskCollection _taskCollectionDeserialize(
   object.title = reader.readString(offsets[10]);
   object.updatedAt = reader.readDateTime(offsets[11]);
   object.uuid = reader.readString(offsets[12]);
+  object.voicePath = reader.readStringOrNull(offsets[13]);
   return object;
 }
 
@@ -223,6 +236,8 @@ P _taskCollectionDeserializeProp<P>(
       return (reader.readDateTime(offset)) as P;
     case 12:
       return (reader.readString(offset)) as P;
+    case 13:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -1496,6 +1511,160 @@ extension TaskCollectionQueryFilter
       ));
     });
   }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'voicePath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'voicePath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      voicePathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension TaskCollectionQueryObject
@@ -1658,6 +1827,19 @@ extension TaskCollectionQuerySortBy
   QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy> sortByUuidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy> sortByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      sortByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
     });
   }
 }
@@ -1830,6 +2012,19 @@ extension TaskCollectionQuerySortThenBy
       return query.addSortBy(r'uuid', Sort.desc);
     });
   }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy> thenByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      thenByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
+    });
+  }
 }
 
 extension TaskCollectionQueryWhereDistinct
@@ -1916,6 +2111,13 @@ extension TaskCollectionQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'uuid', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QDistinct> distinctByVoicePath(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'voicePath', caseSensitive: caseSensitive);
     });
   }
 }
@@ -2008,6 +2210,12 @@ extension TaskCollectionQueryProperty
       return query.addPropertyName(r'uuid');
     });
   }
+
+  QueryBuilder<TaskCollection, String?, QQueryOperations> voicePathProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'voicePath');
+    });
+  }
 }
 
 // coverage:ignore-file
@@ -2093,6 +2301,11 @@ const ReminderCollectionSchema = CollectionSchema(
       id: 13,
       name: r'uuid',
       type: IsarType.string,
+    ),
+    r'voicePath': PropertySchema(
+      id: 14,
+      name: r'voicePath',
+      type: IsarType.string,
     )
   },
   estimateSize: _reminderCollectionEstimateSize,
@@ -2149,6 +2362,12 @@ int _reminderCollectionEstimateSize(
   }
   bytesCount += 3 + object.title.length * 3;
   bytesCount += 3 + object.uuid.length * 3;
+  {
+    final value = object.voicePath;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -2172,6 +2391,7 @@ void _reminderCollectionSerialize(
   writer.writeString(offsets[11], object.title);
   writer.writeDateTime(offsets[12], object.updatedAt);
   writer.writeString(offsets[13], object.uuid);
+  writer.writeString(offsets[14], object.voicePath);
 }
 
 ReminderCollection _reminderCollectionDeserialize(
@@ -2200,6 +2420,7 @@ ReminderCollection _reminderCollectionDeserialize(
   object.title = reader.readString(offsets[11]);
   object.updatedAt = reader.readDateTime(offsets[12]);
   object.uuid = reader.readString(offsets[13]);
+  object.voicePath = reader.readStringOrNull(offsets[14]);
   return object;
 }
 
@@ -2242,6 +2463,8 @@ P _reminderCollectionDeserializeProp<P>(
       return (reader.readDateTime(offset)) as P;
     case 13:
       return (reader.readString(offset)) as P;
+    case 14:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -3711,6 +3934,160 @@ extension ReminderCollectionQueryFilter
       ));
     });
   }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'voicePath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'voicePath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      voicePathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension ReminderCollectionQueryObject
@@ -3914,6 +4291,20 @@ extension ReminderCollectionQuerySortBy
       sortByUuidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      sortByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      sortByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
     });
   }
 }
@@ -4129,6 +4520,20 @@ extension ReminderCollectionQuerySortThenBy
       return query.addSortBy(r'uuid', Sort.desc);
     });
   }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      thenByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      thenByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
+    });
+  }
 }
 
 extension ReminderCollectionQueryWhereDistinct
@@ -4230,6 +4635,13 @@ extension ReminderCollectionQueryWhereDistinct
       distinctByUuid({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'uuid', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QDistinct>
+      distinctByVoicePath({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'voicePath', caseSensitive: caseSensitive);
     });
   }
 }
@@ -4336,6 +4748,13 @@ extension ReminderCollectionQueryProperty
       return query.addPropertyName(r'uuid');
     });
   }
+
+  QueryBuilder<ReminderCollection, String?, QQueryOperations>
+      voicePathProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'voicePath');
+    });
+  }
 }
 
 // coverage:ignore-file
@@ -4383,6 +4802,11 @@ const IdeaCollectionSchema = CollectionSchema(
       id: 6,
       name: r'uuid',
       type: IsarType.string,
+    ),
+    r'voicePath': PropertySchema(
+      id: 7,
+      name: r'voicePath',
+      type: IsarType.string,
     )
   },
   estimateSize: _ideaCollectionEstimateSize,
@@ -4429,6 +4853,12 @@ int _ideaCollectionEstimateSize(
   }
   bytesCount += 3 + object.title.length * 3;
   bytesCount += 3 + object.uuid.length * 3;
+  {
+    final value = object.voicePath;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -4445,6 +4875,7 @@ void _ideaCollectionSerialize(
   writer.writeString(offsets[4], object.title);
   writer.writeDateTime(offsets[5], object.updatedAt);
   writer.writeString(offsets[6], object.uuid);
+  writer.writeString(offsets[7], object.voicePath);
 }
 
 IdeaCollection _ideaCollectionDeserialize(
@@ -4462,6 +4893,7 @@ IdeaCollection _ideaCollectionDeserialize(
   object.title = reader.readString(offsets[4]);
   object.updatedAt = reader.readDateTime(offsets[5]);
   object.uuid = reader.readString(offsets[6]);
+  object.voicePath = reader.readStringOrNull(offsets[7]);
   return object;
 }
 
@@ -4486,6 +4918,8 @@ P _ideaCollectionDeserializeProp<P>(
       return (reader.readDateTime(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -5496,6 +5930,160 @@ extension IdeaCollectionQueryFilter
       ));
     });
   }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'voicePath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'voicePath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      voicePathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension IdeaCollectionQueryObject
@@ -5579,6 +6167,19 @@ extension IdeaCollectionQuerySortBy
   QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy> sortByUuidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy> sortByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy>
+      sortByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
     });
   }
 }
@@ -5672,6 +6273,19 @@ extension IdeaCollectionQuerySortThenBy
       return query.addSortBy(r'uuid', Sort.desc);
     });
   }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy> thenByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy>
+      thenByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
+    });
+  }
 }
 
 extension IdeaCollectionQueryWhereDistinct
@@ -5721,6 +6335,13 @@ extension IdeaCollectionQueryWhereDistinct
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'uuid', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QDistinct> distinctByVoicePath(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'voicePath', caseSensitive: caseSensitive);
     });
   }
 }
@@ -5774,6 +6395,12 @@ extension IdeaCollectionQueryProperty
       return query.addPropertyName(r'uuid');
     });
   }
+
+  QueryBuilder<IdeaCollection, String?, QQueryOperations> voicePathProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'voicePath');
+    });
+  }
 }
 
 // coverage:ignore-file
@@ -5821,6 +6448,11 @@ const NoteCollectionSchema = CollectionSchema(
       id: 6,
       name: r'uuid',
       type: IsarType.string,
+    ),
+    r'voicePath': PropertySchema(
+      id: 7,
+      name: r'voicePath',
+      type: IsarType.string,
     )
   },
   estimateSize: _noteCollectionEstimateSize,
@@ -5867,6 +6499,12 @@ int _noteCollectionEstimateSize(
   bytesCount += 3 + object.content.length * 3;
   bytesCount += 3 + object.title.length * 3;
   bytesCount += 3 + object.uuid.length * 3;
+  {
+    final value = object.voicePath;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
   return bytesCount;
 }
 
@@ -5883,6 +6521,7 @@ void _noteCollectionSerialize(
   writer.writeString(offsets[4], object.title);
   writer.writeDateTime(offsets[5], object.updatedAt);
   writer.writeString(offsets[6], object.uuid);
+  writer.writeString(offsets[7], object.voicePath);
 }
 
 NoteCollection _noteCollectionDeserialize(
@@ -5900,6 +6539,7 @@ NoteCollection _noteCollectionDeserialize(
   object.title = reader.readString(offsets[4]);
   object.updatedAt = reader.readDateTime(offsets[5]);
   object.uuid = reader.readString(offsets[6]);
+  object.voicePath = reader.readStringOrNull(offsets[7]);
   return object;
 }
 
@@ -5924,6 +6564,8 @@ P _noteCollectionDeserializeProp<P>(
       return (reader.readDateTime(offset)) as P;
     case 6:
       return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
   }
@@ -6934,6 +7576,160 @@ extension NoteCollectionQueryFilter
       ));
     });
   }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'voicePath',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'voicePath',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'voicePath',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'voicePath',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      voicePathIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'voicePath',
+        value: '',
+      ));
+    });
+  }
 }
 
 extension NoteCollectionQueryObject
@@ -7017,6 +7813,19 @@ extension NoteCollectionQuerySortBy
   QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy> sortByUuidDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'uuid', Sort.desc);
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy> sortByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy>
+      sortByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
     });
   }
 }
@@ -7110,6 +7919,19 @@ extension NoteCollectionQuerySortThenBy
       return query.addSortBy(r'uuid', Sort.desc);
     });
   }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy> thenByVoicePath() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy>
+      thenByVoicePathDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'voicePath', Sort.desc);
+    });
+  }
 }
 
 extension NoteCollectionQueryWhereDistinct
@@ -7162,6 +7984,13 @@ extension NoteCollectionQueryWhereDistinct
       return query.addDistinctBy(r'uuid', caseSensitive: caseSensitive);
     });
   }
+
+  QueryBuilder<NoteCollection, NoteCollection, QDistinct> distinctByVoicePath(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'voicePath', caseSensitive: caseSensitive);
+    });
+  }
 }
 
 extension NoteCollectionQueryProperty
@@ -7212,6 +8041,12 @@ extension NoteCollectionQueryProperty
   QueryBuilder<NoteCollection, String, QQueryOperations> uuidProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'uuid');
+    });
+  }
+
+  QueryBuilder<NoteCollection, String?, QQueryOperations> voicePathProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'voicePath');
     });
   }
 }

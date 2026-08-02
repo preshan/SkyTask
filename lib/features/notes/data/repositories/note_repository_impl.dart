@@ -4,6 +4,7 @@ import '../../domain/entities/note.dart';
 import '../../domain/repositories/note_repository.dart';
 import '../mappers/note_mapper.dart';
 import '../../../../core/database/isar_collections.dart';
+import '../../../../core/services/voice_memo_service.dart';
 
 class NoteRepositoryImpl implements NoteRepository {
   NoteRepositoryImpl(this._isar);
@@ -37,10 +38,15 @@ class NoteRepositoryImpl implements NoteRepository {
 
   @override
   Future<void> delete(String id) async {
+    String? voicePath;
     await _isar.writeTxn(() async {
       final existing =
           await _isar.noteCollections.filter().uuidEqualTo(id).findFirst();
-      if (existing != null) await _isar.noteCollections.delete(existing.id);
+      if (existing != null) {
+        voicePath = existing.voicePath;
+        await _isar.noteCollections.delete(existing.id);
+      }
     });
+    await VoiceMemoService.deleteIfExists(voicePath);
   }
 }

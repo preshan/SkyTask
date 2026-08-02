@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/di/providers.dart';
+import '../../../../core/router/app_router.dart';
 import '../../../calendar/data/device_calendar_service.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
 
@@ -15,7 +17,19 @@ class SettingsScreen extends ConsumerWidget {
     final calendarSettings = ref.watch(calendarSettingsProvider);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Settings')),
+      appBar: AppBar(
+        title: const Text('Settings'),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go(AppRoutes.home);
+            }
+          },
+        ),
+      ),
       body: ListView(
         children: [
           _header(context, 'Appearance'),
@@ -78,7 +92,9 @@ class SettingsScreen extends ConsumerWidget {
           SwitchListTile(
             secondary: const Icon(Icons.lock_outline),
             title: const Text('App lock'),
-            subtitle: const Text('Fingerprint, face, or PIN'),
+            subtitle: const Text(
+              'Fingerprint, face, or PIN · locks after 30s in background',
+            ),
             value: appLock,
             onChanged: (v) =>
                 ref.read(privacyLockProvider.notifier).setAppLockEnabled(v),

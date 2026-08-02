@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import '../../features/reminders/domain/entities/reminder.dart';
 import 'isar_service.dart';
 import 'notification_service.dart';
+import 'private_crypto_service.dart';
 import '../../features/reminders/data/mappers/reminder_mapper.dart';
 import '../../features/reminders/data/repositories/reminder_repository_impl.dart';
 
@@ -41,6 +42,7 @@ class AlarmService {
 
   /// Re-registers all pending reminders after reboot or app update.
   Future<void> rescheduleAllReminders() async {
+    await PrivateCryptoService.instance.init();
     final isar = await IsarService.instance.db;
     final repo = ReminderRepositoryImpl(isar);
     final reminders = await repo.getPending();
@@ -73,6 +75,8 @@ void _alarmCallback(int id, Map<String, dynamic>? params) async {
   final reminderId = params?['reminderId'] as String?;
   if (reminderId == null) return;
 
+  await PrivateCryptoService.instance.init();
+  await NotificationService.instance.initialize();
   final isar = await IsarService.instance.db;
   final repo = ReminderRepositoryImpl(isar);
   final reminder = await repo.getById(reminderId);
@@ -84,5 +88,7 @@ void _alarmCallback(int id, Map<String, dynamic>? params) async {
 @pragma('vm:entry-point')
 void _bootRescheduleCallback() async {
   debugPrint('SkyTask: re-registering reminders after reboot');
+  await PrivateCryptoService.instance.init();
+  await NotificationService.instance.initialize();
   await AlarmService.instance.rescheduleAllReminders();
 }

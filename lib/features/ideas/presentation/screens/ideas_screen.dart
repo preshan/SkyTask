@@ -3,7 +3,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
+import '../../../../shared/widgets/voice_play_button.dart';
+import '../../../../core/services/voice_memo_service.dart';
 import '../../domain/entities/idea.dart';
 import '../../../notes/domain/entities/note.dart';
 import '../widgets/idea_form_sheet.dart';
@@ -24,7 +27,6 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 2, vsync: this);
-    _tabController.addListener(() => setState(() {}));
   }
 
   @override
@@ -33,19 +35,12 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
     super.dispose();
   }
 
-  void _create() {
-    if (_tabController.index == 0) {
-      showIdeaFormSheet(context, ref);
-    } else {
-      showNoteFormSheet(context, ref);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ideas & Notes'),
+        actions: skyTaskAppBarActions(context),
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -60,10 +55,6 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
           _IdeasTab(),
           _NotesTab(),
         ],
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _create,
-        child: Icon(_tabController.index == 0 ? Icons.lightbulb : Icons.note_add),
       ),
     );
   }
@@ -162,19 +153,34 @@ class _IdeaCard extends StatelessWidget {
     return Card(
       child: PrivateContentGate(
         isPrivate: idea.isPrivate,
-        title: idea.title,
         child: ListTile(
           onTap: onTap,
-          leading: const Icon(Icons.lightbulb_outline),
-          title: Text(idea.isPrivate ? 'Private Item' : idea.title),
+          leading: Icon(
+            idea.isVoice ? Icons.mic : Icons.lightbulb_outline,
+          ),
+          title: Text(
+            displayItemTitle(
+              title: idea.title,
+              isVoice: idea.isVoice,
+              createdAt: idea.createdAt,
+            ),
+          ),
           subtitle: Text(
-            idea.isPrivate ? '🔒 Hidden Content' : idea.content,
+            idea.isVoice && idea.content.isEmpty
+                ? 'Voice memo'
+                : idea.content,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: idea.tags.isEmpty
-              ? const Icon(Icons.chevron_right)
-              : Column(
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (idea.isVoice && idea.voicePath != null)
+                VoicePlayButton(path: idea.voicePath!),
+              if (idea.tags.isEmpty)
+                const Icon(Icons.chevron_right)
+              else
+                Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
@@ -185,6 +191,8 @@ class _IdeaCard extends StatelessWidget {
                     const Icon(Icons.chevron_right, size: 18),
                   ],
                 ),
+            ],
+          ),
         ),
       ),
     );
@@ -202,17 +210,31 @@ class _NoteCard extends StatelessWidget {
     return Card(
       child: PrivateContentGate(
         isPrivate: note.isPrivate,
-        title: note.title,
         child: ListTile(
           onTap: onTap,
-          leading: const Icon(Icons.note_outlined),
-          title: Text(note.isPrivate ? 'Private Item' : note.title),
+          leading: Icon(note.isVoice ? Icons.mic : Icons.note_outlined),
+          title: Text(
+            displayItemTitle(
+              title: note.title,
+              isVoice: note.isVoice,
+              createdAt: note.createdAt,
+            ),
+          ),
           subtitle: Text(
-            note.isPrivate ? '🔒 Hidden Content' : note.content,
+            note.isVoice && note.content.isEmpty
+                ? 'Voice memo'
+                : note.content,
             maxLines: 3,
             overflow: TextOverflow.ellipsis,
           ),
-          trailing: const Icon(Icons.chevron_right),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (note.isVoice && note.voicePath != null)
+                VoicePlayButton(path: note.voicePath!),
+              const Icon(Icons.chevron_right),
+            ],
+          ),
         ),
       ),
     );

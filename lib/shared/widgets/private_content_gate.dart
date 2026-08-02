@@ -5,17 +5,18 @@ import '../../features/privacy/data/privacy_auth_service.dart';
 import '../../features/privacy/presentation/widgets/pin_entry_pad.dart';
 
 /// Masks private content until biometric or app PIN auth succeeds.
+///
+/// Pass the real content as [child] — this gate shows a lock tile until unlock,
+/// then reveals [child] unchanged.
 class PrivateContentGate extends StatefulWidget {
   const PrivateContentGate({
     super.key,
     required this.isPrivate,
-    required this.title,
     required this.child,
     this.hiddenLabel = '🔒 Hidden Content',
   });
 
   final bool isPrivate;
-  final String title;
   final Widget child;
   final String hiddenLabel;
 
@@ -30,7 +31,7 @@ class _PrivateContentGateState extends State<PrivateContentGate> {
 
   Future<void> _unlockWithBiometrics() async {
     final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
-      reason: 'Unlock "${widget.title}"',
+      reason: 'Unlock private item',
     );
     if (ok && mounted) setState(() => _unlocked = true);
   }
@@ -72,7 +73,7 @@ class _PrivateContentGateState extends State<PrivateContentGate> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('Unlock "${widget.title}"'),
+              const Text('Unlock private item'),
               const SizedBox(height: 16),
               PinEntryPad(
                 errorText: _error,
