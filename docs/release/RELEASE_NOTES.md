@@ -15,11 +15,11 @@ SkyTask 1.1 focuses on faster capture (inline Create + voice memos), a navy bran
 
 | Home | Tasks | Create |
 |:----:|:-----:|:------:|
-| ![Home](screenshots/01_home.png) | ![Tasks](screenshots/02_tasks.png) | ![Create](screenshots/03_create_menu.png) |
+| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Create](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_create_menu.png) |
 
 | Calendar | Ideas |
 |:--------:|:-----:|
-| ![Calendar](screenshots/04_calendar.png) | ![Ideas](screenshots/05_ideas.png) |
+| ![Calendar](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_calendar.png) | ![Ideas](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/05_ideas.png) |
 
 > Captured on Android emulator (`emulator-5554`). Browser automation is not used for the Flutter UI; screenshots were taken via `adb screencap`.
 
