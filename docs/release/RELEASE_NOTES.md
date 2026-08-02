@@ -4,6 +4,11 @@
 
 SkyTask 1.1 focuses on faster capture (inline Create + voice memos), a navy brand refresh, and encrypting private text at rest.
 
+## Download
+
+- **[SkyTask-1.1.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.0/SkyTask-1.1.0.apk)** (Android, ~66 MB)
+- Signed with the debug keystore for sideload testing (not Play Store distribution)
+
 ## Highlights
 
 - **Inline Create** in the bottom bar — no floating FAB
