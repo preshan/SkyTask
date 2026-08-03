@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
@@ -44,7 +45,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
   late final TextEditingController _descriptionController;
   late final FocusNode _descriptionFocus;
   late TaskPriority _priority;
-  late TaskCategory _category;
+  late String _category;
   late bool _pinned;
   late bool _isPrivate;
   DateTime? _dueDate;
@@ -68,7 +69,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
         TextEditingController(text: t?.description ?? '');
     _descriptionFocus = FocusNode();
     _priority = t?.priority ?? TaskPriority.medium;
-    _category = t?.category ?? TaskCategory.personal;
+    _category = TaskCategories.normalize(t?.category ?? TaskCategories.personal);
     _pinned = t?.pinned ?? false;
     _isPrivate = t?.isPrivate ?? false;
     _dueDate = t?.dueDate;
@@ -147,6 +148,10 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             );
 
       await repo.save(task);
+      // Persist non-default categories so they stay in the catalog.
+      if (!TaskCategories.isDefault(task.category)) {
+        await ref.read(customTaskCategoriesProvider.notifier).add(task.category);
+      }
       if (previousVoice != null && previousVoice != voicePath) {
         await VoiceMemoService.deleteIfExists(previousVoice);
       }
@@ -197,11 +202,52 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
     if (mounted) Navigator.pop(context);
   }
 
+  Future<void> _addCategory() async {
+    final controller = TextEditingController();
+    final name = await showDialog<String>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('New category'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          textCapitalization: TextCapitalization.words,
+          decoration: const InputDecoration(
+            hintText: 'e.g. Health, Study',
+            border: OutlineInputBorder(),
+          ),
+          onSubmitted: (v) => Navigator.pop(ctx, v),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, controller.text),
+            child: const Text('Add'),
+          ),
+        ],
+      ),
+    );
+    controller.dispose();
+    if (name == null || !mounted) return;
+    final normalized = TaskCategories.normalize(name);
+    if (normalized.isEmpty) return;
+    await ref.read(customTaskCategoriesProvider.notifier).add(normalized);
+    if (!mounted) return;
+    setState(() => _category = normalized);
+  }
+
   @override
   Widget build(BuildContext context) {
     final dueTooltip = _dueDate == null
         ? 'Set due date'
         : 'Due ${DateFormat.yMMMd().format(_dueDate!)} · long-press to clear';
+    final custom = ref.watch(customTaskCategoriesProvider);
+    final allTasks = ref.watch(_categoryUsageTasksProvider).valueOrNull ??
+        const <Task>[];
+    final categories = TaskCategories.ordered(custom: custom, tasks: allTasks);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -243,13 +289,36 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             height: 40,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
-              itemCount: TaskCategory.values.length,
+              itemCount: categories.length + 1,
               separatorBuilder: (_, __) => const SizedBox(width: 8),
               itemBuilder: (context, index) {
-                final category = TaskCategory.values[index];
-                final selected = _category == category;
+                if (index == categories.length) {
+                  return FilterChip(
+                    avatar: Icon(
+                      Icons.add,
+                      size: 16,
+                      color: AppColors.brand(context),
+                    ),
+                    label: const Text('Add'),
+                    selected: false,
+                    showCheckmark: false,
+                    onSelected: _saving ? null : (_) => _addCategory(),
+                    side: BorderSide(
+                      color: AppColors.brand(context).withValues(alpha: 0.35),
+                    ),
+                    labelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 13,
+                    ),
+                    visualDensity: VisualDensity.compact,
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  );
+                }
+                final category = categories[index];
+                final selected =
+                    _category.toLowerCase() == category.toLowerCase();
                 return FilterChip(
-                  label: Text(_label(category.name)),
+                  label: Text(category),
                   selected: selected,
                   showCheckmark: false,
                   onSelected: _saving
@@ -407,3 +476,9 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
         TaskPriority.high => AppColors.error,
       };
 }
+
+final _categoryUsageTasksProvider = FutureProvider<List<Task>>((ref) async {
+  ref.watch(tasksRevisionProvider);
+  final repo = await ref.read(taskRepositoryProvider.future);
+  return repo.getAll(includeArchived: true);
+});

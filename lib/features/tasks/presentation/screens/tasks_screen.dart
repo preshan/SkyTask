@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
@@ -24,11 +25,16 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   String _query = '';
   String _sort = 'updated';
   String _statusFilter = 'all';
-  TaskCategory? _categoryFilter;
+  String? _categoryFilter;
 
   @override
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(_tasksListProvider);
+    final custom = ref.watch(customTaskCategoriesProvider);
+    final categories = TaskCategories.ordered(
+      custom: custom,
+      tasks: tasksAsync.valueOrNull ?? const [],
+    );
 
     return Scaffold(
       appBar: AppBar(
@@ -78,10 +84,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                   selected: _categoryFilter == null,
                   onTap: () => setState(() => _categoryFilter = null),
                 ),
-                ...TaskCategory.values.map(
+                ...categories.map(
                   (category) => _CategoryChip(
-                    label: _categoryLabel(category),
-                    selected: _categoryFilter == category,
+                    label: category,
+                    selected: _categoryFilter?.toLowerCase() ==
+                        category.toLowerCase(),
                     onTap: () => setState(() => _categoryFilter = category),
                   ),
                 ),
@@ -98,30 +105,19 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 filtered = _applySort(filtered);
 
                 if (filtered.isEmpty) {
-                  return Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(24),
-                      child: Text(
-                        'No tasks found.\nTap Create to add one.',
-                        textAlign: TextAlign.center,
-                        style: Theme.of(context).textTheme.bodyLarge,
-                      ),
-                    ),
+                  return const Center(
+                    child: Text('No tasks found. Tap Create to add one.'),
                   );
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
                   itemCount: filtered.length,
                   itemBuilder: (context, index) {
                     final task = filtered[index];
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _TaskCard(
-                        task: task,
-                        onTap: () =>
-                            showTaskFormSheet(context, ref, task: task),
-                      ),
+                    return _TaskCard(
+                      task: task,
+                      onTap: () => showTaskFormSheet(context, ref, task: task),
                     );
                   },
                 );
@@ -135,8 +131,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
 
   List<Task> _applyFilters(List<Task> tasks) {
     var result = tasks;
-    if (_query.isNotEmpty) {
-      final q = _query.toLowerCase();
+    if (_query.trim().isNotEmpty) {
+      final q = _query.trim().toLowerCase();
       result = result
           .where((t) =>
               t.title.toLowerCase().contains(q) ||
@@ -144,7 +140,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           .toList();
     }
     if (_categoryFilter != null) {
-      result = result.where((t) => t.category == _categoryFilter).toList();
+      final filter = _categoryFilter!.toLowerCase();
+      result = result
+          .where((t) => t.category.toLowerCase() == filter)
+          .toList();
     }
     return switch (_statusFilter) {
       'pinned' => result.where((t) => t.pinned && !t.archived).toList(),
@@ -176,11 +175,6 @@ final _tasksListProvider = FutureProvider<List<Task>>((ref) async {
   return repo.getAll(includeArchived: true);
 });
 
-String _categoryLabel(TaskCategory category) {
-  final name = category.name;
-  return '${name[0].toUpperCase()}${name.substring(1)}';
-}
-
 class _CategoryChip extends StatelessWidget {
   const _CategoryChip({
     required this.label,
@@ -204,7 +198,9 @@ class _CategoryChip extends StatelessWidget {
         selectedColor: AppColors.brand(context).withValues(alpha: 0.25),
         backgroundColor: Theme.of(context).colorScheme.surface,
         side: BorderSide(
-          color: selected ? AppColors.brand(context) : AppColors.brand(context).withValues(alpha: 0.25),
+          color: selected
+              ? AppColors.brand(context)
+              : AppColors.brand(context).withValues(alpha: 0.25),
         ),
         labelStyle: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
@@ -230,7 +226,7 @@ class _TaskCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final subtitle = [
-      _categoryLabel(task.category),
+      task.category,
       if (task.dueDate != null)
         'Due ${DateFormat.MMMd().format(task.dueDate!)}',
       if (task.isVoice) 'Voice',
