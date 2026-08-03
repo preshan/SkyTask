@@ -55,6 +55,8 @@ dependencies:
   audioplayers: ^6.8.1
   permission_handler: ^13.0.0
   encrypt: ^5.0.3
+  package_info_plus: ^9.0.1
+  url_launcher: ^6.3.2
 
 dev_dependencies:
   flutter_test:
