@@ -75,8 +75,8 @@ Survives: offline, app closed, app killed, device reboot (via boot receiver + Wo
 |-------|-------|
 | Primary (light) | `#000080` |
 | Primary (dark) | `#6EC6FF` |
-| Secondary (light) | `#191970` |
-| Secondary (dark) | `#9BE7FF` |
+| Secondary (amber) | `#F59E0B` |
+| Secondary (dark) | `#FBBF24` |
 | Background | `#F4F6F9` |
 | Gold Accent | `#F4C542` |
 | Completed Gold | `#D4AF37` |
