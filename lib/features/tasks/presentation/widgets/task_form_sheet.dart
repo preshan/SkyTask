@@ -255,11 +255,11 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                   onSelected: _saving
                       ? null
                       : (_) => setState(() => _category = category),
-                  selectedColor: AppColors.primary.withValues(alpha: 0.25),
+                  selectedColor: AppColors.brand(context).withValues(alpha: 0.25),
                   side: BorderSide(
                     color: selected
-                        ? AppColors.primary
-                        : AppColors.primary.withValues(alpha: 0.25),
+                        ? AppColors.brand(context)
+                        : AppColors.brand(context).withValues(alpha: 0.25),
                   ),
                   labelStyle: TextStyle(
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
@@ -295,7 +295,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                   side: BorderSide(
                     color: selected
                         ? color
-                        : AppColors.primary.withValues(alpha: 0.25),
+                        : AppColors.brand(context).withValues(alpha: 0.25),
                   ),
                   labelStyle: TextStyle(
                     fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
@@ -320,8 +320,8 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                 child: SkyIcon(
                   SkyIcons.calendar,
                   color: _dueDate != null
-                      ? AppColors.primary
-                      : AppColors.primaryText,
+                      ? AppColors.brand(context)
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   size: 22,
                 ),
               ),
@@ -334,7 +334,9 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                     : () => setState(() => _pinned = !_pinned),
                 child: SkyIcon(
                   SkyIcons.pin,
-                  color: _pinned ? AppColors.primary : AppColors.primaryText,
+                  color: _pinned
+                      ? AppColors.brand(context)
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   size: 22,
                 ),
               ),
@@ -349,9 +351,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                 Expanded(
                   child: Text(
                     DateFormat.MMMd().format(_dueDate!),
-                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                          color: AppColors.primaryText,
-                        ),
+                    style: Theme.of(context).textTheme.bodySmall,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),

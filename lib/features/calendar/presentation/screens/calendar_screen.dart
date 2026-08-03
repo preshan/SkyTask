@@ -251,7 +251,7 @@ class _AgendaView extends StatelessWidget {
               child: Text(
                 day,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      color: AppColors.primary,
+                      color: AppColors.brand(context),
                     ),
               ),
             ),
@@ -382,11 +382,11 @@ class _MonthView extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       color: isToday
-                          ? AppColors.primary.withValues(alpha: 0.15)
+                          ? AppColors.brand(context).withValues(alpha: 0.15)
                           : null,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(
-                        color: AppColors.primary.withValues(alpha: 0.2),
+                        color: AppColors.brand(context).withValues(alpha: 0.2),
                       ),
                     ),
                     child: Column(
@@ -398,8 +398,8 @@ class _MonthView extends StatelessWidget {
                             margin: const EdgeInsets.only(top: 4),
                             width: 6,
                             height: 6,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
+                            decoration: BoxDecoration(
+                              color: AppColors.brand(context),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -447,7 +447,7 @@ class _CalendarEntryTile extends StatelessWidget {
             entry.reminder?.isVoice == true
                 ? Icons.mic
                 : (isDevice ? Icons.event : Icons.alarm),
-            color: entry.isCompleted ? Colors.grey : AppColors.primary,
+            color: entry.isCompleted ? Colors.grey : AppColors.brand(context),
           ),
           title: Text(
             displayTitle,

@@ -116,7 +116,7 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 32),
-        Icon(Icons.shield_outlined, size: 72, color: AppColors.primary),
+        Icon(Icons.shield_outlined, size: 72, color: AppColors.brand(context)),
         const SizedBox(height: 24),
         Text(
           'Secure SkyTask',
@@ -146,7 +146,7 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
             icon: const Icon(Icons.fingerprint),
             label: const Text('Use biometrics'),
             style: FilledButton.styleFrom(
-              backgroundColor: AppColors.primary,
+              backgroundColor: AppColors.brand(context),
               minimumSize: const Size.fromHeight(52),
             ),
           ),

@@ -265,13 +265,13 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
             )
           else if (!hasMemo)
             _RoundAction(
-              color: AppColors.primary,
+              color: AppColors.brand(context),
               onTap: widget.enabled ? _start : null,
               child: const SkyIcon(SkyIcons.mic, color: Colors.white, size: 22),
             )
           else ...[
             _RoundAction(
-              color: AppColors.primary,
+              color: AppColors.brand(context),
               onTap: widget.enabled ? _togglePlay : null,
               child: Icon(
                 _playing ? Icons.pause : Icons.play_arrow,
@@ -281,12 +281,12 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
             ),
             const SizedBox(width: 8),
             _RoundAction(
-              color: AppColors.background,
+              color: Theme.of(context).colorScheme.surfaceContainerHighest,
               border: true,
               onTap: widget.enabled ? _clear : null,
-              child: const SkyIcon(
+              child: SkyIcon(
                 SkyIcons.close,
-                color: AppColors.primaryText,
+                color: Theme.of(context).colorScheme.onSurface,
                 size: 18,
               ),
             ),
@@ -300,7 +300,6 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
                       ? 'Voice memo'
                       : 'Add voice memo',
               style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppColors.primaryText,
                     fontWeight: hasMemo || _recording
                         ? FontWeight.w600
                         : FontWeight.w400,
@@ -333,7 +332,7 @@ class _RoundAction extends StatelessWidget {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: border
-            ? BorderSide(color: AppColors.primary.withValues(alpha: 0.25))
+            ? BorderSide(color: AppColors.brand(context).withValues(alpha: 0.25))
             : BorderSide.none,
       ),
       child: InkWell(

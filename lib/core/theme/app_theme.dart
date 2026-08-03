@@ -11,6 +11,7 @@ abstract final class AppTheme {
 
   static ThemeData _build(Brightness brightness) {
     final isLight = brightness == Brightness.light;
+    final brand = AppColors.brandFor(brightness);
     final colorScheme = isLight ? _lightScheme() : _darkScheme();
 
     return ThemeData(
@@ -34,7 +35,7 @@ abstract final class AppTheme {
         elevation: 0,
         height: 72,
         backgroundColor: isLight ? AppColors.card : const Color(0xFF1E293B),
-        indicatorColor: AppColors.primary.withValues(alpha: 0.2),
+        indicatorColor: brand.withValues(alpha: 0.2),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       cardTheme: CardThemeData(
@@ -44,14 +45,14 @@ abstract final class AppTheme {
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
             color: isLight
-                ? AppColors.primary.withValues(alpha: 0.12)
+                ? brand.withValues(alpha: 0.12)
                 : Colors.white12,
           ),
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primary,
-        foregroundColor: Colors.white,
+        backgroundColor: brand,
+        foregroundColor: isLight ? Colors.white : const Color(0xFF0F172A),
         elevation: 4,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
@@ -65,27 +66,37 @@ abstract final class AppTheme {
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.3),
+            color: brand.withValues(alpha: 0.3),
           ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
-            color: AppColors.primary.withValues(alpha: 0.2),
+            color: brand.withValues(alpha: 0.2),
           ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: BorderSide(color: brand, width: 2),
         ),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       ),
       dividerTheme: DividerThemeData(
-        color: AppColors.primary.withValues(alpha: 0.15),
+        color: brand.withValues(alpha: 0.15),
       ),
       snackBarTheme: SnackBarThemeData(
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      ),
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(foregroundColor: brand),
+      ),
+      chipTheme: ChipThemeData(
+        selectedColor: brand.withValues(alpha: 0.25),
+        checkmarkColor: brand,
+        labelStyle: TextStyle(color: colorScheme.onSurface),
+        secondaryLabelStyle: TextStyle(color: brand),
+        side: BorderSide(color: brand.withValues(alpha: 0.25)),
       ),
     );
   }
@@ -105,9 +116,10 @@ abstract final class AppTheme {
 
   static ColorScheme _darkScheme() {
     return const ColorScheme.dark(
-      primary: AppColors.secondary,
-      onPrimary: Colors.white,
-      secondary: AppColors.primary,
+      primary: AppColors.primaryDark,
+      onPrimary: Color(0xFF0F172A),
+      secondary: AppColors.secondaryDark,
+      onSecondary: Color(0xFF0F172A),
       surface: Color(0xFF1E293B),
       onSurface: Color(0xFFE2E8F0),
       error: AppColors.error,

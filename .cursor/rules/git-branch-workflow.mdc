@@ -1,0 +1,12 @@
+---
+description: Work on a feature/dev branch; merge to main only when finished
+alwaysApply: true
+---
+
+# Git branch workflow
+
+- Never commit feature work directly on `main`.
+- Start (or switch to) a `dev` / feature branch before making changes.
+- Prefer names like `dev`, `dev/<topic>`, or `feature/<topic>`.
+- When the work is complete and the user asks to ship it: merge (or open a PR) into `main`, then push.
+- Do not push unfinished work to `main` unless the user explicitly says to.

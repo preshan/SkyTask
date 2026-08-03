@@ -41,7 +41,7 @@ class AppShell extends ConsumerWidget {
     return Scaffold(
       body: child,
       bottomNavigationBar: Material(
-        color: AppColors.card,
+        color: Theme.of(context).colorScheme.surface,
         elevation: 8,
         child: SafeArea(
           top: false,
@@ -160,7 +160,8 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = selected ? AppColors.primary : AppColors.primaryText;
+    final scheme = Theme.of(context).colorScheme;
+    final color = selected ? scheme.primary : scheme.onSurface.withValues(alpha: 0.55);
 
     return InkWell(
       onTap: onTap,
@@ -194,6 +195,9 @@ class _CreateNavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final onBrand = Theme.of(context).colorScheme.onPrimary;
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),
@@ -204,24 +208,24 @@ class _CreateNavItem extends StatelessWidget {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: brand,
               borderRadius: BorderRadius.circular(14),
             ),
-            child: const Center(
+            child: Center(
               child: SkyIcon(
                 SkyIcons.add,
-                color: Colors.white,
+                color: onBrand,
                 size: 22,
                 strokeWidth: 2,
               ),
             ),
           ),
           const SizedBox(height: 2),
-          const Text(
+          Text(
             'Create',
             style: TextStyle(
               fontSize: 12,
-              color: AppColors.primary,
+              color: brand,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -244,16 +248,17 @@ class _CreateOption extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
     return ListTile(
       leading: Container(
         width: 40,
         height: 40,
         decoration: BoxDecoration(
-          color: AppColors.primary.withValues(alpha: 0.12),
+          color: brand.withValues(alpha: 0.12),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
-          child: SkyIcon(icon, color: AppColors.primary, size: 22),
+          child: SkyIcon(icon, color: brand, size: 22),
         ),
       ),
       title: Text(label),

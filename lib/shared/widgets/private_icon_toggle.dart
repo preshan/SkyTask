@@ -25,7 +25,9 @@ class PrivateIconToggle extends StatelessWidget {
       onTap: enabled ? () => onChanged(!value) : null,
       child: SkyIcon(
         SkyIcons.private,
-        color: value ? AppColors.primary : AppColors.primaryText,
+        color: value
+            ? AppColors.brand(context)
+            : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
         size: 22,
       ),
     );

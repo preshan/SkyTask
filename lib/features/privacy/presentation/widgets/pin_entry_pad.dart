@@ -79,8 +79,8 @@ class PinEntryPadState extends State<PinEntryPad> {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: filled
-                    ? AppColors.primary
-                    : AppColors.primary.withValues(alpha: 0.2),
+                    ? AppColors.brand(context)
+                    : AppColors.brand(context).withValues(alpha: 0.2),
               ),
             );
           }),
@@ -142,7 +142,7 @@ class _PadButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Material(
-        color: AppColors.primary.withValues(alpha: 0.08),
+        color: AppColors.brand(context).withValues(alpha: 0.08),
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -152,7 +152,7 @@ class _PadButton extends StatelessWidget {
             height: 64,
             child: Center(
               child: icon != null
-                  ? Icon(icon, color: AppColors.primary)
+                  ? Icon(icon, color: AppColors.brand(context))
                   : Text(
                       label!,
                       style: Theme.of(context).textTheme.headlineSmall,
