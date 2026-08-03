@@ -1,18 +1,9 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/services/voice_memo_service.dart';
 
 enum TaskPriority { low, medium, high }
-
-enum TaskCategory {
-  work,
-  personal,
-  health,
-  finance,
-  study,
-  shopping,
-  custom,
-}
 
 class Task extends Equatable {
   const Task({
@@ -21,7 +12,7 @@ class Task extends Equatable {
     this.description,
     this.priority = TaskPriority.medium,
     this.tags = const [],
-    this.category = TaskCategory.personal,
+    this.category = TaskCategories.personal,
     this.dueDate,
     this.completed = false,
     this.pinned = false,
@@ -37,7 +28,8 @@ class Task extends Equatable {
   final String? description;
   final TaskPriority priority;
   final List<String> tags;
-  final TaskCategory category;
+  /// Display name (e.g. Work, Personal, or a user-added label).
+  final String category;
   final DateTime? dueDate;
   final bool completed;
   final bool pinned;
@@ -55,7 +47,7 @@ class Task extends Equatable {
     String? description,
     TaskPriority? priority,
     List<String>? tags,
-    TaskCategory? category,
+    String? category,
     DateTime? dueDate,
     bool? completed,
     bool? pinned,

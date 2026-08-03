@@ -28,64 +28,69 @@ const TaskCollectionSchema = CollectionSchema(
       type: IsarType.byte,
       enumMap: _TaskCollectioncategoryEnumValueMap,
     ),
-    r'completed': PropertySchema(
+    r'categoryLabel': PropertySchema(
       id: 2,
+      name: r'categoryLabel',
+      type: IsarType.string,
+    ),
+    r'completed': PropertySchema(
+      id: 3,
       name: r'completed',
       type: IsarType.bool,
     ),
     r'createdAt': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'description': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'description',
       type: IsarType.string,
     ),
     r'dueDate': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'dueDate',
       type: IsarType.dateTime,
     ),
     r'isPrivate': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'isPrivate',
       type: IsarType.bool,
     ),
     r'pinned': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'pinned',
       type: IsarType.bool,
     ),
     r'priority': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'priority',
       type: IsarType.byte,
       enumMap: _TaskCollectionpriorityEnumValueMap,
     ),
     r'tags': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'tags',
       type: IsarType.stringList,
     ),
     r'title': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'uuid',
       type: IsarType.string,
     ),
     r'voicePath': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'voicePath',
       type: IsarType.string,
     )
@@ -124,6 +129,7 @@ int _taskCollectionEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.categoryLabel.length * 3;
   {
     final value = object.description;
     if (value != null) {
@@ -156,18 +162,19 @@ void _taskCollectionSerialize(
 ) {
   writer.writeBool(offsets[0], object.archived);
   writer.writeByte(offsets[1], object.category.index);
-  writer.writeBool(offsets[2], object.completed);
-  writer.writeDateTime(offsets[3], object.createdAt);
-  writer.writeString(offsets[4], object.description);
-  writer.writeDateTime(offsets[5], object.dueDate);
-  writer.writeBool(offsets[6], object.isPrivate);
-  writer.writeBool(offsets[7], object.pinned);
-  writer.writeByte(offsets[8], object.priority.index);
-  writer.writeStringList(offsets[9], object.tags);
-  writer.writeString(offsets[10], object.title);
-  writer.writeDateTime(offsets[11], object.updatedAt);
-  writer.writeString(offsets[12], object.uuid);
-  writer.writeString(offsets[13], object.voicePath);
+  writer.writeString(offsets[2], object.categoryLabel);
+  writer.writeBool(offsets[3], object.completed);
+  writer.writeDateTime(offsets[4], object.createdAt);
+  writer.writeString(offsets[5], object.description);
+  writer.writeDateTime(offsets[6], object.dueDate);
+  writer.writeBool(offsets[7], object.isPrivate);
+  writer.writeBool(offsets[8], object.pinned);
+  writer.writeByte(offsets[9], object.priority.index);
+  writer.writeStringList(offsets[10], object.tags);
+  writer.writeString(offsets[11], object.title);
+  writer.writeDateTime(offsets[12], object.updatedAt);
+  writer.writeString(offsets[13], object.uuid);
+  writer.writeString(offsets[14], object.voicePath);
 }
 
 TaskCollection _taskCollectionDeserialize(
@@ -181,21 +188,22 @@ TaskCollection _taskCollectionDeserialize(
   object.category =
       _TaskCollectioncategoryValueEnumMap[reader.readByteOrNull(offsets[1])] ??
           TaskCategory.work;
-  object.completed = reader.readBool(offsets[2]);
-  object.createdAt = reader.readDateTime(offsets[3]);
-  object.description = reader.readStringOrNull(offsets[4]);
-  object.dueDate = reader.readDateTimeOrNull(offsets[5]);
+  object.categoryLabel = reader.readString(offsets[2]);
+  object.completed = reader.readBool(offsets[3]);
+  object.createdAt = reader.readDateTime(offsets[4]);
+  object.description = reader.readStringOrNull(offsets[5]);
+  object.dueDate = reader.readDateTimeOrNull(offsets[6]);
   object.id = id;
-  object.isPrivate = reader.readBool(offsets[6]);
-  object.pinned = reader.readBool(offsets[7]);
+  object.isPrivate = reader.readBool(offsets[7]);
+  object.pinned = reader.readBool(offsets[8]);
   object.priority =
-      _TaskCollectionpriorityValueEnumMap[reader.readByteOrNull(offsets[8])] ??
+      _TaskCollectionpriorityValueEnumMap[reader.readByteOrNull(offsets[9])] ??
           TaskPriority.low;
-  object.tags = reader.readStringList(offsets[9]) ?? [];
-  object.title = reader.readString(offsets[10]);
-  object.updatedAt = reader.readDateTime(offsets[11]);
-  object.uuid = reader.readString(offsets[12]);
-  object.voicePath = reader.readStringOrNull(offsets[13]);
+  object.tags = reader.readStringList(offsets[10]) ?? [];
+  object.title = reader.readString(offsets[11]);
+  object.updatedAt = reader.readDateTime(offsets[12]);
+  object.uuid = reader.readString(offsets[13]);
+  object.voicePath = reader.readStringOrNull(offsets[14]);
   return object;
 }
 
@@ -213,30 +221,32 @@ P _taskCollectionDeserializeProp<P>(
               reader.readByteOrNull(offset)] ??
           TaskCategory.work) as P;
     case 2:
-      return (reader.readBool(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readDateTime(offset)) as P;
-    case 4:
-      return (reader.readStringOrNull(offset)) as P;
-    case 5:
-      return (reader.readDateTimeOrNull(offset)) as P;
-    case 6:
       return (reader.readBool(offset)) as P;
+    case 4:
+      return (reader.readDateTime(offset)) as P;
+    case 5:
+      return (reader.readStringOrNull(offset)) as P;
+    case 6:
+      return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
+      return (reader.readBool(offset)) as P;
+    case 9:
       return (_TaskCollectionpriorityValueEnumMap[
               reader.readByteOrNull(offset)] ??
           TaskPriority.low) as P;
-    case 9:
-      return (reader.readStringList(offset) ?? []) as P;
     case 10:
-      return (reader.readString(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 11:
-      return (reader.readDateTime(offset)) as P;
-    case 12:
       return (reader.readString(offset)) as P;
+    case 12:
+      return (reader.readDateTime(offset)) as P;
     case 13:
+      return (reader.readString(offset)) as P;
+    case 14:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -530,6 +540,142 @@ extension TaskCollectionQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'categoryLabel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'categoryLabel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      categoryLabelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'categoryLabel',
+        value: '',
       ));
     });
   }
@@ -1701,6 +1847,20 @@ extension TaskCollectionQuerySortBy
     });
   }
 
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      sortByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      sortByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy> sortByCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'completed', Sort.asc);
@@ -1869,6 +2029,20 @@ extension TaskCollectionQuerySortThenBy
       thenByCategoryDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'category', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      thenByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      thenByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
     });
   }
 
@@ -2042,6 +2216,14 @@ extension TaskCollectionQueryWhereDistinct
   }
 
   QueryBuilder<TaskCollection, TaskCollection, QDistinct>
+      distinctByCategoryLabel({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'categoryLabel',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QDistinct>
       distinctByCompleted() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'completed');
@@ -2140,6 +2322,13 @@ extension TaskCollectionQueryProperty
       categoryProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'category');
+    });
+  }
+
+  QueryBuilder<TaskCollection, String, QQueryOperations>
+      categoryLabelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'categoryLabel');
     });
   }
 

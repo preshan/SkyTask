@@ -15,8 +15,12 @@ class TaskCollection {
   @enumerated
   late TaskPriority priority;
 
+  /// Legacy enum — kept so existing DBs open. Prefer [categoryLabel].
   @enumerated
   late TaskCategory category;
+
+  /// User-facing category name (Work, Personal, or custom).
+  String categoryLabel = '';
 
   List<String> tags = [];
 
