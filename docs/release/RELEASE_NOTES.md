@@ -19,6 +19,16 @@ Home shortcuts, amber accents, and a full Hugeicons pass across the app.
 - **Voice UX:** skip description autofocus when you mostly save with voice
 - **Calendar:** clearer selected Agenda / Week / Month contrast
 
+## Screenshots
+
+| Home | Tasks | Create |
+|:----:|:-----:|:------:|
+| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Create](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_create_menu.png) |
+
+| New Task | New Reminder | Settings |
+|:--------:|:------------:|:--------:|
+| ![New Task](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_new_task.png) | ![New Reminder](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/05_new_reminder.png) | ![Settings](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/06_settings.png) |
+
 ---
 
 # SkyTask 1.1.0 — Release Notes
@@ -45,11 +55,7 @@ SkyTask 1.1 focuses on faster capture (inline Create + voice memos), a navy bran
 |:----:|:-----:|:------:|
 | ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Create](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_create_menu.png) |
 
-| Calendar | Ideas |
-|:--------:|:-----:|
-| ![Calendar](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_calendar.png) | ![Ideas](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/05_ideas.png) |
-
-> Captured on Android emulator (`emulator-5554`). Browser automation is not used for the Flutter UI; screenshots were taken via `adb screencap`.
+> Captured on Android emulator. See also the [1.1.2 screenshots](#screenshots) above for newer UI.
 
 ## Architecture diagrams
 
