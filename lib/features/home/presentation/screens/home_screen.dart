@@ -38,7 +38,7 @@ class HomeScreen extends ConsumerWidget {
             data: (counts) => _TodayCreateTiles(counts: counts),
           ),
           SectionHeader(
-            title: 'This week',
+            title: 'Recent reminders',
             onAction: () => context.go(AppRoutes.calendar),
           ),
           weekRemindersAsync.when(
@@ -92,12 +92,11 @@ final _thisWeekReminderDaysProvider =
   final repo = await ref.watch(reminderRepositoryProvider.future);
   final all = await repo.getAll();
 
-  final now = DateTime.now();
-  final monday = DateTime(now.year, now.month, now.day)
-      .subtract(Duration(days: now.weekday - DateTime.monday));
+  final today = DateTime.now();
+  final start = DateTime(today.year, today.month, today.day);
 
   return List.generate(7, (i) {
-    final day = monday.add(Duration(days: i));
+    final day = start.add(Duration(days: i));
     final count = all.where((r) {
       if (r.isCompleted) return false;
       return DateFilters.isSameDay(r.reminderDateTime, day);
@@ -214,26 +213,28 @@ class _WeekDayTile extends StatelessWidget {
               Positioned(
                 top: 6,
                 right: 6,
-                child: Container(
-                  constraints:
-                      const BoxConstraints(minWidth: 18, minHeight: 18),
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: item.count > 0 ? amber : scheme.outlineVariant,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    '${item.count}',
-                    style: TextStyle(
-                      color: item.count > 0
-                          ? scheme.onSecondary
-                          : scheme.onSurface.withValues(alpha: 0.55),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+                child: item.count > 0
+                    ? Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 18,
+                          minHeight: 18,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: amber,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          '${item.count}',
+                          style: TextStyle(
+                            color: scheme.onSecondary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),
