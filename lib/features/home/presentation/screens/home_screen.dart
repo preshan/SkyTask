@@ -57,32 +57,30 @@ class HomeScreen extends ConsumerWidget {
 class _TodayCounts {
   const _TodayCounts({
     required this.tasks,
-    required this.ideas,
-    required this.notes,
+    required this.reminders,
   });
 
   final int tasks;
-  final int ideas;
-  final int notes;
+  final int reminders;
 }
 
 final _todayCreatedCountsProvider = FutureProvider<_TodayCounts>((ref) async {
   ref.watch(tasksRevisionProvider);
-  ref.watch(ideasRevisionProvider);
-  ref.watch(notesRevisionProvider);
+  ref.watch(remindersRevisionProvider);
 
   final taskRepo = await ref.read(taskRepositoryProvider.future);
-  final ideaRepo = await ref.read(ideaRepositoryProvider.future);
-  final noteRepo = await ref.read(noteRepositoryProvider.future);
+  final reminderRepo = await ref.read(reminderRepositoryProvider.future);
 
   final tasks = await taskRepo.getAll();
-  final ideas = await ideaRepo.getAll();
-  final notes = await noteRepo.getAll();
+  final reminders = await reminderRepo.getAll();
+  final today = DateTime.now();
 
   return _TodayCounts(
     tasks: tasks.where((t) => DateFilters.isCreatedToday(t.createdAt)).length,
-    ideas: ideas.where((i) => DateFilters.isCreatedToday(i.createdAt)).length,
-    notes: notes.where((n) => DateFilters.isCreatedToday(n.createdAt)).length,
+    reminders: reminders.where((r) {
+      if (r.isCompleted) return false;
+      return DateFilters.isSameDay(r.reminderDateTime, today);
+    }).length,
   );
 });
 
@@ -266,19 +264,10 @@ class _TodayCreateTiles extends StatelessWidget {
           const SizedBox(width: 12),
           Expanded(
             child: _TodayTypeTile(
-              label: 'Ideas',
-              count: counts.ideas,
-              icon: SkyIcons.lightbulb,
-              onTap: () => context.go(AppRoutes.ideasCreatedToday()),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: _TodayTypeTile(
-              label: 'Notes',
-              count: counts.notes,
-              icon: SkyIcons.notes,
-              onTap: () => context.go(AppRoutes.notesCreatedToday()),
+              label: 'Reminders',
+              count: counts.reminders,
+              icon: SkyIcons.alarm,
+              onTap: () => context.go(AppRoutes.calendarDay(DateTime.now())),
             ),
           ),
         ],
@@ -339,30 +328,35 @@ class _TodayTypeTile extends StatelessWidget {
               Positioned(
                 top: 8,
                 right: 8,
-                child: Container(
-                  constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: amber,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: amber.withValues(alpha: 0.35),
-                        blurRadius: 6,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Text(
-                    count > 99 ? '99+' : '$count',
-                    style: TextStyle(
-                      color: scheme.onSecondary,
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                    ),
-                  ),
-                ),
+                child: count > 0
+                    ? Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 22,
+                          minHeight: 22,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: amber,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: amber.withValues(alpha: 0.35),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Text(
+                          count > 99 ? '99+' : '$count',
+                          style: TextStyle(
+                            color: scheme.onSecondary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
               ),
             ],
           ),
