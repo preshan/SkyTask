@@ -203,6 +203,12 @@ DateRange agendaRange() {
   return DateRange(start: start, end: end);
 }
 
+DateRange dayRange(DateTime day) {
+  final start = DateTime(day.year, day.month, day.day);
+  final end = start.add(const Duration(days: 1));
+  return DateRange(start: start, end: end);
+}
+
 DateRange weekRange(DateTime anchor) {
   final monday = anchor.subtract(Duration(days: anchor.weekday - 1));
   final start = DateTime(monday.year, monday.month, monday.day);
