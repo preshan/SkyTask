@@ -470,59 +470,57 @@ class _ShortcutTile extends StatelessWidget {
     return FrostedSurface(
       borderRadius: 16,
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.fromLTRB(12, 12, 10, 12),
       child: SizedBox(
-        height: 88,
-        child: Stack(
+        height: 64,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(
-                    color: brand.withValues(alpha: 0.10),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  alignment: Alignment.center,
-                  child: SkyIcon(icon, size: 24, color: brand),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
-                ),
-              ],
+            Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: brand.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              alignment: Alignment.center,
+              child: SkyIcon(icon, size: 24, color: brand),
             ),
-            if (count > 0)
-              Positioned(
-                top: 8,
-                right: 0,
-                child: Container(
-                  constraints: const BoxConstraints(
-                    minWidth: 20,
-                    minHeight: 20,
-                  ),
-                  padding: const EdgeInsets.symmetric(horizontal: 5),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(
-                    color: amber,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Text(
-                    count > 99 ? '99+' : '$count',
-                    style: TextStyle(
-                      color: scheme.onSecondary,
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700,
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                label,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
                     ),
+              ),
+            ),
+            if (count > 0) ...[
+              const SizedBox(width: 8),
+              Container(
+                constraints: const BoxConstraints(
+                  minWidth: 22,
+                  minHeight: 22,
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: amber,
+                  shape: BoxShape.circle,
+                ),
+                child: Text(
+                  count > 99 ? '99+' : '$count',
+                  style: TextStyle(
+                    color: scheme.onSecondary,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
+            ],
           ],
         ),
       ),

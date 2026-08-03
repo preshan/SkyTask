@@ -34,7 +34,22 @@ class FrostedSurface extends StatelessWidget {
     final border = borderColor ?? AppColors.glassBorderFor(brightness);
     final radius = BorderRadius.circular(borderRadius);
 
-    Widget content = ClipRRect(
+    Widget body = padding == null
+        ? child
+        : Padding(padding: padding!, child: child);
+
+    if (onTap != null) {
+      body = Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: body,
+        ),
+      );
+    }
+
+    return ClipRRect(
       borderRadius: radius,
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
@@ -46,24 +61,9 @@ class FrostedSurface extends StatelessWidget {
                 ? Border.all(color: border, width: borderWidth)
                 : null,
           ),
-          child: padding == null
-              ? child
-              : Padding(padding: padding!, child: child),
+          child: body,
         ),
       ),
     );
-
-    if (onTap != null) {
-      content = Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: radius,
-          child: content,
-        ),
-      );
-    }
-
-    return content;
   }
 }
