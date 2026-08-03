@@ -114,16 +114,49 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(),
           _header(context, 'About'),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.info),
-            title: const Text(AppInfo.name),
-            subtitle: Text('Version ${AppInfo.versionLabel}'),
-            onTap: () => _showAbout(context),
-          ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             child: Column(
               children: [
+                InkWell(
+                  onTap: () => _showAbout(context),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Column(
+                      children: [
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset(
+                            'assets/images/app_icon.png',
+                            width: 64,
+                            height: 64,
+                            fit: BoxFit.cover,
+                          ),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          AppInfo.name,
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleMedium
+                              ?.copyWith(fontWeight: FontWeight.w700),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Version ${AppInfo.versionLabel}',
+                          style: mist,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
                 Text(
                   AppInfo.copyright,
                   style: mist,
