@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/services/voice_memo_service.dart';
+import 'sky_icon.dart';
 
 /// Compact play/pause control for voice items in lists.
 class VoicePlayButton extends StatefulWidget {
@@ -70,8 +71,8 @@ class _VoicePlayButtonState extends State<VoicePlayButton> {
     return IconButton(
       tooltip: _playing ? 'Pause' : 'Play voice memo',
       onPressed: _toggle,
-      icon: Icon(
-        _playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
+      icon: SkyIcon(
+        _playing ? SkyIcons.pauseCircle : SkyIcons.playCircle,
         color: AppColors.brand(context),
         size: 28,
       ),

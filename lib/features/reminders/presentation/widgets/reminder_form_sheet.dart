@@ -7,6 +7,7 @@ import '../../../../core/constants/capture_preference.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_memo_recorder.dart';
 import '../../domain/entities/reminder.dart';
 
@@ -285,10 +286,10 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           const SizedBox(height: 12),
           ListTile(
             contentPadding: EdgeInsets.zero,
-            leading: const Icon(Icons.event),
+            leading: const SkyIcon(SkyIcons.event),
             title: const Text('Date & time'),
             subtitle: Text('$dateLabel at $timeLabel'),
-            trailing: const Icon(Icons.chevron_right),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
             onTap: _saving ? null : _pickDate,
           ),
           DropdownButtonFormField<NotificationOffset>(
@@ -331,10 +332,13 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
               !_isPrivate)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              leading: const Icon(Icons.calendar_month_outlined),
+              leading: const SkyIcon(SkyIcons.calendar),
               title: const Text('Sync to device calendar'),
               subtitle: Text(settings.defaultCalendarName ?? 'Calendar'),
-              trailing: const Icon(Icons.check_circle, color: Colors.green),
+              trailing: const SkyIcon(
+                SkyIcons.checkCircle,
+                color: Colors.green,
+              ),
             ),
           if (VoiceMemoService.hasVoice(_voicePath) || _isPrivate)
             Padding(

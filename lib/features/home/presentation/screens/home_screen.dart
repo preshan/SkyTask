@@ -7,16 +7,11 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../../core/services/voice_memo_service.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
-import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../../shared/widgets/sky_icon.dart';
-import '../../../../shared/widgets/voice_play_button.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
-import '../../../notes/domain/entities/note.dart';
-import '../../../ideas/domain/entities/idea.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -25,8 +20,6 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final todayCountsAsync = ref.watch(_todayCreatedCountsProvider);
     final weekRemindersAsync = ref.watch(_thisWeekReminderDaysProvider);
-    final ideasAsync = ref.watch(_recentIdeasProvider);
-    final notesAsync = ref.watch(_recentNotesProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -53,112 +46,8 @@ class HomeScreen extends ConsumerWidget {
             error: (e, _) => Text('Error: $e'),
             data: (days) => _ThisWeekReminderStrip(days: days),
           ),
-          SectionHeader(
-            title: 'Recent Ideas',
-            onAction: () => context.go(AppRoutes.ideas),
-          ),
-          ideasAsync.when(
-            loading: () => const _ShimmerCard(),
-            error: (e, _) => Text('Error: $e'),
-            data: (ideas) {
-              if (ideas.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.lightbulb_outline),
-                    title: Text('Capture your first idea'),
-                  ),
-                );
-              }
-              return Card(
-                child: Column(
-                  children: [
-                    for (final idea in ideas.take(3))
-                      PrivateContentGate(
-                        isPrivate: idea.isPrivate,
-                        child: ListTile(
-                          leading: Icon(
-                            idea.isVoice
-                                ? Icons.mic
-                                : Icons.lightbulb_outline,
-                            color: AppColors.brandSecondary(context),
-                          ),
-                          title: Text(
-                            displayItemTitle(
-                              title: idea.title,
-                              isVoice: idea.isVoice,
-                              createdAt: idea.createdAt,
-                            ),
-                          ),
-                          subtitle: Text(
-                            idea.isVoice && idea.content.isEmpty
-                                ? 'Voice memo'
-                                : idea.content,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: idea.isVoice && idea.voicePath != null
-                              ? VoicePlayButton(path: idea.voicePath!)
-                              : null,
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-          SectionHeader(
-            title: 'Recent Notes',
-            onAction: () => context.go('${AppRoutes.ideas}?tab=notes'),
-          ),
-          notesAsync.when(
-            loading: () => const _ShimmerCard(),
-            error: (e, _) => Text('Error: $e'),
-            data: (notes) {
-              if (notes.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.note_outlined),
-                    title: Text('Write your first note'),
-                  ),
-                );
-              }
-              return Card(
-                child: Column(
-                  children: [
-                    for (final note in notes.take(3))
-                      PrivateContentGate(
-                        isPrivate: note.isPrivate,
-                        child: ListTile(
-                          leading: Icon(
-                            note.isVoice ? Icons.mic : Icons.note_outlined,
-                            color: AppColors.brandSecondary(context),
-                          ),
-                          title: Text(
-                            displayItemTitle(
-                              title: note.title,
-                              isVoice: note.isVoice,
-                              createdAt: note.createdAt,
-                            ),
-                          ),
-                          subtitle: Text(
-                            note.isVoice && note.content.isEmpty
-                                ? 'Voice memo'
-                                : note.content,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          trailing: note.isVoice && note.voicePath != null
-                              ? VoicePlayButton(path: note.voicePath!)
-                              : null,
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
-          ),
-          const SectionHeader(title: 'Productivity'),
-          const _StatsRow(),
+          const SectionHeader(title: 'Shortcuts'),
+          const _HomeShortcuts(),
         ],
       ),
     );
@@ -223,20 +112,6 @@ class _WeekDayReminders {
   final DateTime day;
   final int count;
 }
-
-final _recentIdeasProvider = FutureProvider<List<Idea>>((ref) async {
-  ref.watch(ideasRevisionProvider);
-  final repo = await ref.read(ideaRepositoryProvider.future);
-  final all = await repo.getAll();
-  return all.take(5).toList();
-});
-
-final _recentNotesProvider = FutureProvider<List<Note>>((ref) async {
-  ref.watch(notesRevisionProvider);
-  final repo = await ref.read(noteRepositoryProvider.future);
-  final all = await repo.getAll();
-  return all.take(3).toList();
-});
 
 class _GreetingHeader extends StatelessWidget {
   const _GreetingHeader();
@@ -496,42 +371,112 @@ class _TodayTypeTile extends StatelessWidget {
   }
 }
 
-class _StatsRow extends StatelessWidget {
-  const _StatsRow();
+class _HomeShortcuts extends StatelessWidget {
+  const _HomeShortcuts();
 
   @override
   Widget build(BuildContext context) {
-    return const Row(
-      children: [
-        Expanded(child: _StatCard('Pinned', '—', Icons.push_pin_outlined)),
-        SizedBox(width: 12),
-        Expanded(child: _StatCard('Private', '—', Icons.lock_outline)),
-        SizedBox(width: 12),
-        Expanded(child: _StatCard('Done', '—', Icons.check_circle_outline)),
-      ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 24),
+      child: Column(
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: _ShortcutTile(
+                  label: 'Pinned tasks',
+                  icon: SkyIcons.pin,
+                  onTap: () => context.go(AppRoutes.tasksPinned()),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ShortcutTile(
+                  label: 'Pending tasks',
+                  icon: SkyIcons.pending,
+                  onTap: () => context.go(AppRoutes.tasksPending()),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _ShortcutTile(
+                  label: 'Private ideas',
+                  icon: SkyIcons.private,
+                  onTap: () => context.go(AppRoutes.ideasPrivate()),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _ShortcutTile(
+                  label: 'Private reminders',
+                  icon: SkyIcons.alarm,
+                  onTap: () => context.go(AppRoutes.remindersPrivate()),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }
 
-class _StatCard extends StatelessWidget {
-  const _StatCard(this.label, this.value, this.icon);
+class _ShortcutTile extends StatelessWidget {
+  const _ShortcutTile({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
 
   final String label;
-  final String value;
-  final IconData icon;
+  final List<List<dynamic>> icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          children: [
-            Icon(icon, color: AppColors.brandSecondary(context)),
-            const SizedBox(height: 8),
-            Text(value, style: Theme.of(context).textTheme.titleLarge),
-            Text(label, style: Theme.of(context).textTheme.bodySmall),
-          ],
+    final brand = AppColors.brand(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 88,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: brand.withValues(alpha: 0.14)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: brand.withValues(alpha: 0.10),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                alignment: Alignment.center,
+                child: SkyIcon(icon, size: 24, color: brand),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  label,
+                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

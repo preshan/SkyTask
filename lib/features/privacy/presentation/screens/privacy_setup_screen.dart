@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../data/pin_storage_service.dart';
 import '../../data/privacy_auth_service.dart';
 import '../widgets/pin_entry_pad.dart';
@@ -116,7 +117,7 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 32),
-        Icon(Icons.shield_outlined, size: 72, color: AppColors.brand(context)),
+        SkyIcon(SkyIcons.shield, size: 72, color: AppColors.brand(context)),
         const SizedBox(height: 24),
         Text(
           'Secure SkyTask',
@@ -143,7 +144,7 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
         if (_biometricsAvailable == true)
           FilledButton.icon(
             onPressed: _loading ? null : _useBiometrics,
-            icon: const Icon(Icons.fingerprint),
+            icon: const SkyIcon(SkyIcons.fingerprint),
             label: const Text('Use biometrics'),
             style: FilledButton.styleFrom(
               backgroundColor: AppColors.brand(context),
@@ -158,7 +159,7 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
                     _step = _SetupStep.createPin;
                     _error = null;
                   }),
-          icon: const Icon(Icons.pin_outlined),
+          icon: const SkyIcon(SkyIcons.lock),
           label: const Text('Create a PIN'),
           style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
         ),
@@ -188,7 +189,7 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
                       _draftPin = null;
                       _error = null;
                     }),
-            icon: const Icon(Icons.arrow_back),
+            icon: const SkyIcon(SkyIcons.arrowBack),
           ),
         ),
         const Spacer(),

@@ -301,8 +301,8 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
               itemBuilder: (context, index) {
                 if (index == categories.length) {
                   return FilterChip(
-                    avatar: Icon(
-                      Icons.add,
+                    avatar: SkyIcon(
+                      SkyIcons.add,
                       size: 16,
                       color: AppColors.brand(context),
                     ),

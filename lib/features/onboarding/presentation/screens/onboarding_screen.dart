@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
@@ -19,17 +20,17 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   static const _pages = [
     _OnboardingPage(
-      icon: Icons.task_alt,
+      icon: SkyIcons.task,
       title: 'Organize Tasks',
       subtitle: 'Manage work, personal, and custom categories with ease.',
     ),
     _OnboardingPage(
-      icon: Icons.alarm,
+      icon: SkyIcons.alarm,
       title: 'Never Miss Reminders',
       subtitle: 'Reliable alerts that work offline, even when the app is closed.',
     ),
     _OnboardingPage(
-      icon: Icons.lightbulb,
+      icon: SkyIcons.lightbulb,
       title: 'Capture Ideas Instantly',
       subtitle: 'Quick capture for ideas and long-form notes in one place.',
     ),
@@ -78,7 +79,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.all(24),
               child: FilledButton(
@@ -93,8 +93,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   }
                 },
                 style: FilledButton.styleFrom(
-                  minimumSize: const Size.fromHeight(52),
                   backgroundColor: AppColors.brand(context),
+                  minimumSize: const Size.fromHeight(52),
                 ),
                 child: Text(
                   _page < _pages.length - 1 ? 'Next' : 'Get Started',
@@ -115,7 +115,7 @@ class _OnboardingPage extends StatelessWidget {
     required this.subtitle,
   });
 
-  final IconData icon;
+  final List<List<dynamic>> icon;
   final String title;
   final String subtitle;
 
@@ -126,7 +126,7 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: AppColors.brand(context)),
+          SkyIcon(icon, size: 80, color: AppColors.brand(context)),
           const SizedBox(height: 32),
           Text(
             title,

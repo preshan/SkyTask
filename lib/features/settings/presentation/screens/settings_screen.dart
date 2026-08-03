@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/constants/app_info.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../../calendar/data/device_calendar_service.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
 
@@ -25,7 +26,7 @@ class SettingsScreen extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Settings'),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const SkyIcon(SkyIcons.arrowBack),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
@@ -39,7 +40,7 @@ class SettingsScreen extends ConsumerWidget {
         children: [
           _header(context, 'Appearance'),
           ListTile(
-            leading: const Icon(Icons.palette_outlined),
+            leading: const SkyIcon(SkyIcons.palette),
             title: const Text('Theme'),
             subtitle: Text(_themeLabel(themeMode)),
             onTap: () => _pickTheme(context, ref, themeMode),
@@ -47,7 +48,7 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           _header(context, 'Notifications'),
           const SwitchListTile(
-            secondary: Icon(Icons.notifications_outlined),
+            secondary: SkyIcon(SkyIcons.notification),
             title: Text('Reminder notifications'),
             subtitle: Text('Local + exact alarms (offline)'),
             value: true,
@@ -56,7 +57,7 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           _header(context, 'Calendar Sync'),
           SwitchListTile(
-            secondary: const Icon(Icons.calendar_month_outlined),
+            secondary: const SkyIcon(SkyIcons.calendar),
             title: const Text('Google Calendar sync'),
             subtitle: Text(
               calendarSettings.syncEnabled
@@ -86,16 +87,16 @@ class SettingsScreen extends ConsumerWidget {
           ),
           if (calendarSettings.syncEnabled)
             ListTile(
-              leading: const Icon(Icons.edit_calendar),
+              leading: const SkyIcon(SkyIcons.edit),
               title: const Text('Default calendar'),
               subtitle: Text(calendarSettings.defaultCalendarName ?? 'Not set'),
-              trailing: const Icon(Icons.chevron_right),
+              trailing: const SkyIcon(SkyIcons.chevronRight),
               onTap: () => _pickCalendar(context, ref),
             ),
           const Divider(),
           _header(context, 'Privacy'),
           SwitchListTile(
-            secondary: const Icon(Icons.lock_outline),
+            secondary: const SkyIcon(SkyIcons.lock),
             title: const Text('App lock'),
             subtitle: const Text(
               'Fingerprint, face, or PIN · locks after 30s in background',
@@ -105,7 +106,7 @@ class SettingsScreen extends ConsumerWidget {
                 ref.read(privacyLockProvider.notifier).setAppLockEnabled(v),
           ),
           const SwitchListTile(
-            secondary: Icon(Icons.shield_outlined),
+            secondary: SkyIcon(SkyIcons.shield),
             title: Text('Private vault'),
             subtitle: Text('Hide private item content'),
             value: true,
@@ -114,47 +115,38 @@ class SettingsScreen extends ConsumerWidget {
           const Divider(),
           _header(context, 'About'),
           ListTile(
-            leading: const Icon(Icons.info_outline),
+            leading: const SkyIcon(SkyIcons.info),
             title: const Text(AppInfo.name),
             subtitle: Text('Version ${AppInfo.versionLabel}'),
             onTap: () => _showAbout(context),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(AppInfo.copyright, style: mist),
+                Text(
+                  AppInfo.copyright,
+                  style: mist,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 6),
-                Text('Developed by ${AppInfo.developerName}', style: mist),
-                const SizedBox(height: 2),
-                Wrap(
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  spacing: 4,
-                  children: [
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: () => _openLink(AppInfo.developerLinkedIn),
-                      child: const Text('LinkedIn'),
-                    ),
-                    Text('·', style: mist),
-                    TextButton(
-                      style: TextButton.styleFrom(
-                        visualDensity: VisualDensity.compact,
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        minimumSize: Size.zero,
-                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                      ),
-                      onPressed: () =>
-                          _openLink('mailto:${AppInfo.developerEmail}'),
-                      child: Text(AppInfo.developerEmail),
-                    ),
-                  ],
+                Text(
+                  'Developed by ${AppInfo.developerName}',
+                  style: mist,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                _ContactLink(
+                  icon: SkyIcons.linkedIn,
+                  label: 'LinkedIn',
+                  onTap: () => _openLink(AppInfo.developerLinkedIn),
+                ),
+                const SizedBox(height: 6),
+                _ContactLink(
+                  icon: SkyIcons.mail,
+                  label: AppInfo.developerEmail,
+                  onTap: () =>
+                      _openLink('mailto:${AppInfo.developerEmail}'),
                 ),
               ],
             ),
@@ -208,10 +200,10 @@ class SettingsScreen extends ConsumerWidget {
             ),
             for (final calendar in calendars)
               ListTile(
-                leading: Icon(
+                leading: SkyIcon(
                   DeviceCalendarService.instance.isGoogleCalendar(calendar)
-                      ? Icons.event
-                      : Icons.calendar_today_outlined,
+                      ? SkyIcons.event
+                      : SkyIcons.today,
                 ),
                 title: Text(calendar.name ?? 'Unnamed calendar'),
                 subtitle: Text(
@@ -270,12 +262,52 @@ class SettingsScreen extends ConsumerWidget {
             for (final mode in ThemeMode.values)
               ListTile(
                 title: Text(_themeLabel(mode)),
-                trailing: current == mode ? const Icon(Icons.check) : null,
+                trailing: current == mode
+                    ? const SkyIcon(SkyIcons.check)
+                    : null,
                 onTap: () {
                   ref.read(themeModeProvider.notifier).setThemeMode(mode);
                   Navigator.pop(ctx);
                 },
               ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ContactLink extends StatelessWidget {
+  const _ContactLink({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final List<List<dynamic>> icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(8),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            SkyIcon(icon, size: 18, color: color),
+            const SizedBox(width: 6),
+            Text(
+              label,
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                  ),
+            ),
           ],
         ),
       ),

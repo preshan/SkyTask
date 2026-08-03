@@ -23,8 +23,12 @@ abstract final class AppRoutes {
   static const settings = '/settings';
 
   static String tasksCreatedToday() => '$tasks?createdToday=1';
+  static String tasksPinned() => '$tasks?filter=pinned';
+  static String tasksPending() => '$tasks?filter=pending';
   static String ideasCreatedToday() => '$ideas?tab=ideas&createdToday=1';
   static String notesCreatedToday() => '$ideas?tab=notes&createdToday=1';
+  static String ideasPrivate() => '$ideas?tab=ideas&filter=private';
+  static String remindersPrivate() => '$calendar?filter=private';
 
   static String calendarDay(DateTime day) {
     final d = DateTime(day.year, day.month, day.day);
@@ -89,6 +93,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               child: TasksScreen(
                 createdToday:
                     state.uri.queryParameters['createdToday'] == '1',
+                initialFilter: state.uri.queryParameters['filter'],
               ),
             ),
           ),
@@ -101,7 +106,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                 focusedDay = DateTime.tryParse(dayParam);
               }
               return NoTransitionPage(
-                child: CalendarScreen(focusedDay: focusedDay),
+                child: CalendarScreen(
+                  focusedDay: focusedDay,
+                  privateOnly:
+                      state.uri.queryParameters['filter'] == 'private',
+                ),
               );
             },
           ),
@@ -115,6 +124,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
                   initialTab: initialTab,
                   createdToday:
                       state.uri.queryParameters['createdToday'] == '1',
+                  privateOnly:
+                      state.uri.queryParameters['filter'] == 'private',
                 ),
               );
             },

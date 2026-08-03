@@ -52,4 +52,34 @@ abstract final class SkyIcons {
   /// Closed eye with slash — private / hidden.
   static const private = HugeIcons.strokeRoundedViewOffSlash;
   static const mic = HugeIcons.strokeRoundedMic01;
+
+  static const pending = HugeIcons.strokeRoundedClock01;
+  static const check = HugeIcons.strokeRoundedTick02;
+  static const checkCircle = HugeIcons.strokeRoundedCheckmarkCircle01;
+  static const search = HugeIcons.strokeRoundedSearch01;
+  static const sort = HugeIcons.strokeRoundedSorting01;
+  static const filter = HugeIcons.strokeRoundedFilter;
+  static const filterOff = HugeIcons.strokeRoundedFilterReset;
+  static const today = HugeIcons.strokeRoundedCalendar03;
+  static const event = HugeIcons.strokeRoundedCalendar02;
+  static const archive = HugeIcons.strokeRoundedArchive02;
+  static const chevronLeft = HugeIcons.strokeRoundedArrowLeft01;
+  static const chevronRight = HugeIcons.strokeRoundedArrowRight01;
+  static const arrowForward = HugeIcons.strokeRoundedArrowRight01;
+  static const arrowBack = HugeIcons.strokeRoundedArrowLeft01;
+  static const play = HugeIcons.strokeRoundedPlay;
+  static const playCircle = HugeIcons.strokeRoundedPlayCircle;
+  static const pause = HugeIcons.strokeRoundedPause;
+  static const pauseCircle = HugeIcons.strokeRoundedPauseCircle;
+  static const stop = HugeIcons.strokeRoundedStop;
+  static const unlock = HugeIcons.strokeRoundedSquareUnlock01;
+  static const fingerprint = HugeIcons.strokeRoundedFingerprintScan;
+  static const shield = HugeIcons.strokeRoundedShield01;
+  static const info = HugeIcons.strokeRoundedInformationCircle;
+  static const palette = HugeIcons.strokeRoundedPaintBoard;
+  static const edit = HugeIcons.strokeRoundedEdit01;
+  static const backspace = HugeIcons.strokeRoundedEraser01;
+  static const security = HugeIcons.strokeRoundedSecurityLock;
+  static const linkedIn = HugeIcons.strokeRoundedLinkedin01;
+  static const mail = HugeIcons.strokeRoundedMail01;
 }

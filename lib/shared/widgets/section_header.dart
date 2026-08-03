@@ -1,18 +1,19 @@
 import 'package:flutter/material.dart';
 
 import '../../core/constants/app_colors.dart';
+import 'sky_icon.dart';
 
 class SectionHeader extends StatelessWidget {
   const SectionHeader({
     super.key,
     required this.title,
-    this.action,
+    this.actionIcon,
     this.actionLabel,
     this.onAction,
   });
 
   final String title;
-  final IconData? action;
+  final List<List<dynamic>>? actionIcon;
   final String? actionLabel;
   final VoidCallback? onAction;
 
@@ -33,7 +34,10 @@ class SectionHeader extends StatelessWidget {
           if (onAction != null)
             TextButton.icon(
               onPressed: onAction,
-              icon: Icon(action ?? Icons.arrow_forward, size: 18),
+              icon: SkyIcon(
+                actionIcon ?? SkyIcons.arrowForward,
+                size: 18,
+              ),
               label: Text(actionLabel ?? 'See all'),
             ),
         ],
