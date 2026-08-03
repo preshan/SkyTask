@@ -113,7 +113,6 @@ class SettingsScreen extends ConsumerWidget {
             onChanged: null,
           ),
           const Divider(),
-          _header(context, 'About'),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             child: Column(
