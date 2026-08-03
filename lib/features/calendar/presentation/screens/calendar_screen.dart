@@ -83,6 +83,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               ],
               selected: {_view},
               onSelectionChanged: (s) => _setView(s.first),
+              style: ButtonStyle(
+                foregroundColor: WidgetStateProperty.resolveWith((states) {
+                  final scheme = Theme.of(context).colorScheme;
+                  if (states.contains(WidgetState.selected)) {
+                    return scheme.onPrimary;
+                  }
+                  return scheme.onSurface;
+                }),
+                backgroundColor: WidgetStateProperty.resolveWith((states) {
+                  final scheme = Theme.of(context).colorScheme;
+                  if (states.contains(WidgetState.selected)) {
+                    return scheme.primary;
+                  }
+                  return scheme.surface;
+                }),
+                iconColor: WidgetStateProperty.resolveWith((states) {
+                  final scheme = Theme.of(context).colorScheme;
+                  if (states.contains(WidgetState.selected)) {
+                    return scheme.onPrimary;
+                  }
+                  return scheme.onSurface;
+                }),
+              ),
             ),
           ),
         ),
