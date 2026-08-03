@@ -185,7 +185,9 @@ class _WeekDayTile extends StatelessWidget {
                     weekday,
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                           fontWeight: FontWeight.w600,
-                          color: isToday ? brand : null,
+                          color: isToday
+                              ? brand
+                              : Theme.of(context).colorScheme.onSurface,
                         ),
                   ),
                   const SizedBox(height: 2),
@@ -193,7 +195,9 @@ class _WeekDayTile extends StatelessWidget {
                     dayNum,
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.w700,
-                          color: isToday ? brand : null,
+                          color: isToday
+                              ? brand
+                              : Theme.of(context).colorScheme.onSurface,
                         ),
                   ),
                 ],
@@ -299,12 +303,13 @@ class _TodayTypeTile extends StatelessWidget {
                 children: [
                   SkyIcon(icon, size: 28, color: brand),
                   const SizedBox(height: 6),
-                  Text(
-                    label,
-                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                  ),
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                    ),
                 ],
               ),
             ),
