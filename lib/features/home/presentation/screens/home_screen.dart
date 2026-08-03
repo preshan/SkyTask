@@ -366,55 +366,101 @@ class _TodayTypeTile extends StatelessWidget {
   }
 }
 
-class _HomeShortcuts extends StatelessWidget {
+class _ShortcutCounts {
+  const _ShortcutCounts({
+    required this.pinnedTasks,
+    required this.pendingTasks,
+    required this.privateIdeas,
+    required this.privateReminders,
+  });
+
+  final int pinnedTasks;
+  final int pendingTasks;
+  final int privateIdeas;
+  final int privateReminders;
+}
+
+final _shortcutCountsProvider = FutureProvider<_ShortcutCounts>((ref) async {
+  ref.watch(tasksRevisionProvider);
+  ref.watch(ideasRevisionProvider);
+  ref.watch(remindersRevisionProvider);
+
+  final taskRepo = await ref.read(taskRepositoryProvider.future);
+  final ideaRepo = await ref.read(ideaRepositoryProvider.future);
+  final reminderRepo = await ref.read(reminderRepositoryProvider.future);
+
+  final tasks = await taskRepo.getAll(includeArchived: true);
+  final ideas = await ideaRepo.getAll();
+  final reminders = await reminderRepo.getAll();
+
+  return _ShortcutCounts(
+    pinnedTasks: tasks.where((t) => t.pinned && !t.archived).length,
+    pendingTasks: tasks.where((t) => !t.completed && !t.archived).length,
+    privateIdeas: ideas.where((i) => i.isPrivate).length,
+    privateReminders:
+        reminders.where((r) => r.isPrivate && !r.isCompleted).length,
+  );
+});
+
+class _HomeShortcuts extends ConsumerWidget {
   const _HomeShortcuts();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final countsAsync = ref.watch(_shortcutCountsProvider);
+
     return Padding(
       padding: const EdgeInsets.only(top: 4, bottom: 24),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _ShortcutTile(
-                  label: 'Pinned tasks',
-                  icon: SkyIcons.pin,
-                  onTap: () => context.go(AppRoutes.tasksPinned()),
+      child: countsAsync.when(
+        loading: () => const _ShimmerCard(),
+        error: (e, _) => Text('Error: $e'),
+        data: (counts) => Column(
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: _ShortcutTile(
+                    label: 'Pinned tasks',
+                    icon: SkyIcons.pin,
+                    count: counts.pinnedTasks,
+                    onTap: () => context.go(AppRoutes.tasksPinned()),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ShortcutTile(
-                  label: 'Pending tasks',
-                  icon: SkyIcons.pending,
-                  onTap: () => context.go(AppRoutes.tasksPending()),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ShortcutTile(
+                    label: 'Pending tasks',
+                    icon: SkyIcons.pending,
+                    count: counts.pendingTasks,
+                    onTap: () => context.go(AppRoutes.tasksPending()),
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _ShortcutTile(
-                  label: 'Private ideas',
-                  icon: SkyIcons.private,
-                  onTap: () => context.go(AppRoutes.ideasPrivate()),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Expanded(
+                  child: _ShortcutTile(
+                    label: 'Private ideas',
+                    icon: SkyIcons.private,
+                    count: counts.privateIdeas,
+                    onTap: () => context.go(AppRoutes.ideasPrivate()),
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _ShortcutTile(
-                  label: 'Private reminders',
-                  icon: SkyIcons.alarm,
-                  onTap: () => context.go(AppRoutes.remindersPrivate()),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ShortcutTile(
+                    label: 'Private reminders',
+                    icon: SkyIcons.alarm,
+                    count: counts.privateReminders,
+                    onTap: () => context.go(AppRoutes.remindersPrivate()),
+                  ),
                 ),
-              ),
-            ],
-          ),
-        ],
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -424,16 +470,19 @@ class _ShortcutTile extends StatelessWidget {
   const _ShortcutTile({
     required this.label,
     required this.icon,
+    required this.count,
     required this.onTap,
   });
 
   final String label;
   final List<List<dynamic>> icon;
+  final int count;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     final brand = AppColors.brand(context);
+    final amber = AppColors.brandSecondary(context);
     final scheme = Theme.of(context).colorScheme;
 
     return Material(
@@ -449,27 +498,56 @@ class _ShortcutTile extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: brand.withValues(alpha: 0.14)),
           ),
-          child: Row(
+          child: Stack(
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: brand.withValues(alpha: 0.10),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                alignment: Alignment.center,
-                child: SkyIcon(icon, size: 24, color: brand),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: brand.withValues(alpha: 0.10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    alignment: Alignment.center,
+                    child: SkyIcon(icon, size: 24, color: brand),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  label,
-                  style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.w600,
+              if (count > 0)
+                Positioned(
+                  top: 8,
+                  right: 0,
+                  child: Container(
+                    constraints: const BoxConstraints(
+                      minWidth: 20,
+                      minHeight: 20,
+                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: amber,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      count > 99 ? '99+' : '$count',
+                      style: TextStyle(
+                        color: scheme.onSecondary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
                       ),
+                    ),
+                  ),
                 ),
-              ),
             ],
           ),
         ),
