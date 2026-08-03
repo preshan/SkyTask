@@ -24,7 +24,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final todayCountsAsync = ref.watch(_todayCreatedCountsProvider);
-    final remindersAsync = ref.watch(_upcomingRemindersProvider);
+    final weekRemindersAsync = ref.watch(_thisWeekReminderDaysProvider);
     final ideasAsync = ref.watch(_recentIdeasProvider);
     final notesAsync = ref.watch(_recentNotesProvider);
 
@@ -45,53 +45,13 @@ class HomeScreen extends ConsumerWidget {
             data: (counts) => _TodayCreateTiles(counts: counts),
           ),
           SectionHeader(
-            title: 'Upcoming Reminders',
+            title: 'This week',
             onAction: () => context.go(AppRoutes.calendar),
           ),
-          remindersAsync.when(
+          weekRemindersAsync.when(
             loading: () => const _ShimmerCard(),
             error: (e, _) => Text('Error: $e'),
-            data: (reminders) {
-              if (reminders.isEmpty) {
-                return const Card(
-                  child: ListTile(
-                    leading: Icon(Icons.alarm_outlined),
-                    title: Text('No upcoming reminders'),
-                  ),
-                );
-              }
-              return Card(
-                child: Column(
-                  children: [
-                    for (final r in reminders.take(3))
-                      PrivateContentGate(
-                        isPrivate: r.isPrivate,
-                        child: ListTile(
-                          leading: Icon(
-                            r.isVoice ? Icons.mic : Icons.alarm,
-                            color: AppColors.brand(context),
-                          ),
-                          title: Text(
-                            displayItemTitle(
-                              title: r.title,
-                              isVoice: r.isVoice,
-                              createdAt: r.createdAt,
-                            ),
-                          ),
-                          subtitle: Text(
-                            DateFormat.MMMd()
-                                .add_jm()
-                                .format(r.reminderDateTime),
-                          ),
-                          trailing: r.isVoice && r.voicePath != null
-                              ? VoicePlayButton(path: r.voicePath!)
-                              : null,
-                        ),
-                      ),
-                  ],
-                ),
-              );
-            },
+            data: (days) => _ThisWeekReminderStrip(days: days),
           ),
           SectionHeader(
             title: 'Recent Ideas',
@@ -237,11 +197,32 @@ final _todayCreatedCountsProvider = FutureProvider<_TodayCounts>((ref) async {
   );
 });
 
-final _upcomingRemindersProvider = FutureProvider((ref) async {
+final _thisWeekReminderDaysProvider =
+    FutureProvider<List<_WeekDayReminders>>((ref) async {
   ref.watch(remindersRevisionProvider);
   final repo = await ref.watch(reminderRepositoryProvider.future);
-  return repo.getUpcoming();
+  final all = await repo.getAll();
+
+  final now = DateTime.now();
+  final monday = DateTime(now.year, now.month, now.day)
+      .subtract(Duration(days: now.weekday - DateTime.monday));
+
+  return List.generate(7, (i) {
+    final day = monday.add(Duration(days: i));
+    final count = all.where((r) {
+      if (r.isCompleted) return false;
+      return DateFilters.isSameDay(r.reminderDateTime, day);
+    }).length;
+    return _WeekDayReminders(day: day, count: count);
+  });
 });
+
+class _WeekDayReminders {
+  const _WeekDayReminders({required this.day, required this.count});
+
+  final DateTime day;
+  final int count;
+}
 
 final _recentIdeasProvider = FutureProvider<List<Idea>>((ref) async {
   ref.watch(ideasRevisionProvider);
@@ -272,6 +253,117 @@ class _GreetingHeader extends StatelessWidget {
     return Text(
       greeting,
       style: Theme.of(context).textTheme.headlineSmall,
+    );
+  }
+}
+
+class _ThisWeekReminderStrip extends StatelessWidget {
+  const _ThisWeekReminderStrip({required this.days});
+
+  final List<_WeekDayReminders> days;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Row(
+        children: [
+          for (var i = 0; i < days.length; i++) ...[
+            if (i > 0) const SizedBox(width: 6),
+            Expanded(child: _WeekDayTile(item: days[i])),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WeekDayTile extends StatelessWidget {
+  const _WeekDayTile({required this.item});
+
+  final _WeekDayReminders item;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final amber = AppColors.brandSecondary(context);
+    final scheme = Theme.of(context).colorScheme;
+    final isToday = DateFilters.isCreatedToday(item.day);
+    final weekday = DateFormat.E().format(item.day); // Mon
+    final dayNum = '${item.day.day}';
+
+    return Material(
+      color: isToday
+          ? brand.withValues(alpha: 0.10)
+          : scheme.surface,
+      borderRadius: BorderRadius.circular(14),
+      child: InkWell(
+        onTap: () => context.go(AppRoutes.calendarDay(item.day)),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          height: 88,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isToday
+                  ? brand.withValues(alpha: 0.45)
+                  : brand.withValues(alpha: 0.12),
+              width: isToday ? 1.5 : 1,
+            ),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      weekday,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: isToday ? brand : null,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      dayNum,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: isToday ? brand : null,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              Positioned(
+                top: 6,
+                right: 6,
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minWidth: 18, minHeight: 18),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: item.count > 0 ? amber : scheme.outlineVariant,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    '${item.count}',
+                    style: TextStyle(
+                      color: item.count > 0
+                          ? scheme.onSecondary
+                          : scheme.onSurface.withValues(alpha: 0.55),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

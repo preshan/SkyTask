@@ -25,6 +25,14 @@ abstract final class AppRoutes {
   static String tasksCreatedToday() => '$tasks?createdToday=1';
   static String ideasCreatedToday() => '$ideas?tab=ideas&createdToday=1';
   static String notesCreatedToday() => '$ideas?tab=notes&createdToday=1';
+
+  static String calendarDay(DateTime day) {
+    final d = DateTime(day.year, day.month, day.day);
+    final y = d.year.toString().padLeft(4, '0');
+    final m = d.month.toString().padLeft(2, '0');
+    final dd = d.day.toString().padLeft(2, '0');
+    return '$calendar?day=$y-$m-$dd';
+  }
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -86,8 +94,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.calendar,
-            pageBuilder: (_, __) =>
-                const NoTransitionPage(child: CalendarScreen()),
+            pageBuilder: (_, state) {
+              final dayParam = state.uri.queryParameters['day'];
+              DateTime? focusedDay;
+              if (dayParam != null) {
+                focusedDay = DateTime.tryParse(dayParam);
+              }
+              return NoTransitionPage(
+                child: CalendarScreen(focusedDay: focusedDay),
+              );
+            },
           ),
           GoRoute(
             path: AppRoutes.ideas,

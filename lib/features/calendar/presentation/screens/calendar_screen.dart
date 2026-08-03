@@ -14,33 +14,94 @@ import '../providers/calendar_providers.dart';
 enum CalendarView { agenda, week, month }
 
 class CalendarScreen extends ConsumerStatefulWidget {
-  const CalendarScreen({super.key});
+  const CalendarScreen({super.key, this.focusedDay});
+
+  /// When set (e.g. from Home “This week”), open agenda for that day.
+  final DateTime? focusedDay;
 
   @override
   ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
 }
 
 class _CalendarScreenState extends ConsumerState<CalendarScreen> {
-  CalendarView _view = CalendarView.agenda;
-  DateTime _anchor = DateTime.now();
-  late DateRange _range = _computeRange(CalendarView.agenda, DateTime.now());
+  late CalendarView _view;
+  late DateTime _anchor;
+  late DateRange _range;
+  late bool _dayFocus;
+
+  @override
+  void initState() {
+    super.initState();
+    final focus = widget.focusedDay;
+    if (focus != null) {
+      _dayFocus = true;
+      _view = CalendarView.agenda;
+      _anchor = DateTime(focus.year, focus.month, focus.day);
+      _range = dayRange(_anchor);
+    } else {
+      _dayFocus = false;
+      _view = CalendarView.agenda;
+      _anchor = DateTime.now();
+      _range = agendaRange();
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CalendarScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final focus = widget.focusedDay;
+    final old = oldWidget.focusedDay;
+    if (focus?.millisecondsSinceEpoch != old?.millisecondsSinceEpoch) {
+      if (focus != null) {
+        setState(() {
+          _dayFocus = true;
+          _view = CalendarView.agenda;
+          _anchor = DateTime(focus.year, focus.month, focus.day);
+          _range = dayRange(_anchor);
+        });
+      } else if (old != null) {
+        setState(() {
+          _dayFocus = false;
+          _view = CalendarView.agenda;
+          _anchor = DateTime.now();
+          _range = agendaRange();
+        });
+      }
+    }
+  }
 
   DateRange _computeRange(CalendarView view, DateTime anchor) => switch (view) {
-        CalendarView.agenda => agendaRange(),
+        CalendarView.agenda =>
+          _dayFocus ? dayRange(anchor) : agendaRange(),
         CalendarView.week => weekRange(anchor),
         CalendarView.month => monthRange(anchor),
       };
 
   void _setView(CalendarView view) {
     setState(() {
+      _dayFocus = false;
       _view = view;
       _anchor = DateTime.now();
       _range = _computeRange(_view, _anchor);
     });
   }
 
+  void _clearDayFocus() {
+    setState(() {
+      _dayFocus = false;
+      _view = CalendarView.agenda;
+      _anchor = DateTime.now();
+      _range = agendaRange();
+    });
+  }
+
   void _shiftPeriod(int delta) {
     setState(() {
+      if (_dayFocus && _view == CalendarView.agenda) {
+        _anchor = _anchor.add(Duration(days: delta));
+        _range = dayRange(_anchor);
+        return;
+      }
       _anchor = switch (_view) {
         CalendarView.week => _anchor.add(Duration(days: 7 * delta)),
         CalendarView.month => DateTime(_anchor.year, _anchor.month + delta, 1),
@@ -54,17 +115,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   Widget build(BuildContext context) {
     final entriesAsync = ref.watch(calendarEntriesProvider(_range));
     final settings = ref.watch(calendarSettingsProvider);
+    final title = _dayFocus
+        ? DateFormat.MMMd().format(_anchor)
+        : 'Calendar';
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Calendar'),
+        title: Text(title),
         actions: [
-          if (_view != CalendarView.agenda)
+          if (_dayFocus || _view != CalendarView.agenda)
             IconButton(
               icon: const Icon(Icons.chevron_left),
               onPressed: () => _shiftPeriod(-1),
             ),
-          if (_view != CalendarView.agenda)
+          if (_dayFocus || _view != CalendarView.agenda)
             IconButton(
               icon: const Icon(Icons.chevron_right),
               onPressed: () => _shiftPeriod(1),
@@ -72,41 +136,72 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ...skyTaskAppBarActions(context),
         ],
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-            child: SegmentedButton<CalendarView>(
-              segments: const [
-                ButtonSegment(value: CalendarView.agenda, label: Text('Agenda')),
-                ButtonSegment(value: CalendarView.week, label: Text('Week')),
-                ButtonSegment(value: CalendarView.month, label: Text('Month')),
-              ],
-              selected: {_view},
-              onSelectionChanged: (s) => _setView(s.first),
-              style: ButtonStyle(
-                foregroundColor: WidgetStateProperty.resolveWith((states) {
-                  final scheme = Theme.of(context).colorScheme;
-                  if (states.contains(WidgetState.selected)) {
-                    return scheme.onPrimary;
-                  }
-                  return scheme.onSurface;
-                }),
-                backgroundColor: WidgetStateProperty.resolveWith((states) {
-                  final scheme = Theme.of(context).colorScheme;
-                  if (states.contains(WidgetState.selected)) {
-                    return scheme.primary;
-                  }
-                  return scheme.surface;
-                }),
-                iconColor: WidgetStateProperty.resolveWith((states) {
-                  final scheme = Theme.of(context).colorScheme;
-                  if (states.contains(WidgetState.selected)) {
-                    return scheme.onPrimary;
-                  }
-                  return scheme.onSurface;
-                }),
+          preferredSize: Size.fromHeight(_dayFocus ? 96 : 48),
+          child: Column(
+            children: [
+              if (_dayFocus)
+                Material(
+                  color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
+                  child: ListTile(
+                    dense: true,
+                    leading: Icon(
+                      Icons.event,
+                      color: AppColors.brandSecondary(context),
+                    ),
+                    title: Text(
+                      'Reminders on ${DateFormat.yMMMEd().format(_anchor)}',
+                    ),
+                    trailing: TextButton(
+                      onPressed: _clearDayFocus,
+                      child: const Text('All'),
+                    ),
+                  ),
+                ),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                child: SegmentedButton<CalendarView>(
+                  segments: const [
+                    ButtonSegment(
+                      value: CalendarView.agenda,
+                      label: Text('Agenda'),
+                    ),
+                    ButtonSegment(
+                      value: CalendarView.week,
+                      label: Text('Week'),
+                    ),
+                    ButtonSegment(
+                      value: CalendarView.month,
+                      label: Text('Month'),
+                    ),
+                  ],
+                  selected: {_view},
+                  onSelectionChanged: (s) => _setView(s.first),
+                  style: ButtonStyle(
+                    foregroundColor: WidgetStateProperty.resolveWith((states) {
+                      final scheme = Theme.of(context).colorScheme;
+                      if (states.contains(WidgetState.selected)) {
+                        return scheme.onPrimary;
+                      }
+                      return scheme.onSurface;
+                    }),
+                    backgroundColor: WidgetStateProperty.resolveWith((states) {
+                      final scheme = Theme.of(context).colorScheme;
+                      if (states.contains(WidgetState.selected)) {
+                        return scheme.primary;
+                      }
+                      return scheme.surface;
+                    }),
+                    iconColor: WidgetStateProperty.resolveWith((states) {
+                      final scheme = Theme.of(context).colorScheme;
+                      if (states.contains(WidgetState.selected)) {
+                        return scheme.onPrimary;
+                      }
+                      return scheme.onSurface;
+                    }),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
         ),
       ),
@@ -143,7 +238,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            'No events in this period.\nTap + to create a reminder.',
+            _dayFocus
+                ? 'No reminders on this day.\nTap + to create one.'
+                : 'No events in this period.\nTap + to create a reminder.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
@@ -166,9 +263,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           month: _anchor,
           onSelectDay: (day) {
             setState(() {
+              _dayFocus = true;
               _anchor = day;
               _view = CalendarView.agenda;
-              _range = _computeRange(_view, _anchor);
+              _range = dayRange(_anchor);
             });
           },
         ),
