@@ -9,6 +9,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/frosted_surface.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
@@ -164,78 +165,67 @@ class _WeekDayTile extends StatelessWidget {
     final weekday = DateFormat.E().format(item.day); // Mon
     final dayNum = '${item.day.day}';
 
-    return Material(
-      color: isToday
-          ? brand.withValues(alpha: 0.10)
-          : scheme.surface,
-      borderRadius: BorderRadius.circular(14),
-      child: InkWell(
-        onTap: () => context.go(AppRoutes.calendarDay(item.day)),
-        borderRadius: BorderRadius.circular(14),
-        child: Container(
-          height: 88,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isToday
-                  ? brand.withValues(alpha: 0.45)
-                  : brand.withValues(alpha: 0.12),
-              width: isToday ? 1.5 : 1,
+    return FrostedSurface(
+      borderRadius: 14,
+      borderColor: isToday
+          ? brand.withValues(alpha: 0.45)
+          : null,
+      borderWidth: isToday ? 1.5 : 1,
+      onTap: () => context.go(AppRoutes.calendarDay(item.day)),
+      child: SizedBox(
+        height: 88,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    weekday,
+                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: isToday ? brand : null,
+                        ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    dayNum,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: isToday ? brand : null,
+                        ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      weekday,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: isToday ? brand : null,
-                          ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      dayNum,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: isToday ? brand : null,
-                          ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 6,
-                right: 6,
-                child: item.count > 0
-                    ? Container(
-                        constraints: const BoxConstraints(
-                          minWidth: 18,
-                          minHeight: 18,
+            Positioned(
+              top: 6,
+              right: 6,
+              child: item.count > 0
+                  ? Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: amber,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Text(
+                        '${item.count}',
+                        style: TextStyle(
+                          color: scheme.onSecondary,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 5),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: amber,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Text(
-                          '${item.count}',
-                          style: TextStyle(
-                            color: scheme.onSecondary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ),
       ),
     );
@@ -295,71 +285,63 @@ class _TodayTypeTile extends StatelessWidget {
     final amber = AppColors.brandSecondary(context);
     final scheme = Theme.of(context).colorScheme;
 
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          height: 96,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: brand.withValues(alpha: 0.14)),
-          ),
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    SkyIcon(icon, size: 28, color: brand),
-                    const SizedBox(height: 6),
-                    Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
-                  ],
-                ),
+    return FrostedSurface(
+      borderRadius: 16,
+      onTap: onTap,
+      child: SizedBox(
+        height: 96,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SkyIcon(icon, size: 28, color: brand),
+                  const SizedBox(height: 6),
+                  Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                  ),
+                ],
               ),
-              Positioned(
-                top: 8,
-                right: 8,
-                child: count > 0
-                    ? Container(
-                        constraints: const BoxConstraints(
-                          minWidth: 22,
-                          minHeight: 22,
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          color: amber,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: amber.withValues(alpha: 0.35),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Text(
-                          count > 99 ? '99+' : '$count',
-                          style: TextStyle(
-                            color: scheme.onSecondary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
+            ),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: count > 0
+                  ? Container(
+                      constraints: const BoxConstraints(
+                        minWidth: 22,
+                        minHeight: 22,
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      alignment: Alignment.center,
+                      decoration: BoxDecoration(
+                        color: amber,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: amber.withValues(alpha: 0.35),
+                            blurRadius: 6,
+                            offset: const Offset(0, 2),
                           ),
+                        ],
+                      ),
+                      child: Text(
+                        count > 99 ? '99+' : '$count',
+                        style: TextStyle(
+                          color: scheme.onSecondary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
                         ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
-          ),
+                      ),
+                    )
+                  : const SizedBox.shrink(),
+            ),
+          ],
         ),
       ),
     );
@@ -485,71 +467,63 @@ class _ShortcutTile extends StatelessWidget {
     final amber = AppColors.brandSecondary(context);
     final scheme = Theme.of(context).colorScheme;
 
-    return Material(
-      color: scheme.surface,
-      borderRadius: BorderRadius.circular(16),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          height: 88,
-          padding: const EdgeInsets.symmetric(horizontal: 12),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: brand.withValues(alpha: 0.14)),
-          ),
-          child: Stack(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: brand.withValues(alpha: 0.10),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    alignment: Alignment.center,
-                    child: SkyIcon(icon, size: 24, color: brand),
+    return FrostedSurface(
+      borderRadius: 16,
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      child: SizedBox(
+        height: 88,
+        child: Stack(
+          children: [
+            Row(
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: brand.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Text(
-                      label,
-                      style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                    ),
+                  alignment: Alignment.center,
+                  child: SkyIcon(icon, size: 24, color: brand),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    label,
+                    style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
                   ),
-                ],
-              ),
-              if (count > 0)
-                Positioned(
-                  top: 8,
-                  right: 0,
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minWidth: 20,
-                      minHeight: 20,
-                    ),
-                    padding: const EdgeInsets.symmetric(horizontal: 5),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: amber,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      count > 99 ? '99+' : '$count',
-                      style: TextStyle(
-                        color: scheme.onSecondary,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
+                ),
+              ],
+            ),
+            if (count > 0)
+              Positioned(
+                top: 8,
+                right: 0,
+                child: Container(
+                  constraints: const BoxConstraints(
+                    minWidth: 20,
+                    minHeight: 20,
+                  ),
+                  padding: const EdgeInsets.symmetric(horizontal: 5),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: amber,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    style: TextStyle(
+                      color: scheme.onSecondary,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700,
                     ),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );

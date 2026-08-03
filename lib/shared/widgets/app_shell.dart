@@ -8,6 +8,8 @@ import '../../features/ideas/presentation/widgets/idea_form_sheet.dart';
 import '../../features/notes/presentation/widgets/note_form_sheet.dart';
 import '../../features/reminders/presentation/widgets/reminder_form_sheet.dart';
 import '../../features/tasks/presentation/widgets/task_form_sheet.dart';
+import 'frosted_surface.dart';
+import 'sky_atmosphere_background.dart';
 import 'sky_icon.dart';
 
 /// Bottom nav: Home · Tasks · Create · Calendar · Ideas
@@ -38,51 +40,58 @@ class AppShell extends ConsumerWidget {
     final location = GoRouterState.of(context).uri.path;
     final selectedIndex = _indexForLocation(location);
 
-    return Scaffold(
-      body: child,
-      bottomNavigationBar: Material(
-        color: Theme.of(context).colorScheme.surface,
-        elevation: 8,
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 64,
-            child: Row(
-              children: [
-                Expanded(
-                  child: _NavItem(
-                    tab: _tabs[0],
-                    selected: selectedIndex == 0,
-                    onTap: () => context.go(_tabs[0].route),
-                  ),
+    return SkyAtmosphereBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: child,
+        bottomNavigationBar: FrostedSurface(
+          borderRadius: 0,
+          elevated: true,
+          borderWidth: 0,
+          child: Material(
+            color: Colors.transparent,
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 64,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _NavItem(
+                        tab: _tabs[0],
+                        selected: selectedIndex == 0,
+                        onTap: () => context.go(_tabs[0].route),
+                      ),
+                    ),
+                    Expanded(
+                      child: _NavItem(
+                        tab: _tabs[1],
+                        selected: selectedIndex == 1,
+                        onTap: () => context.go(_tabs[1].route),
+                      ),
+                    ),
+                    Expanded(
+                      child: _CreateNavItem(
+                        onTap: () => _showCreateMenu(context, ref),
+                      ),
+                    ),
+                    Expanded(
+                      child: _NavItem(
+                        tab: _tabs[2],
+                        selected: selectedIndex == 2,
+                        onTap: () => context.go(_tabs[2].route),
+                      ),
+                    ),
+                    Expanded(
+                      child: _NavItem(
+                        tab: _tabs[3],
+                        selected: selectedIndex == 3,
+                        onTap: () => context.go(_tabs[3].route),
+                      ),
+                    ),
+                  ],
                 ),
-                Expanded(
-                  child: _NavItem(
-                    tab: _tabs[1],
-                    selected: selectedIndex == 1,
-                    onTap: () => context.go(_tabs[1].route),
-                  ),
-                ),
-                Expanded(
-                  child: _CreateNavItem(
-                    onTap: () => _showCreateMenu(context, ref),
-                  ),
-                ),
-                Expanded(
-                  child: _NavItem(
-                    tab: _tabs[2],
-                    selected: selectedIndex == 2,
-                    onTap: () => context.go(_tabs[2].route),
-                  ),
-                ),
-                Expanded(
-                  child: _NavItem(
-                    tab: _tabs[3],
-                    selected: selectedIndex == 3,
-                    onTap: () => context.go(_tabs[3].route),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

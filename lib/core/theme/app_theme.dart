@@ -12,19 +12,20 @@ abstract final class AppTheme {
   static ThemeData _build(Brightness brightness) {
     final isLight = brightness == Brightness.light;
     final brand = AppColors.brandFor(brightness);
+    final glass = AppColors.glassFillFor(brightness);
+    final glassElevated = AppColors.glassFillElevatedFor(brightness);
     final colorScheme = isLight ? _lightScheme() : _darkScheme();
 
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
-      colorScheme: colorScheme,
-      scaffoldBackgroundColor:
-          isLight ? AppColors.background : const Color(0xFF0F172A),
+      colorScheme: colorScheme.copyWith(surface: glass),
+      scaffoldBackgroundColor: Colors.transparent,
       textTheme: AppTypography.textTheme(brightness),
       appBarTheme: AppBarTheme(
         centerTitle: false,
         elevation: 0,
-        scrolledUnderElevation: 0.5,
+        scrolledUnderElevation: 0,
         backgroundColor: Colors.transparent,
         foregroundColor: colorScheme.onSurface,
         systemOverlayStyle: isLight
@@ -34,19 +35,19 @@ abstract final class AppTheme {
       navigationBarTheme: NavigationBarThemeData(
         elevation: 0,
         height: 72,
-        backgroundColor: isLight ? AppColors.card : const Color(0xFF1E293B),
+        backgroundColor: glassElevated,
         indicatorColor: brand.withValues(alpha: 0.2),
         labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
       ),
       cardTheme: CardThemeData(
-        color: isLight ? AppColors.card : const Color(0xFF1E293B),
+        color: glass,
         elevation: 0,
+        shadowColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
           side: BorderSide(
-            color: isLight
-                ? brand.withValues(alpha: 0.12)
-                : Colors.white12,
+            color: AppColors.glassBorderFor(brightness),
           ),
         ),
       ),
@@ -61,8 +62,8 @@ abstract final class AppTheme {
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: isLight
-            ? Colors.white
-            : const Color(0xFF334155),
+            ? Colors.white.withValues(alpha: 0.55)
+            : const Color(0xFF334155).withValues(alpha: 0.55),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(14),
           borderSide: BorderSide(
@@ -93,10 +94,22 @@ abstract final class AppTheme {
       ),
       chipTheme: ChipThemeData(
         selectedColor: brand.withValues(alpha: 0.25),
+        backgroundColor: glass,
         checkmarkColor: brand,
         labelStyle: TextStyle(color: colorScheme.onSurface),
         secondaryLabelStyle: TextStyle(color: brand),
         side: BorderSide(color: brand.withValues(alpha: 0.25)),
+      ),
+      dialogTheme: DialogThemeData(
+        backgroundColor: isLight ? AppColors.card : const Color(0xFF1E293B),
+        surfaceTintColor: Colors.transparent,
+      ),
+      bottomSheetTheme: BottomSheetThemeData(
+        backgroundColor: isLight ? AppColors.card : const Color(0xFF1E293B),
+        surfaceTintColor: Colors.transparent,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
       ),
     );
   }
