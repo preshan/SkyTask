@@ -8,6 +8,18 @@ Inspired by Google Tasks, Google Calendar, TickTick, Todoist, and Notion Quick N
 
 **Owner & Developer:** Preshan Pradeepa Kariyawasam
 
+## Screenshots
+
+| Home | Tasks | Create |
+|:----:|:-----:|:------:|
+| ![Home](docs/release/screenshots/01_home.png) | ![Tasks](docs/release/screenshots/02_tasks.png) | ![Create](docs/release/screenshots/03_create_menu.png) |
+
+| New Task | New Reminder | Settings |
+|:--------:|:------------:|:--------:|
+| ![New Task](docs/release/screenshots/04_new_task.png) | ![New Reminder](docs/release/screenshots/05_new_reminder.png) | ![Settings](docs/release/screenshots/06_settings.png) |
+
+Latest release: [v1.1.2](https://github.com/preshan/SkyTask/releases/tag/v1.1.2)
+
 ## Architecture
 
 ```
