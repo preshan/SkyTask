@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 
 /// Numeric pad for entering a fixed-length PIN.
 class PinEntryPad extends StatefulWidget {
@@ -110,7 +111,7 @@ class PinEntryPadState extends State<PinEntryPad> {
                 }
                 if (key == 'back') {
                   return _PadButton(
-                    icon: Icons.backspace_outlined,
+                    icon: SkyIcons.backspace,
                     onPressed: _backspace,
                   );
                 }
@@ -134,7 +135,7 @@ class _PadButton extends StatelessWidget {
   });
 
   final String? label;
-  final IconData? icon;
+  final List<List<dynamic>>? icon;
   final VoidCallback onPressed;
 
   @override
@@ -152,7 +153,7 @@ class _PadButton extends StatelessWidget {
             height: 64,
             child: Center(
               child: icon != null
-                  ? Icon(icon, color: AppColors.brand(context))
+                  ? SkyIcon(icon!, color: AppColors.brand(context))
                   : Text(
                       label!,
                       style: Theme.of(context).textTheme.headlineSmall,

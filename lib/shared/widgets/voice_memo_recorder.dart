@@ -261,7 +261,7 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
             _RoundAction(
               color: AppColors.error,
               onTap: widget.enabled ? _stop : null,
-              child: const Icon(Icons.stop, color: Colors.white, size: 22),
+              child: const SkyIcon(SkyIcons.stop, color: Colors.white, size: 22),
             )
           else if (!hasMemo)
             _RoundAction(
@@ -273,8 +273,8 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
             _RoundAction(
               color: AppColors.brand(context),
               onTap: widget.enabled ? _togglePlay : null,
-              child: Icon(
-                _playing ? Icons.pause : Icons.play_arrow,
+              child: SkyIcon(
+                _playing ? SkyIcons.pause : SkyIcons.play,
                 color: Colors.white,
                 size: 22,
               ),

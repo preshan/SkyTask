@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../data/pin_storage_service.dart';
 import '../../data/privacy_auth_service.dart';
 import '../widgets/pin_entry_pad.dart';
@@ -85,7 +86,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.lock_outline, size: 72, color: Colors.white),
+        const SkyIcon(SkyIcons.lock, size: 72, color: Colors.white),
         const SizedBox(height: 24),
         Text(
           'SkyTask Locked',
@@ -101,7 +102,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
         const SizedBox(height: 32),
         FilledButton.icon(
           onPressed: _unlockWithBiometrics,
-          icon: const Icon(Icons.fingerprint),
+          icon: SkyIcon(
+            SkyIcons.fingerprint,
+            color: AppColors.brand(context),
+          ),
           label: const Text('Unlock'),
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
@@ -117,7 +121,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.lock_outline, size: 56, color: Colors.white),
+        const SkyIcon(SkyIcons.lock, size: 56, color: Colors.white),
         const SizedBox(height: 16),
         Text(
           'Enter your PIN',

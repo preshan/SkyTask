@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../features/privacy/data/pin_storage_service.dart';
 import '../../features/privacy/data/privacy_auth_service.dart';
 import '../../features/privacy/presentation/widgets/pin_entry_pad.dart';
+import 'sky_icon.dart';
 
 /// Masks private content until biometric or app PIN auth succeeds.
 ///
@@ -90,11 +91,11 @@ class _PrivateContentGateState extends State<PrivateContentGate> {
     }
 
     return ListTile(
-      leading: const Icon(Icons.lock_outline),
+      leading: const SkyIcon(SkyIcons.lock),
       title: const Text('Private Item'),
       subtitle: Text(widget.hiddenLabel),
       trailing: IconButton(
-        icon: const Icon(Icons.lock_open_outlined),
+        icon: const SkyIcon(SkyIcons.unlock),
         onPressed: _unlock,
       ),
       onTap: _unlock,

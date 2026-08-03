@@ -10,15 +10,22 @@ import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../domain/entities/task.dart';
 import '../widgets/task_form_sheet.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
-  const TasksScreen({super.key, this.createdToday = false});
+  const TasksScreen({
+    super.key,
+    this.createdToday = false,
+    this.initialFilter,
+  });
 
   final bool createdToday;
+  /// `pinned`, `pending`, `completed`, `private`, `archived`, or null/all.
+  final String? initialFilter;
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -35,6 +42,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   void initState() {
     super.initState();
     _createdToday = widget.createdToday;
+    _applyInitialFilter(widget.initialFilter);
   }
 
   @override
@@ -43,6 +51,20 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     if (oldWidget.createdToday != widget.createdToday) {
       _createdToday = widget.createdToday;
     }
+    if (oldWidget.initialFilter != widget.initialFilter) {
+      _applyInitialFilter(widget.initialFilter);
+    }
+  }
+
+  void _applyInitialFilter(String? filter) {
+    if (filter == null || filter.isEmpty) return;
+    if (filter == 'createdToday') {
+      _createdToday = true;
+      _statusFilter = 'all';
+      return;
+    }
+    _statusFilter = filter;
+    if (filter != 'all') _createdToday = false;
   }
 
   @override
@@ -59,7 +81,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
         title: const Text('Tasks'),
         actions: [
           PopupMenuButton<String>(
-            icon: const Icon(Icons.sort),
+            icon: const SkyIcon(SkyIcons.sort),
             onSelected: (v) => setState(() => _sort = v),
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'updated', child: Text('Recently updated')),
@@ -68,7 +90,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
             ],
           ),
           PopupMenuButton<String>(
-            icon: const Icon(Icons.filter_list),
+            icon: const SkyIcon(SkyIcons.filter),
             onSelected: (v) => setState(() {
               if (v == 'createdToday') {
                 _createdToday = true;
@@ -82,6 +104,7 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               PopupMenuItem(value: 'all', child: Text('All active')),
               PopupMenuItem(value: 'createdToday', child: Text('Created today')),
               PopupMenuItem(value: 'pinned', child: Text('Pinned')),
+              PopupMenuItem(value: 'pending', child: Text('Pending')),
               PopupMenuItem(value: 'completed', child: Text('Completed')),
               PopupMenuItem(value: 'private', child: Text('Private')),
               PopupMenuItem(value: 'archived', child: Text('Archived')),
@@ -97,8 +120,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
               child: ListTile(
                 dense: true,
-                leading: Icon(
-                  Icons.today_outlined,
+                leading: SkyIcon(
+                  SkyIcons.today,
                   color: AppColors.brandSecondary(context),
                 ),
                 title: const Text('Showing items created today'),
@@ -108,12 +131,38 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 ),
               ),
             ),
+          if (_statusFilter == 'pinned' ||
+              _statusFilter == 'pending' ||
+              _statusFilter == 'private')
+            Material(
+              color: AppColors.brand(context).withValues(alpha: 0.08),
+              child: ListTile(
+                dense: true,
+                leading: SkyIcon(
+                  switch (_statusFilter) {
+                    'pinned' => SkyIcons.pin,
+                    'pending' => SkyIcons.pending,
+                    _ => SkyIcons.private,
+                  },
+                  color: AppColors.brand(context),
+                ),
+                title: Text(switch (_statusFilter) {
+                  'pinned' => 'Showing pinned tasks',
+                  'pending' => 'Showing pending tasks',
+                  _ => 'Showing private tasks',
+                }),
+                trailing: TextButton(
+                  onPressed: () => setState(() => _statusFilter = 'all'),
+                  child: const Text('Clear'),
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SearchBar(
               hintText: 'Search tasks...',
               onChanged: (v) => setState(() => _query = v),
-              leading: const Icon(Icons.search),
+              leading: const SkyIcon(SkyIcons.search),
             ),
           ),
           SizedBox(
@@ -195,6 +244,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
     }
     return switch (_statusFilter) {
       'pinned' => result.where((t) => t.pinned && !t.archived).toList(),
+      'pending' =>
+        result.where((t) => !t.completed && !t.archived).toList(),
       'completed' => result.where((t) => t.completed).toList(),
       'private' => result.where((t) => t.isPrivate).toList(),
       'archived' => result.where((t) => t.archived).toList(),
@@ -312,10 +363,10 @@ class _TaskCard extends ConsumerWidget {
               children: [
                 if (task.isVoice && task.voicePath != null)
                   VoicePlayButton(path: task.voicePath!),
-                if (task.pinned) const Icon(Icons.push_pin, size: 18),
+                if (task.pinned) const SkyIcon(SkyIcons.pin, size: 18),
                 if (task.archived)
-                  const Icon(Icons.inventory_2_outlined, size: 18),
-                const Icon(Icons.chevron_right),
+                  const SkyIcon(SkyIcons.archive, size: 18),
+                const SkyIcon(SkyIcons.chevronRight),
               ],
             ),
           ),

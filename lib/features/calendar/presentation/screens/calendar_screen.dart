@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../../reminders/presentation/widgets/reminder_form_sheet.dart';
 import '../../domain/calendar_entry.dart';
@@ -14,10 +15,15 @@ import '../providers/calendar_providers.dart';
 enum CalendarView { agenda, week, month }
 
 class CalendarScreen extends ConsumerStatefulWidget {
-  const CalendarScreen({super.key, this.focusedDay});
+  const CalendarScreen({
+    super.key,
+    this.focusedDay,
+    this.privateOnly = false,
+  });
 
   /// When set (e.g. from Home “This week”), open agenda for that day.
   final DateTime? focusedDay;
+  final bool privateOnly;
 
   @override
   ConsumerState<CalendarScreen> createState() => _CalendarScreenState();
@@ -28,10 +34,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateTime _anchor;
   late DateRange _range;
   late bool _dayFocus;
+  late bool _privateOnly;
 
   @override
   void initState() {
     super.initState();
+    _privateOnly = widget.privateOnly;
     final focus = widget.focusedDay;
     if (focus != null) {
       _dayFocus = true;
@@ -49,6 +57,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   @override
   void didUpdateWidget(covariant CalendarScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.privateOnly != widget.privateOnly) {
+      _privateOnly = widget.privateOnly;
+    }
     final focus = widget.focusedDay;
     final old = oldWidget.focusedDay;
     if (focus?.millisecondsSinceEpoch != old?.millisecondsSinceEpoch) {
@@ -125,18 +136,20 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         actions: [
           if (_dayFocus || _view != CalendarView.agenda)
             IconButton(
-              icon: const Icon(Icons.chevron_left),
+              icon: const SkyIcon(SkyIcons.chevronLeft),
               onPressed: () => _shiftPeriod(-1),
             ),
           if (_dayFocus || _view != CalendarView.agenda)
             IconButton(
-              icon: const Icon(Icons.chevron_right),
+              icon: const SkyIcon(SkyIcons.chevronRight),
               onPressed: () => _shiftPeriod(1),
             ),
           ...skyTaskAppBarActions(context),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(_dayFocus ? 96 : 48),
+          preferredSize: Size.fromHeight(
+            48 + (_dayFocus ? 48.0 : 0) + (_privateOnly ? 48.0 : 0),
+          ),
           child: Column(
             children: [
               if (_dayFocus)
@@ -144,8 +157,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
                   child: ListTile(
                     dense: true,
-                    leading: Icon(
-                      Icons.event,
+                    leading: SkyIcon(
+                      SkyIcons.event,
                       color: AppColors.brandSecondary(context),
                     ),
                     title: Text(
@@ -154,6 +167,22 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                     trailing: TextButton(
                       onPressed: _clearDayFocus,
                       child: const Text('All'),
+                    ),
+                  ),
+                ),
+              if (_privateOnly)
+                Material(
+                  color: AppColors.brand(context).withValues(alpha: 0.08),
+                  child: ListTile(
+                    dense: true,
+                    leading: SkyIcon(
+                      SkyIcons.private,
+                      color: AppColors.brand(context),
+                    ),
+                    title: const Text('Showing private reminders'),
+                    trailing: TextButton(
+                      onPressed: () => setState(() => _privateOnly = false),
+                      child: const Text('Clear'),
                     ),
                   ),
                 ),
@@ -225,7 +254,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   style: Theme.of(context).textTheme.bodySmall,
                 ),
               ),
-            Expanded(child: _buildView(entries)),
+            Expanded(
+              child: _buildView(
+                _privateOnly
+                    ? entries.where((e) => e.isPrivate).toList()
+                    : entries,
+              ),
+            ),
           ],
         ),
       ),
@@ -238,9 +273,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            _dayFocus
-                ? 'No reminders on this day.\nTap + to create one.'
-                : 'No events in this period.\nTap + to create a reminder.',
+            _privateOnly
+                ? 'No private reminders in this period.'
+                : _dayFocus
+                    ? 'No reminders on this day.\nTap + to create one.'
+                    : 'No events in this period.\nTap + to create a reminder.',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
@@ -329,7 +366,7 @@ class _GoogleSyncBanner extends StatelessWidget {
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: onEnable,
-              icon: const Icon(Icons.calendar_month),
+              icon: const SkyIcon(SkyIcons.calendar),
               label: const Text('Enable Google Calendar sync'),
             ),
           ],
@@ -564,10 +601,10 @@ class _CalendarEntryTile extends StatelessWidget {
         isPrivate: entry.isPrivate,
         child: ListTile(
           dense: compact,
-          leading: Icon(
+          leading: SkyIcon(
             entry.reminder?.isVoice == true
-                ? Icons.mic
-                : (isDevice ? Icons.event : Icons.alarm),
+                ? SkyIcons.mic
+                : (isDevice ? SkyIcons.event : SkyIcons.alarm),
             color: entry.isCompleted ? Colors.grey : AppColors.brand(context),
           ),
           title: Text(
@@ -593,7 +630,7 @@ class _CalendarEntryTile extends StatelessWidget {
               if (entry.reminder?.isVoice == true &&
                   entry.reminder?.voicePath != null)
                 VoicePlayButton(path: entry.reminder!.voicePath!),
-              if (onTap != null) const Icon(Icons.chevron_right),
+              if (onTap != null) const SkyIcon(SkyIcons.chevronRight),
             ],
           ),
           onTap: onTap,

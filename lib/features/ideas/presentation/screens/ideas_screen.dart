@@ -8,6 +8,7 @@ import '../../../../core/services/voice_memo_service.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../domain/entities/idea.dart';
 import '../../../notes/domain/entities/note.dart';
@@ -19,10 +20,12 @@ class IdeasScreen extends ConsumerStatefulWidget {
     super.key,
     this.initialTab = 0,
     this.createdToday = false,
+    this.privateOnly = false,
   });
 
   final int initialTab;
   final bool createdToday;
+  final bool privateOnly;
 
   @override
   ConsumerState<IdeasScreen> createState() => _IdeasScreenState();
@@ -32,11 +35,13 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
   late bool _createdToday;
+  late bool _privateOnly;
 
   @override
   void initState() {
     super.initState();
     _createdToday = widget.createdToday;
+    _privateOnly = widget.privateOnly;
     _tabController = TabController(
       length: 2,
       vsync: this,
@@ -49,6 +54,9 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
     super.didUpdateWidget(oldWidget);
     if (oldWidget.createdToday != widget.createdToday) {
       _createdToday = widget.createdToday;
+    }
+    if (oldWidget.privateOnly != widget.privateOnly) {
+      _privateOnly = widget.privateOnly;
     }
     if (oldWidget.initialTab != widget.initialTab &&
         widget.initialTab >= 0 &&
@@ -69,25 +77,34 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
       appBar: AppBar(
         title: const Text('Ideas & Notes'),
         actions: [
-          if (_createdToday)
+          if (_createdToday || _privateOnly)
             IconButton(
-              tooltip: 'Clear created-today filter',
-              onPressed: () => setState(() => _createdToday = false),
-              icon: const Icon(Icons.filter_alt_off_outlined),
+              tooltip: 'Clear filters',
+              onPressed: () => setState(() {
+                _createdToday = false;
+                _privateOnly = false;
+              }),
+              icon: const SkyIcon(SkyIcons.filterOff),
             )
           else
             IconButton(
               tooltip: 'Created today',
               onPressed: () => setState(() => _createdToday = true),
-              icon: const Icon(Icons.today_outlined),
+              icon: const SkyIcon(SkyIcons.today),
             ),
           ...skyTaskAppBarActions(context),
         ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(text: 'Ideas', icon: Icon(Icons.lightbulb_outline)),
-            Tab(text: 'Notes', icon: Icon(Icons.note_outlined)),
+            Tab(
+              text: 'Ideas',
+              icon: SkyIcon(SkyIcons.lightbulb, size: 20),
+            ),
+            Tab(
+              text: 'Notes',
+              icon: SkyIcon(SkyIcons.notes, size: 20),
+            ),
           ],
         ),
       ),
@@ -96,18 +113,47 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
           if (_createdToday)
             Material(
               color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
-              child: const ListTile(
+              child: ListTile(
                 dense: true,
-                leading: Icon(Icons.today_outlined),
-                title: Text('Showing items created today'),
+                leading: SkyIcon(
+                  SkyIcons.today,
+                  color: AppColors.brandSecondary(context),
+                ),
+                title: const Text('Showing items created today'),
+                trailing: TextButton(
+                  onPressed: () => setState(() => _createdToday = false),
+                  child: const Text('Clear'),
+                ),
+              ),
+            ),
+          if (_privateOnly)
+            Material(
+              color: AppColors.brand(context).withValues(alpha: 0.08),
+              child: ListTile(
+                dense: true,
+                leading: SkyIcon(
+                  SkyIcons.private,
+                  color: AppColors.brand(context),
+                ),
+                title: const Text('Showing private items'),
+                trailing: TextButton(
+                  onPressed: () => setState(() => _privateOnly = false),
+                  child: const Text('Clear'),
+                ),
               ),
             ),
           Expanded(
             child: TabBarView(
               controller: _tabController,
               children: [
-                _IdeasTab(createdToday: _createdToday),
-                _NotesTab(createdToday: _createdToday),
+                _IdeasTab(
+                  createdToday: _createdToday,
+                  privateOnly: _privateOnly,
+                ),
+                _NotesTab(
+                  createdToday: _createdToday,
+                  privateOnly: _privateOnly,
+                ),
               ],
             ),
           ),
@@ -118,9 +164,13 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
 }
 
 class _IdeasTab extends ConsumerWidget {
-  const _IdeasTab({required this.createdToday});
+  const _IdeasTab({
+    required this.createdToday,
+    required this.privateOnly,
+  });
 
   final bool createdToday;
+  final bool privateOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -130,17 +180,23 @@ class _IdeasTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (ideas) {
-        final filtered = createdToday
-            ? ideas
-                .where((i) => DateFilters.isCreatedToday(i.createdAt))
-                .toList()
-            : ideas;
+        var filtered = ideas;
+        if (createdToday) {
+          filtered = filtered
+              .where((i) => DateFilters.isCreatedToday(i.createdAt))
+              .toList();
+        }
+        if (privateOnly) {
+          filtered = filtered.where((i) => i.isPrivate).toList();
+        }
         if (filtered.isEmpty) {
           return Center(
             child: Text(
-              createdToday
-                  ? 'No ideas created today.'
-                  : 'Capture ideas instantly.\nTap + to start.',
+              privateOnly
+                  ? 'No private ideas yet.'
+                  : createdToday
+                      ? 'No ideas created today.'
+                      : 'Capture ideas instantly.\nTap + to start.',
               textAlign: TextAlign.center,
             ),
           );
@@ -165,9 +221,13 @@ class _IdeasTab extends ConsumerWidget {
 }
 
 class _NotesTab extends ConsumerWidget {
-  const _NotesTab({required this.createdToday});
+  const _NotesTab({
+    required this.createdToday,
+    required this.privateOnly,
+  });
 
   final bool createdToday;
+  final bool privateOnly;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -177,17 +237,23 @@ class _NotesTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (notes) {
-        final filtered = createdToday
-            ? notes
-                .where((n) => DateFilters.isCreatedToday(n.createdAt))
-                .toList()
-            : notes;
+        var filtered = notes;
+        if (createdToday) {
+          filtered = filtered
+              .where((n) => DateFilters.isCreatedToday(n.createdAt))
+              .toList();
+        }
+        if (privateOnly) {
+          filtered = filtered.where((n) => n.isPrivate).toList();
+        }
         if (filtered.isEmpty) {
           return Center(
             child: Text(
-              createdToday
-                  ? 'No notes created today.'
-                  : 'Write long-form notes.\nTap + to start.',
+              privateOnly
+                  ? 'No private notes yet.'
+                  : createdToday
+                      ? 'No notes created today.'
+                      : 'Write long-form notes.\nTap + to start.',
               textAlign: TextAlign.center,
             ),
           );
@@ -236,8 +302,8 @@ class _IdeaCard extends StatelessWidget {
         isPrivate: idea.isPrivate,
         child: ListTile(
           onTap: onTap,
-          leading: Icon(
-            idea.isVoice ? Icons.mic : Icons.lightbulb_outline,
+          leading: SkyIcon(
+            idea.isVoice ? SkyIcons.mic : SkyIcons.lightbulb,
             color: AppColors.brandSecondary(context),
           ),
           title: Text(
@@ -260,7 +326,7 @@ class _IdeaCard extends StatelessWidget {
               if (idea.isVoice && idea.voicePath != null)
                 VoicePlayButton(path: idea.voicePath!),
               if (idea.tags.isEmpty)
-                const Icon(Icons.chevron_right)
+                const SkyIcon(SkyIcons.chevronRight)
               else
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -270,7 +336,7 @@ class _IdeaCard extends StatelessWidget {
                       idea.tags.take(2).join(', '),
                       style: Theme.of(context).textTheme.bodySmall,
                     ),
-                    const Icon(Icons.chevron_right, size: 18),
+                    const SkyIcon(SkyIcons.chevronRight, size: 18),
                   ],
                 ),
             ],
@@ -294,8 +360,8 @@ class _NoteCard extends StatelessWidget {
         isPrivate: note.isPrivate,
         child: ListTile(
           onTap: onTap,
-          leading: Icon(
-            note.isVoice ? Icons.mic : Icons.note_outlined,
+          leading: SkyIcon(
+            note.isVoice ? SkyIcons.mic : SkyIcons.notes,
             color: AppColors.brandSecondary(context),
           ),
           title: Text(
@@ -317,7 +383,7 @@ class _NoteCard extends StatelessWidget {
             children: [
               if (note.isVoice && note.voicePath != null)
                 VoicePlayButton(path: note.voicePath!),
-              const Icon(Icons.chevron_right),
+              const SkyIcon(SkyIcons.chevronRight),
             ],
           ),
         ),
