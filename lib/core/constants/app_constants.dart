@@ -17,6 +17,8 @@ abstract final class AppConstants {
   static const String themeModeKey = 'theme_mode';
   static const String onboardingCompleteKey = 'onboarding_complete';
   static const String privacySetupCompleteKey = 'privacy_setup_complete';
+  static const String captureVoiceSavesKey = 'capture_voice_saves';
+  static const String captureTypedDescSavesKey = 'capture_typed_desc_saves';
 
   /// Seconds the app can stay in background before requiring unlock.
   /// Short overlays (keyboard, system sheets) usually return sooner.
