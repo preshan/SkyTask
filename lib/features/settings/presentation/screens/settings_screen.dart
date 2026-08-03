@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/constants/app_info.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../calendar/data/device_calendar_service.dart';
@@ -15,6 +17,9 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final appLock = ref.watch(appLockEnabledProvider);
     final calendarSettings = ref.watch(calendarSettingsProvider);
+    final mist = Theme.of(context).textTheme.bodySmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+        );
 
     return Scaffold(
       appBar: AppBar(
@@ -108,13 +113,75 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const Divider(),
           _header(context, 'About'),
-          const ListTile(
-            leading: Icon(Icons.info_outline),
-            title: Text('SkyTask'),
-            subtitle: Text('Version 1.0.0'),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text(AppInfo.name),
+            subtitle: Text('Version ${AppInfo.versionLabel}'),
+            onTap: () => _showAbout(context),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(AppInfo.copyright, style: mist),
+                const SizedBox(height: 6),
+                Text('Developed by ${AppInfo.developerName}', style: mist),
+                const SizedBox(height: 2),
+                Wrap(
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  spacing: 4,
+                  children: [
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () => _openLink(AppInfo.developerLinkedIn),
+                      child: const Text('LinkedIn'),
+                    ),
+                    Text('·', style: mist),
+                    TextButton(
+                      style: TextButton.styleFrom(
+                        visualDensity: VisualDensity.compact,
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        minimumSize: Size.zero,
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: () =>
+                          _openLink('mailto:${AppInfo.developerEmail}'),
+                      child: Text(AppInfo.developerEmail),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ],
       ),
+    );
+  }
+
+  Future<void> _openLink(String url) async {
+    final uri = Uri.parse(url);
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  void _showAbout(BuildContext context) {
+    showAboutDialog(
+      context: context,
+      applicationName: AppInfo.name,
+      applicationVersion: AppInfo.versionLabel,
+      applicationLegalese: AppInfo.copyright,
+      children: [
+        const SizedBox(height: 12),
+        Text(AppInfo.tagline),
+        const SizedBox(height: 8),
+        Text('Developed by ${AppInfo.developerName}'),
+        Text(AppInfo.developerEmail),
+      ],
     );
   }
 
@@ -181,6 +248,7 @@ class SettingsScreen extends ConsumerWidget {
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
               color: Theme.of(context).colorScheme.primary,
+              fontWeight: FontWeight.w600,
             ),
       ),
     );

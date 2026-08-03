@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
+import 'core/constants/app_info.dart';
 import 'core/di/providers.dart';
 import 'core/services/alarm_service.dart';
 import 'core/services/background_task_service.dart';
@@ -19,6 +21,12 @@ Future<void> main() async {
       statusBarColor: Colors.transparent,
       systemNavigationBarColor: Colors.transparent,
     ),
+  );
+
+  final packageInfo = await PackageInfo.fromPlatform();
+  AppInfo.applyPackageInfo(
+    versionName: packageInfo.version,
+    build: packageInfo.buildNumber,
   );
 
   final prefs = await SharedPreferences.getInstance();
