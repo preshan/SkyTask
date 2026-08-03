@@ -1,3 +1,26 @@
+# SkyTask 1.1.2 — Release Notes
+
+**Released:** 2026-08-03 · **Version:** `1.1.2+4`
+
+Home shortcuts, amber accents, and a full Hugeicons pass across the app.
+
+## Download
+
+- **[SkyTask-1.1.2.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.2/SkyTask-1.1.2.apk)** (Android, debug-signed for sideload)
+
+## What's new
+
+- **Home shortcuts:** pinned tasks, pending tasks, private ideas, private reminders
+- **Today tiles:** Tasks / Ideas / Notes with amber count badges (created today)
+- **This week:** Mon–Sun reminder count boxes that open that day’s agenda
+- **Amber secondary** brand accent for badges and highlights
+- **Hugeicons everywhere:** Material icons replaced with `SkyIcon` / Hugeicons
+- **About:** centered credits with LinkedIn and mail icons
+- **Voice UX:** skip description autofocus when you mostly save with voice
+- **Calendar:** clearer selected Agenda / Week / Month contrast
+
+---
+
 # SkyTask 1.1.0 — Release Notes
 
 **Released:** 2026-08-02 · **Version:** `1.1.0+2`
