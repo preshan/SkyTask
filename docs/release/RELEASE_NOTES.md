@@ -1,3 +1,23 @@
+# SkyTask 1.1.3 — Release Notes
+
+**Released:** 2026-08-03 · **Version:** `1.1.3+5`
+
+Hotfix for release builds crashing when scheduling reminders (voice or text).
+
+## Download
+
+- **[SkyTask-1.1.3.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.3/SkyTask-1.1.3.apk)** (Android, debug-signed for sideload)
+
+## What's fixed
+
+- **Reminders / notifications:** R8 was stripping Gson `TypeToken` generics used by `flutter_local_notifications`, causing `IllegalStateException` when creating a reminder (including voice). Added ProGuard keep rules + Gson 2.11.
+
+## Note on voice + calendar
+
+Voice reminders are **intentionally not synced** to Google/device calendar (same as private reminders). That is separate from this crash.
+
+---
+
 # SkyTask 1.1.2 — Release Notes
 
 **Released:** 2026-08-03 · **Version:** `1.1.2+4`
