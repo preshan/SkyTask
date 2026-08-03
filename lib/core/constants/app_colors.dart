@@ -23,6 +23,16 @@ abstract final class AppColors {
   static const Color warning = Color(0xFFF59E0B);
   static const Color error = Color(0xFFEF4444);
 
+  /// Soft day-sky blues / cream horizon.
+  static const Color daySkyTop = Color(0xFF87CEEB);
+  static const Color daySkyMid = Color(0xFFB8D4F0);
+  static const Color daySkyHorizon = Color(0xFFF5E6D3);
+
+  /// Night sky depths.
+  static const Color nightSkyTop = Color(0xFF020617);
+  static const Color nightSkyMid = Color(0xFF0F172A);
+  static const Color nightSkyHorizon = Color(0xFF1E1B4B);
+
   /// Brand accent for the current theme.
   static Color brand(BuildContext context) =>
       brandFor(Theme.of(context).brightness);
@@ -36,6 +46,7 @@ abstract final class AppColors {
   static Color brandSecondaryFor(Brightness brightness) =>
       brightness == Brightness.dark ? secondaryDark : secondary;
 
+  /// Splash / lock brand gradient (navy/sky → amber).
   static LinearGradient skyGradientFor(Brightness brightness) => LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
@@ -50,6 +61,41 @@ abstract final class AppColors {
     end: Alignment.bottomRight,
     colors: [primary, secondary],
   );
+
+  /// App shell atmosphere — day sky or night sky.
+  static LinearGradient atmosphereGradientFor(Brightness brightness) {
+    if (brightness == Brightness.dark) {
+      return const LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [nightSkyTop, nightSkyMid, nightSkyHorizon],
+        stops: [0.0, 0.55, 1.0],
+      );
+    }
+    return const LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: [daySkyTop, daySkyMid, daySkyHorizon],
+      stops: [0.0, 0.45, 1.0],
+    );
+  }
+
+  /// Translucent fill for frosted cards / tiles.
+  static Color glassFillFor(Brightness brightness) =>
+      brightness == Brightness.dark
+          ? Colors.white.withValues(alpha: 0.10)
+          : Colors.white.withValues(alpha: 0.45);
+
+  /// Slightly stronger glass for bottom nav / elevated panels.
+  static Color glassFillElevatedFor(Brightness brightness) =>
+      brightness == Brightness.dark
+          ? const Color(0xFF1E293B).withValues(alpha: 0.55)
+          : Colors.white.withValues(alpha: 0.55);
+
+  static Color glassBorderFor(Brightness brightness) =>
+      brightness == Brightness.dark
+          ? Colors.white.withValues(alpha: 0.14)
+          : brandFor(brightness).withValues(alpha: 0.14);
 
   static const LinearGradient goldGradient = LinearGradient(
     colors: [goldAccent, completedGold],
