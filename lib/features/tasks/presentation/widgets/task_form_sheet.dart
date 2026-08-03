@@ -6,6 +6,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
+import '../../../../core/constants/capture_preference.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
@@ -77,7 +78,9 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _descriptionFocus.requestFocus();
+      if (!ref.read(preferVoiceCaptureProvider)) {
+        _descriptionFocus.requestFocus();
+      }
     });
   }
 
@@ -148,6 +151,10 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             );
 
       await repo.save(task);
+      await ref.read(preferVoiceCaptureProvider.notifier).recordSave(
+        hasVoice: hasVoice,
+        hasTypedBody: description.isNotEmpty,
+      );
       // Persist non-default categories so they stay in the catalog.
       if (!TaskCategories.isDefault(task.category)) {
         await ref.read(customTaskCategoriesProvider.notifier).add(task.category);
@@ -274,7 +281,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
           TextField(
             controller: _descriptionController,
             focusNode: _descriptionFocus,
-            autofocus: true,
+            autofocus: !ref.watch(preferVoiceCaptureProvider),
             decoration: const InputDecoration(
               labelText: 'Description (optional)',
               border: OutlineInputBorder(),

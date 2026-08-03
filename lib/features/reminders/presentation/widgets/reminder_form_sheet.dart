@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../calendar/presentation/providers/calendar_providers.dart';
+import '../../../../core/constants/capture_preference.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/private_icon_toggle.dart';
@@ -68,7 +69,9 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _descriptionFocus.requestFocus();
+      if (!ref.read(preferVoiceCaptureProvider)) {
+        _descriptionFocus.requestFocus();
+      }
     });
   }
 
@@ -167,6 +170,10 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
       if (previousVoice != null && previousVoice != voicePath) {
         await VoiceMemoService.deleteIfExists(previousVoice);
       }
+      await ref.read(preferVoiceCaptureProvider.notifier).recordSave(
+        hasVoice: hasVoice,
+        hasTypedBody: description != null && description.isNotEmpty,
+      );
       refreshReminders(ref);
       if (mounted) Navigator.pop(context);
     } catch (e) {
@@ -267,7 +274,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           TextField(
             controller: _descriptionController,
             focusNode: _descriptionFocus,
-            autofocus: true,
+            autofocus: !ref.watch(preferVoiceCaptureProvider),
             decoration: const InputDecoration(
               labelText: 'Description (optional)',
               border: OutlineInputBorder(),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/content_providers.dart';
+import '../../../../core/constants/capture_preference.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
@@ -65,7 +66,9 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _contentFocus.requestFocus();
+      if (!ref.read(preferVoiceCaptureProvider)) {
+        _contentFocus.requestFocus();
+      }
     });
   }
 
@@ -125,6 +128,10 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
             );
 
       await repo.save(idea);
+      await ref.read(preferVoiceCaptureProvider.notifier).recordSave(
+        hasVoice: hasVoice,
+        hasTypedBody: _contentController.text.trim().isNotEmpty,
+      );
       if (previousVoice != null && previousVoice != voicePath) {
         await VoiceMemoService.deleteIfExists(previousVoice);
       }
@@ -182,7 +189,7 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
           TextField(
             controller: _contentController,
             focusNode: _contentFocus,
-            autofocus: true,
+            autofocus: !ref.watch(preferVoiceCaptureProvider),
             decoration: const InputDecoration(
               labelText: 'Details',
               border: OutlineInputBorder(),
