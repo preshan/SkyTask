@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
@@ -15,7 +16,9 @@ import '../../domain/entities/task.dart';
 import '../widgets/task_form_sheet.dart';
 
 class TasksScreen extends ConsumerStatefulWidget {
-  const TasksScreen({super.key});
+  const TasksScreen({super.key, this.createdToday = false});
+
+  final bool createdToday;
 
   @override
   ConsumerState<TasksScreen> createState() => _TasksScreenState();
@@ -26,6 +29,21 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   String _sort = 'updated';
   String _statusFilter = 'all';
   String? _categoryFilter;
+  late bool _createdToday;
+
+  @override
+  void initState() {
+    super.initState();
+    _createdToday = widget.createdToday;
+  }
+
+  @override
+  void didUpdateWidget(covariant TasksScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.createdToday != widget.createdToday) {
+      _createdToday = widget.createdToday;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,9 +69,18 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.filter_list),
-            onSelected: (v) => setState(() => _statusFilter = v),
+            onSelected: (v) => setState(() {
+              if (v == 'createdToday') {
+                _createdToday = true;
+                _statusFilter = 'all';
+              } else {
+                _statusFilter = v;
+                if (v != 'all') _createdToday = false;
+              }
+            }),
             itemBuilder: (_) => const [
               PopupMenuItem(value: 'all', child: Text('All active')),
+              PopupMenuItem(value: 'createdToday', child: Text('Created today')),
               PopupMenuItem(value: 'pinned', child: Text('Pinned')),
               PopupMenuItem(value: 'completed', child: Text('Completed')),
               PopupMenuItem(value: 'private', child: Text('Private')),
@@ -65,6 +92,22 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
       ),
       body: Column(
         children: [
+          if (_createdToday)
+            Material(
+              color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
+              child: ListTile(
+                dense: true,
+                leading: Icon(
+                  Icons.today_outlined,
+                  color: AppColors.brandSecondary(context),
+                ),
+                title: const Text('Showing items created today'),
+                trailing: TextButton(
+                  onPressed: () => setState(() => _createdToday = false),
+                  child: const Text('Clear'),
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             child: SearchBar(
@@ -137,6 +180,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           .where((t) =>
               t.title.toLowerCase().contains(q) ||
               (t.description?.toLowerCase().contains(q) ?? false))
+          .toList();
+    }
+    if (_createdToday) {
+      result = result
+          .where((t) => DateFilters.isCreatedToday(t.createdAt))
           .toList();
     }
     if (_categoryFilter != null) {

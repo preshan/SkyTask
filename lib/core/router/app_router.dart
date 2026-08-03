@@ -21,6 +21,10 @@ abstract final class AppRoutes {
   static const calendar = '/calendar';
   static const ideas = '/ideas';
   static const settings = '/settings';
+
+  static String tasksCreatedToday() => '$tasks?createdToday=1';
+  static String ideasCreatedToday() => '$ideas?tab=ideas&createdToday=1';
+  static String notesCreatedToday() => '$ideas?tab=notes&createdToday=1';
 }
 
 final appRouterProvider = Provider<GoRouter>((ref) {
@@ -73,8 +77,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.tasks,
-            pageBuilder: (_, __) =>
-                const NoTransitionPage(child: TasksScreen()),
+            pageBuilder: (_, state) => NoTransitionPage(
+              child: TasksScreen(
+                createdToday:
+                    state.uri.queryParameters['createdToday'] == '1',
+              ),
+            ),
           ),
           GoRoute(
             path: AppRoutes.calendar,
@@ -83,8 +91,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.ideas,
-            pageBuilder: (_, __) =>
-                const NoTransitionPage(child: IdeasScreen()),
+            pageBuilder: (_, state) {
+              final tab = state.uri.queryParameters['tab'];
+              final initialTab = tab == 'notes' ? 1 : 0;
+              return NoTransitionPage(
+                child: IdeasScreen(
+                  initialTab: initialTab,
+                  createdToday:
+                      state.uri.queryParameters['createdToday'] == '1',
+                ),
+              );
+            },
           ),
           GoRoute(
             path: AppRoutes.settings,

@@ -1,19 +1,28 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../core/services/voice_memo_service.dart';
+import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
-import '../../../../core/services/voice_memo_service.dart';
 import '../../domain/entities/idea.dart';
 import '../../../notes/domain/entities/note.dart';
 import '../widgets/idea_form_sheet.dart';
 import '../../../notes/presentation/widgets/note_form_sheet.dart';
 
 class IdeasScreen extends ConsumerStatefulWidget {
-  const IdeasScreen({super.key});
+  const IdeasScreen({
+    super.key,
+    this.initialTab = 0,
+    this.createdToday = false,
+  });
+
+  final int initialTab;
+  final bool createdToday;
 
   @override
   ConsumerState<IdeasScreen> createState() => _IdeasScreenState();
@@ -22,11 +31,30 @@ class IdeasScreen extends ConsumerStatefulWidget {
 class _IdeasScreenState extends ConsumerState<IdeasScreen>
     with SingleTickerProviderStateMixin {
   late final TabController _tabController;
+  late bool _createdToday;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
+    _createdToday = widget.createdToday;
+    _tabController = TabController(
+      length: 2,
+      vsync: this,
+      initialIndex: widget.initialTab.clamp(0, 1),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant IdeasScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.createdToday != widget.createdToday) {
+      _createdToday = widget.createdToday;
+    }
+    if (oldWidget.initialTab != widget.initialTab &&
+        widget.initialTab >= 0 &&
+        widget.initialTab < 2) {
+      _tabController.index = widget.initialTab;
+    }
   }
 
   @override
@@ -40,7 +68,21 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
     return Scaffold(
       appBar: AppBar(
         title: const Text('Ideas & Notes'),
-        actions: skyTaskAppBarActions(context),
+        actions: [
+          if (_createdToday)
+            IconButton(
+              tooltip: 'Clear created-today filter',
+              onPressed: () => setState(() => _createdToday = false),
+              icon: const Icon(Icons.filter_alt_off_outlined),
+            )
+          else
+            IconButton(
+              tooltip: 'Created today',
+              onPressed: () => setState(() => _createdToday = true),
+              icon: const Icon(Icons.today_outlined),
+            ),
+          ...skyTaskAppBarActions(context),
+        ],
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
@@ -49,11 +91,26 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
           ],
         ),
       ),
-      body: TabBarView(
-        controller: _tabController,
-        children: const [
-          _IdeasTab(),
-          _NotesTab(),
+      body: Column(
+        children: [
+          if (_createdToday)
+            Material(
+              color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
+              child: const ListTile(
+                dense: true,
+                leading: Icon(Icons.today_outlined),
+                title: Text('Showing items created today'),
+              ),
+            ),
+          Expanded(
+            child: TabBarView(
+              controller: _tabController,
+              children: [
+                _IdeasTab(createdToday: _createdToday),
+                _NotesTab(createdToday: _createdToday),
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -61,7 +118,9 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
 }
 
 class _IdeasTab extends ConsumerWidget {
-  const _IdeasTab();
+  const _IdeasTab({required this.createdToday});
+
+  final bool createdToday;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -71,16 +130,26 @@ class _IdeasTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (ideas) {
-        if (ideas.isEmpty) {
-          return const Center(
-            child: Text('Capture ideas instantly.\nTap + to start.'),
+        final filtered = createdToday
+            ? ideas
+                .where((i) => DateFilters.isCreatedToday(i.createdAt))
+                .toList()
+            : ideas;
+        if (filtered.isEmpty) {
+          return Center(
+            child: Text(
+              createdToday
+                  ? 'No ideas created today.'
+                  : 'Capture ideas instantly.\nTap + to start.',
+              textAlign: TextAlign.center,
+            ),
           );
         }
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: ideas.length,
+          itemCount: filtered.length,
           itemBuilder: (_, i) {
-            final idea = ideas[i];
+            final idea = filtered[i];
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _IdeaCard(
@@ -96,7 +165,9 @@ class _IdeasTab extends ConsumerWidget {
 }
 
 class _NotesTab extends ConsumerWidget {
-  const _NotesTab();
+  const _NotesTab({required this.createdToday});
+
+  final bool createdToday;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -106,16 +177,26 @@ class _NotesTab extends ConsumerWidget {
       loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (notes) {
-        if (notes.isEmpty) {
-          return const Center(
-            child: Text('Write long-form notes.\nTap + to start.'),
+        final filtered = createdToday
+            ? notes
+                .where((n) => DateFilters.isCreatedToday(n.createdAt))
+                .toList()
+            : notes;
+        if (filtered.isEmpty) {
+          return Center(
+            child: Text(
+              createdToday
+                  ? 'No notes created today.'
+                  : 'Write long-form notes.\nTap + to start.',
+              textAlign: TextAlign.center,
+            ),
           );
         }
         return ListView.builder(
           padding: const EdgeInsets.all(16),
-          itemCount: notes.length,
+          itemCount: filtered.length,
           itemBuilder: (_, i) {
-            final note = notes[i];
+            final note = filtered[i];
             return Padding(
               padding: const EdgeInsets.only(bottom: 8),
               child: _NoteCard(
@@ -157,6 +238,7 @@ class _IdeaCard extends StatelessWidget {
           onTap: onTap,
           leading: Icon(
             idea.isVoice ? Icons.mic : Icons.lightbulb_outline,
+            color: AppColors.brandSecondary(context),
           ),
           title: Text(
             displayItemTitle(
@@ -212,7 +294,10 @@ class _NoteCard extends StatelessWidget {
         isPrivate: note.isPrivate,
         child: ListTile(
           onTap: onTap,
-          leading: Icon(note.isVoice ? Icons.mic : Icons.note_outlined),
+          leading: Icon(
+            note.isVoice ? Icons.mic : Icons.note_outlined,
+            color: AppColors.brandSecondary(context),
+          ),
           title: Text(
             displayItemTitle(
               title: note.title,

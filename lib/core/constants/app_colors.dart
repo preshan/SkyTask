@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// SkyTask brand palette — navy in light, sky blue in dark.
+/// SkyTask brand palette — navy/sky primary, amber secondary.
 abstract final class AppColors {
   /// Light-theme brand (navy).
   static const Color primary = Color(0xFF000080);
@@ -8,8 +8,12 @@ abstract final class AppColors {
   /// Dark-theme brand (sky blue) — readable on dark surfaces.
   static const Color primaryDark = Color(0xFF6EC6FF);
 
-  static const Color secondary = Color(0xFF191970);
-  static const Color secondaryDark = Color(0xFF9BE7FF);
+  /// Amber secondary (light).
+  static const Color secondary = Color(0xFFF59E0B);
+
+  /// Amber secondary (dark theme — slightly brighter).
+  static const Color secondaryDark = Color(0xFFFBBF24);
+
   static const Color background = Color(0xFFF4F6F9);
   static const Color card = Color(0xFFFFFFFF);
   static const Color goldAccent = Color(0xFFF4C542);

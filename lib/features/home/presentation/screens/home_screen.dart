@@ -7,21 +7,23 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
-import '../../../calendar/presentation/providers/calendar_providers.dart';
+import '../../../../core/services/voice_memo_service.dart';
+import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/section_header.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
-import '../../../../core/services/voice_memo_service.dart';
+import '../../../calendar/presentation/providers/calendar_providers.dart';
 import '../../../notes/domain/entities/note.dart';
-import '../../../tasks/domain/entities/task.dart';
+import '../../../ideas/domain/entities/idea.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final tasksAsync = ref.watch(_todayTasksProvider);
+    final todayCountsAsync = ref.watch(_todayCreatedCountsProvider);
     final remindersAsync = ref.watch(_upcomingRemindersProvider);
     final ideasAsync = ref.watch(_recentIdeasProvider);
     final notesAsync = ref.watch(_recentNotesProvider);
@@ -34,16 +36,13 @@ class HomeScreen extends ConsumerWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _GreetingHeader(),
+          const _GreetingHeader(),
           const SizedBox(height: 8),
-          SectionHeader(
-            title: 'Today',
-            onAction: () => context.go(AppRoutes.tasks),
-          ),
-          tasksAsync.when(
+          const SectionHeader(title: 'Today'),
+          todayCountsAsync.when(
             loading: () => const _ShimmerCard(),
             error: (e, _) => Text('Error: $e'),
-            data: (tasks) => _TaskSummaryCard(tasks: tasks),
+            data: (counts) => _TodayCreateTiles(counts: counts),
           ),
           SectionHeader(
             title: 'Upcoming Reminders',
@@ -121,6 +120,7 @@ class HomeScreen extends ConsumerWidget {
                             idea.isVoice
                                 ? Icons.mic
                                 : Icons.lightbulb_outline,
+                            color: AppColors.brandSecondary(context),
                           ),
                           title: Text(
                             displayItemTitle(
@@ -148,7 +148,7 @@ class HomeScreen extends ConsumerWidget {
           ),
           SectionHeader(
             title: 'Recent Notes',
-            onAction: () => context.go(AppRoutes.ideas),
+            onAction: () => context.go('${AppRoutes.ideas}?tab=notes'),
           ),
           notesAsync.when(
             loading: () => const _ShimmerCard(),
@@ -171,6 +171,7 @@ class HomeScreen extends ConsumerWidget {
                         child: ListTile(
                           leading: Icon(
                             note.isVoice ? Icons.mic : Icons.note_outlined,
+                            color: AppColors.brandSecondary(context),
                           ),
                           title: Text(
                             displayItemTitle(
@@ -204,10 +205,36 @@ class HomeScreen extends ConsumerWidget {
   }
 }
 
-final _todayTasksProvider = FutureProvider<List<Task>>((ref) async {
+class _TodayCounts {
+  const _TodayCounts({
+    required this.tasks,
+    required this.ideas,
+    required this.notes,
+  });
+
+  final int tasks;
+  final int ideas;
+  final int notes;
+}
+
+final _todayCreatedCountsProvider = FutureProvider<_TodayCounts>((ref) async {
   ref.watch(tasksRevisionProvider);
-  final repo = await ref.read(taskRepositoryProvider.future);
-  return repo.getToday();
+  ref.watch(ideasRevisionProvider);
+  ref.watch(notesRevisionProvider);
+
+  final taskRepo = await ref.read(taskRepositoryProvider.future);
+  final ideaRepo = await ref.read(ideaRepositoryProvider.future);
+  final noteRepo = await ref.read(noteRepositoryProvider.future);
+
+  final tasks = await taskRepo.getAll();
+  final ideas = await ideaRepo.getAll();
+  final notes = await noteRepo.getAll();
+
+  return _TodayCounts(
+    tasks: tasks.where((t) => DateFilters.isCreatedToday(t.createdAt)).length,
+    ideas: ideas.where((i) => DateFilters.isCreatedToday(i.createdAt)).length,
+    notes: notes.where((n) => DateFilters.isCreatedToday(n.createdAt)).length,
+  );
 });
 
 final _upcomingRemindersProvider = FutureProvider((ref) async {
@@ -216,7 +243,7 @@ final _upcomingRemindersProvider = FutureProvider((ref) async {
   return repo.getUpcoming();
 });
 
-final _recentIdeasProvider = FutureProvider((ref) async {
+final _recentIdeasProvider = FutureProvider<List<Idea>>((ref) async {
   ref.watch(ideasRevisionProvider);
   final repo = await ref.read(ideaRepositoryProvider.future);
   final all = await repo.getAll();
@@ -231,6 +258,8 @@ final _recentNotesProvider = FutureProvider<List<Note>>((ref) async {
 });
 
 class _GreetingHeader extends StatelessWidget {
+  const _GreetingHeader();
+
   @override
   Widget build(BuildContext context) {
     final hour = DateTime.now().hour;
@@ -247,38 +276,128 @@ class _GreetingHeader extends StatelessWidget {
   }
 }
 
-class _TaskSummaryCard extends StatelessWidget {
-  const _TaskSummaryCard({required this.tasks});
+class _TodayCreateTiles extends StatelessWidget {
+  const _TodayCreateTiles({required this.counts});
 
-  final List<Task> tasks;
+  final _TodayCounts counts;
 
   @override
   Widget build(BuildContext context) {
-    final completed = tasks.where((t) => t.completed).length;
-    return Card(
-      child: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    '${tasks.length} tasks today',
-                    style: Theme.of(context).textTheme.titleMedium,
-                  ),
-                  const SizedBox(height: 4),
-                  Text('$completed completed'),
-                ],
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 8),
+      child: Row(
+        children: [
+          Expanded(
+            child: _TodayTypeTile(
+              label: 'Tasks',
+              count: counts.tasks,
+              icon: SkyIcons.task,
+              onTap: () => context.go(AppRoutes.tasksCreatedToday()),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _TodayTypeTile(
+              label: 'Ideas',
+              count: counts.ideas,
+              icon: SkyIcons.lightbulb,
+              onTap: () => context.go(AppRoutes.ideasCreatedToday()),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: _TodayTypeTile(
+              label: 'Notes',
+              count: counts.notes,
+              icon: SkyIcons.notes,
+              onTap: () => context.go(AppRoutes.notesCreatedToday()),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TodayTypeTile extends StatelessWidget {
+  const _TodayTypeTile({
+    required this.label,
+    required this.count,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final int count;
+  final List<List<dynamic>> icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final amber = AppColors.brandSecondary(context);
+    final scheme = Theme.of(context).colorScheme;
+
+    return Material(
+      color: scheme.surface,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          height: 96,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: brand.withValues(alpha: 0.14)),
+          ),
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SkyIcon(icon, size: 28, color: brand),
+                    const SizedBox(height: 6),
+                    Text(
+                      label,
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            CircularProgressIndicator(
-              value: tasks.isEmpty ? 0 : completed / tasks.length,
-              backgroundColor: AppColors.brand(context).withValues(alpha: 0.2),
-              color: AppColors.goldAccent,
-            ),
-          ],
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 22, minHeight: 22),
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: amber,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: amber.withValues(alpha: 0.35),
+                        blurRadius: 6,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Text(
+                    count > 99 ? '99+' : '$count',
+                    style: TextStyle(
+                      color: scheme.onSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -290,12 +409,12 @@ class _StatsRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return const Row(
       children: [
         Expanded(child: _StatCard('Pinned', '—', Icons.push_pin_outlined)),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(child: _StatCard('Private', '—', Icons.lock_outline)),
-        const SizedBox(width: 12),
+        SizedBox(width: 12),
         Expanded(child: _StatCard('Done', '—', Icons.check_circle_outline)),
       ],
     );
@@ -316,7 +435,7 @@ class _StatCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.brand(context)),
+            Icon(icon, color: AppColors.brandSecondary(context)),
             const SizedBox(height: 8),
             Text(value, style: Theme.of(context).textTheme.titleLarge),
             Text(label, style: Theme.of(context).textTheme.bodySmall),
@@ -333,7 +452,10 @@ class _ShimmerCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Card(
-      child: SizedBox(height: 80, child: Center(child: CircularProgressIndicator())),
+      child: SizedBox(
+        height: 80,
+        child: Center(child: CircularProgressIndicator()),
+      ),
     );
   }
 }
