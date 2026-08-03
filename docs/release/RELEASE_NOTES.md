@@ -1,3 +1,36 @@
+# SkyTask 1.2.0 — Release Notes
+
+**Released:** 2026-08-03 · **Version:** `1.2.0+6`
+
+Sky glass visual refresh: day/night atmosphere, frosted surfaces, clearer home shortcuts, and dark-mode PIN contrast.
+
+## Download
+
+- **[SkyTask-1.2.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.2.0/SkyTask-1.2.0.apk)** (Android, debug-signed for sideload)
+
+## What's new
+
+- **Sky glass theme:** soft day/night sky behind the app, frosted glass panels on home and navigation
+- **Today:** Tasks and Reminders due today (incomplete only); zero counts stay badge-free
+- **Recent reminders:** rolling next 7 days (today + 6) with day badges when there are items
+- **Shortcut badges:** live counts for pinned tasks, pending tasks, private ideas, private reminders
+- **About:** centered credits with the app icon
+- **Dark mode:** readable PIN setup / lock / onboarding; theme-aware icons and text on sky backgrounds
+
+## Screenshots
+
+| Home | Tasks | Create |
+|:----:|:-----:|:------:|
+| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Create](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_create_menu.png) |
+
+| New Task | New Reminder | Settings |
+|:--------:|:------------:|:--------:|
+| ![New Task](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_new_task.png) | ![New Reminder](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/05_new_reminder.png) | ![Settings](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/06_settings.png) |
+
+> Screenshots may still reflect the pre–sky-glass home chrome; UI polish continues.
+
+---
+
 # SkyTask 1.1.3 — Release Notes
 
 **Released:** 2026-08-03 · **Version:** `1.1.3+5`

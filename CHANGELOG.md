@@ -2,6 +2,22 @@
 
 All notable changes to SkyTask are documented in this file.
 
+## [1.2.0] — 2026-08-03
+
+### Added
+- **Sky glass theme:** day/night atmosphere gradients with frosted glass surfaces across the shell and home
+- Home shortcut live count badges (pinned, pending, private ideas, private reminders)
+
+### Changed
+- Today tiles focus on **Tasks + Reminders** due today (incomplete)
+- “This week” becomes **Recent reminders** — today plus the next 6 days
+- Settings About: centered credits with app icon; section header removed
+- Dark-mode text contrast on sky backgrounds, PIN setup, lock screen, and onboarding
+
+### Fixed
+- PIN keypad and copy readable in dark mode (theme-aware colors)
+- Shortcut tile alignment and badge layout
+
 ## [1.1.0] — 2026-08-02
 
 ### Added
