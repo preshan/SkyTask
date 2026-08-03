@@ -201,13 +201,13 @@ class _CategoryChip extends StatelessWidget {
         selected: selected,
         showCheckmark: false,
         onSelected: (_) => onTap(),
-        selectedColor: AppColors.primary.withValues(alpha: 0.25),
-        backgroundColor: AppColors.card,
+        selectedColor: AppColors.brand(context).withValues(alpha: 0.25),
+        backgroundColor: Theme.of(context).colorScheme.surface,
         side: BorderSide(
-          color: selected ? AppColors.primary : AppColors.primary.withValues(alpha: 0.25),
+          color: selected ? AppColors.brand(context) : AppColors.brand(context).withValues(alpha: 0.25),
         ),
         labelStyle: TextStyle(
-          color: AppColors.primaryText,
+          color: Theme.of(context).colorScheme.onSurface,
           fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
           fontSize: 13,
         ),

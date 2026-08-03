@@ -105,7 +105,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           label: const Text('Unlock'),
           style: FilledButton.styleFrom(
             backgroundColor: Colors.white,
-            foregroundColor: AppColors.primary,
+            foregroundColor: AppColors.brand(context),
             minimumSize: const Size(200, 48),
           ),
         ),

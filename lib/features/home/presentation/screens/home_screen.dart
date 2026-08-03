@@ -70,7 +70,7 @@ class HomeScreen extends ConsumerWidget {
                         child: ListTile(
                           leading: Icon(
                             r.isVoice ? Icons.mic : Icons.alarm,
-                            color: AppColors.primary,
+                            color: AppColors.brand(context),
                           ),
                           title: Text(
                             displayItemTitle(
@@ -275,7 +275,7 @@ class _TaskSummaryCard extends StatelessWidget {
             ),
             CircularProgressIndicator(
               value: tasks.isEmpty ? 0 : completed / tasks.length,
-              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
+              backgroundColor: AppColors.brand(context).withValues(alpha: 0.2),
               color: AppColors.goldAccent,
             ),
           ],
@@ -316,7 +316,7 @@ class _StatCard extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            Icon(icon, color: AppColors.primary),
+            Icon(icon, color: AppColors.brand(context)),
             const SizedBox(height: 8),
             Text(value, style: Theme.of(context).textTheme.titleLarge),
             Text(label, style: Theme.of(context).textTheme.bodySmall),

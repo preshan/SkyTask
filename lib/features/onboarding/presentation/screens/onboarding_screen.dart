@@ -71,8 +71,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   decoration: BoxDecoration(
                     color: _page == i
-                        ? AppColors.primary
-                        : AppColors.primary.withValues(alpha: 0.3),
+                        ? AppColors.brand(context)
+                        : AppColors.brand(context).withValues(alpha: 0.3),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -94,7 +94,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 },
                 style: FilledButton.styleFrom(
                   minimumSize: const Size.fromHeight(52),
-                  backgroundColor: AppColors.primary,
+                  backgroundColor: AppColors.brand(context),
                 ),
                 child: Text(
                   _page < _pages.length - 1 ? 'Next' : 'Get Started',
@@ -126,7 +126,7 @@ class _OnboardingPage extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 80, color: AppColors.primary),
+          Icon(icon, size: 80, color: AppColors.brand(context)),
           const SizedBox(height: 32),
           Text(
             title,

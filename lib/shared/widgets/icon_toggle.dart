@@ -21,10 +21,11 @@ class IconToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     final button = Material(
       color: active
-          ? AppColors.primary.withValues(alpha: 0.18)
-          : AppColors.background,
+          ? AppColors.brand(context).withValues(alpha: 0.18)
+          : scheme.surfaceContainerHighest.withValues(alpha: 0.5),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         onTap: onTap,

@@ -72,7 +72,7 @@ class _VoicePlayButtonState extends State<VoicePlayButton> {
       onPressed: _toggle,
       icon: Icon(
         _playing ? Icons.pause_circle_filled : Icons.play_circle_filled,
-        color: AppColors.primary,
+        color: AppColors.brand(context),
         size: 28,
       ),
     );
