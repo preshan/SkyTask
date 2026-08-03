@@ -18,10 +18,12 @@ class SkyIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final resolved =
+        color ?? IconTheme.of(context).color ?? Theme.of(context).colorScheme.onSurface;
     return HugeIcon(
       icon: icon,
       size: size,
-      color: color,
+      color: resolved,
       strokeWidth: strokeWidth,
     );
   }

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/sky_atmosphere_background.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 
 class OnboardingScreen extends ConsumerStatefulWidget {
@@ -43,65 +44,69 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Column(
-          children: [
-            Align(
-              alignment: Alignment.centerRight,
-              child: TextButton(
-                onPressed: _finish,
-                child: const Text('Skip'),
+    return SkyAtmosphereBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: _finish,
+                  child: const Text('Skip'),
+                ),
               ),
-            ),
-            Expanded(
-              child: PageView.builder(
-                controller: _controller,
-                itemCount: _pages.length,
-                onPageChanged: (i) => setState(() => _page = i),
-                itemBuilder: (_, i) => _pages[i],
+              Expanded(
+                child: PageView.builder(
+                  controller: _controller,
+                  itemCount: _pages.length,
+                  onPageChanged: (i) => setState(() => _page = i),
+                  itemBuilder: (_, i) => _pages[i],
+                ),
               ),
-            ),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: List.generate(
-                _pages.length,
-                (i) => Container(
-                  width: _page == i ? 24 : 8,
-                  height: 8,
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  decoration: BoxDecoration(
-                    color: _page == i
-                        ? AppColors.brand(context)
-                        : AppColors.brand(context).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(4),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  _pages.length,
+                  (i) => Container(
+                    width: _page == i ? 24 : 8,
+                    height: 8,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    decoration: BoxDecoration(
+                      color: _page == i
+                          ? AppColors.brand(context)
+                          : AppColors.brand(context).withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(4),
+                    ),
                   ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(24),
-              child: FilledButton(
-                onPressed: () {
-                  if (_page < _pages.length - 1) {
-                    _controller.nextPage(
-                      duration: const Duration(milliseconds: 300),
-                      curve: Curves.easeOut,
-                    );
-                  } else {
-                    _finish();
-                  }
-                },
-                style: FilledButton.styleFrom(
-                  backgroundColor: AppColors.brand(context),
-                  minimumSize: const Size.fromHeight(52),
-                ),
-                child: Text(
-                  _page < _pages.length - 1 ? 'Next' : 'Get Started',
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: FilledButton(
+                  onPressed: () {
+                    if (_page < _pages.length - 1) {
+                      _controller.nextPage(
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    } else {
+                      _finish();
+                    }
+                  },
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.brand(context),
+                    foregroundColor: Theme.of(context).colorScheme.onPrimary,
+                    minimumSize: const Size.fromHeight(52),
+                  ),
+                  child: Text(
+                    _page < _pages.length - 1 ? 'Next' : 'Get Started',
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -137,7 +142,10 @@ class _OnboardingPage extends StatelessWidget {
           Text(
             subtitle,
             style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                  color: AppColors.primaryText.withValues(alpha: 0.7),
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.75),
                 ),
             textAlign: TextAlign.center,
           ),

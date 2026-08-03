@@ -14,6 +14,7 @@ class PinEntryPad extends StatefulWidget {
     this.title,
     this.subtitle,
     this.errorText,
+    this.lightOnDark = false,
   });
 
   final int length;
@@ -21,6 +22,9 @@ class PinEntryPad extends StatefulWidget {
   final String? title;
   final String? subtitle;
   final String? errorText;
+
+  /// Force light text/icons (e.g. brand gradient lock screen).
+  final bool lightOnDark;
 
   @override
   State<PinEntryPad> createState() => PinEntryPadState();
@@ -48,13 +52,28 @@ class PinEntryPadState extends State<PinEntryPad> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    final brand = AppColors.brand(context);
+    final onSurface =
+        widget.lightOnDark ? Colors.white : scheme.onSurface;
+    final muted = onSurface.withValues(alpha: 0.72);
+    final keyFill = widget.lightOnDark
+        ? Colors.white.withValues(alpha: 0.18)
+        : scheme.onSurface.withValues(
+            alpha: Theme.of(context).brightness == Brightness.dark ? 0.16 : 0.08,
+          );
+    final accent = widget.lightOnDark ? Colors.white : brand;
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         if (widget.title != null) ...[
           Text(
             widget.title!,
-            style: Theme.of(context).textTheme.titleLarge,
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  color: onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 8),
@@ -63,7 +82,7 @@ class PinEntryPadState extends State<PinEntryPad> {
           Text(
             widget.subtitle!,
             style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.primaryText.withValues(alpha: 0.7),
+                  color: muted,
                 ),
             textAlign: TextAlign.center,
           ),
@@ -79,9 +98,11 @@ class PinEntryPadState extends State<PinEntryPad> {
               margin: const EdgeInsets.symmetric(horizontal: 8),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: filled
-                    ? AppColors.brand(context)
-                    : AppColors.brand(context).withValues(alpha: 0.2),
+                color: filled ? accent : Colors.transparent,
+                border: Border.all(
+                  color: filled ? accent : muted,
+                  width: 1.5,
+                ),
               ),
             );
           }),
@@ -107,16 +128,20 @@ class PinEntryPadState extends State<PinEntryPad> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: row.map((key) {
                 if (key.isEmpty) {
-                  return const SizedBox(width: 80, height: 64);
+                  return const SizedBox(width: 88, height: 64);
                 }
                 if (key == 'back') {
                   return _PadButton(
                     icon: SkyIcons.backspace,
+                    fill: keyFill,
+                    foreground: accent,
                     onPressed: _backspace,
                   );
                 }
                 return _PadButton(
                   label: key,
+                  fill: keyFill,
+                  foreground: onSurface,
                   onPressed: () => _tap(key),
                 );
               }).toList(),
@@ -131,11 +156,15 @@ class _PadButton extends StatelessWidget {
   const _PadButton({
     this.label,
     this.icon,
+    required this.fill,
+    required this.foreground,
     required this.onPressed,
   });
 
   final String? label;
   final List<List<dynamic>>? icon;
+  final Color fill;
+  final Color foreground;
   final VoidCallback onPressed;
 
   @override
@@ -143,7 +172,7 @@ class _PadButton extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Material(
-        color: AppColors.brand(context).withValues(alpha: 0.08),
+        color: fill,
         shape: const CircleBorder(),
         child: InkWell(
           customBorder: const CircleBorder(),
@@ -153,10 +182,13 @@ class _PadButton extends StatelessWidget {
             height: 64,
             child: Center(
               child: icon != null
-                  ? SkyIcon(icon!, color: AppColors.brand(context))
+                  ? SkyIcon(icon!, color: foreground)
                   : Text(
                       label!,
-                      style: Theme.of(context).textTheme.headlineSmall,
+                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                            color: foreground,
+                            fontWeight: FontWeight.w500,
+                          ),
                     ),
             ),
           ),

@@ -139,6 +139,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           ),
           child: PinEntryPad(
             key: _pinPadKey,
+            lightOnDark: true,
             errorText: _error,
             onCompleted: (pin) {
               setState(() => _error = null);
