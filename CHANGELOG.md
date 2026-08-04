@@ -2,6 +2,17 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.0] — 2026-08-04
+
+### Added
+- Full-app backup export / import (`.skytaskbak`: gzip JSON, optional password)
+- Google Drive backups under a **SkyTask Backups** folder (sign in, upload, list, restore)
+- Settings → Data: Export, Import, and Google Drive backups
+
+### Notes
+- Private item text is decrypted into the backup so it restores on another device; app PIN and device encryption keys are not exported
+- Import can replace everything or merge by UUID
+
 ## [1.3.1] — 2026-08-04
 
 ### Fixed

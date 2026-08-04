@@ -65,6 +65,9 @@ abstract final class SkyIcons {
   static const today = HugeIcons.strokeRoundedCalendar03;
   static const event = HugeIcons.strokeRoundedCalendar02;
   static const archive = HugeIcons.strokeRoundedArchive02;
+  static const cloud = HugeIcons.strokeRoundedCloud;
+  static const cloudUpload = HugeIcons.strokeRoundedCloudUpload;
+  static const cloudDownload = HugeIcons.strokeRoundedCloudDownload;
   static const chevronLeft = HugeIcons.strokeRoundedArrowLeft01;
   static const chevronRight = HugeIcons.strokeRoundedArrowRight01;
   static const arrowForward = HugeIcons.strokeRoundedArrowRight01;
