@@ -1,50 +1,71 @@
 # Changelog
 
-All notable changes to SkyTask are documented in this file.
+Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [1.2.0] — 2026-08-03
 
 ### Added
-- **Sky glass theme:** day/night atmosphere gradients with frosted glass surfaces across the shell and home
-- Home shortcut live count badges (pinned, pending, private ideas, private reminders)
+- Day / night sky background and frosted panels on the main shell and home
+- Count badges on home shortcuts (pinned, pending, private ideas, private reminders)
 
 ### Changed
-- Today tiles focus on **Tasks + Reminders** due today (incomplete)
-- “This week” becomes **Recent reminders** — today plus the next 6 days
-- Settings About: centered credits with app icon; section header removed
-- Dark-mode text contrast on sky backgrounds, PIN setup, lock screen, and onboarding
+- Today section shows tasks and reminders due today (incomplete only)
+- Week strip is a rolling next 7 days (“Recent reminders”)
+- Settings About layout: app icon and credits, no section title
+- Better contrast for text and PIN entry in dark mode
 
 ### Fixed
-- PIN keypad and copy readable in dark mode (theme-aware colors)
-- Shortcut tile alignment and badge layout
+- PIN pad hard to read in dark mode
+- Shortcut tile alignment and badge placement
+
+## [1.1.3] — 2026-08-03
+
+### Fixed
+- Release builds crashing when scheduling a reminder (R8 / Gson `TypeToken` with local notifications)
+
+## [1.1.2] — 2026-08-03
+
+### Added
+- Home shortcuts for pinned tasks, pending tasks, private ideas, private reminders
+- Amber accent for badges and highlights
+- Hugeicons used across the UI (`SkyIcon`)
+
+### Changed
+- Today tiles and week reminder boxes on home
+- About section credits layout
+- Calendar Agenda / Week / Month selected state contrast
+
+### Fixed
+- Voice forms no longer autofocus description when voice is the usual input
+
+## [1.1.1] — 2026-08-03
+
+### Added
+- Custom task categories (Work / Personal by default)
+- Live version string and developer credits in Settings → About
+
+### Changed
+- Dark theme brand accent uses sky blue for contrast (navy kept in light mode)
 
 ## [1.1.0] — 2026-08-02
 
 ### Added
-- Inline **Create** action in the bottom navigation (Task / Reminder / Idea / Note sheet)
-- **Voice memos** on tasks, reminders, ideas, and notes (record, play, clear)
-- Voice-aware titles: empty/placeholder titles become a date/time label when a memo is attached
-- **AES-256 encryption** for private item text fields at rest (`PrivateCryptoService`)
-- Shared form UX: autofocus description, private eye-toggle, icon toggles for pin/due
-- Hugeicons-based `SkyIcon` system across navigation and actions
+- Create button in the bottom bar (task, reminder, idea, note)
+- Voice memos on tasks, reminders, ideas, and notes
+- AES-256 encryption for private text fields at rest
+- Shared form patterns: autofocus description, private toggle, pin / due icons
 
 ### Changed
-- Brand primary color to navy `#000080` (secondary `#191970`)
-- Tasks screen: reliable check/uncheck + horizontal category filter chips
-- Private notifications show “Private reminder” without leaking title/body
-- Private items skip device calendar sync; calendar tiles use `PrivateContentGate`
-- App version bumped to `1.1.0+2`
+- Brand primary navy `#000080`
+- Private notifications hide real titles; private items skip calendar sync
 
 ### Fixed
-- Gold checkbox unchecked state no longer fades incorrectly
-- Voice file deletion runs only after a successful save
-- Dismiss-while-recording blocked until recording is stopped (`PopScope`)
-- Settings back returns to the previous route when possible
-- Editing legacy “Untitled …” voice items no longer rewrites titles on every save
+- Checkbox unchecked styling
+- Voice file only deleted after a successful save
+- Can’t dismiss a sheet while recording (stops recording first)
+- Settings back uses previous route when possible
+- Legacy “Untitled …” voice titles no longer rewritten on every edit
 
 ### Known limitations
-- Private **voice `.m4a` files** are not encrypted on disk (text fields are)
-- Private note **attachment paths** are not encrypted
-- Emulator may show Android 16 KB page-size compatibility warnings (Isar/Flutter native libs)
-
-See full notes and diagrams: [`docs/release/RELEASE_NOTES.md`](docs/release/RELEASE_NOTES.md)
+- Private voice `.m4a` files are not encrypted on disk (text is)
+- Private note attachment paths are not encrypted

@@ -1,12 +1,8 @@
 # SkyTask
 
-Premium productivity app combining Tasks, Reminders, Ideas, Notes, Calendar Integration, Privacy Lock, and Cloud Sync.
+Android app for tasks, reminders, ideas, and notes — with a local reminder engine, device calendar sync, voice memos, and optional PIN / biometric lock.
 
-Inspired by Google Tasks, Google Calendar, TickTick, Todoist, and Notion Quick Notes.
-
-## Author
-
-**Owner & Developer:** Preshan Pradeepa Kariyawasam
+Built with Flutter by **Preshan Pradeepa Kariyawasam**.
 
 ## Screenshots
 
@@ -18,139 +14,89 @@ Inspired by Google Tasks, Google Calendar, TickTick, Todoist, and Notion Quick N
 |:--------:|:------------:|:--------:|
 | ![New Task](docs/release/screenshots/04_new_task.png) | ![New Reminder](docs/release/screenshots/05_new_reminder.png) | ![Settings](docs/release/screenshots/06_settings.png) |
 
-Latest release: [v1.1.2](https://github.com/preshan/SkyTask/releases/tag/v1.1.2)
+Latest release: [v1.2.0](https://github.com/preshan/SkyTask/releases/tag/v1.2.0)
 
-## Architecture
+## Features
+
+- Tasks with categories, priority, pin, archive, and search
+- Reminders that keep working offline (local notifications + AlarmManager)
+- Ideas and notes, including voice memos
+- Device calendar integration (optional; skipped for private items)
+- App lock with PIN or biometrics; private text encrypted at rest
+- Dark / light theme with a day–night sky background
+
+## Stack
+
+| Area | Choice |
+|------|--------|
+| UI | Flutter, Material 3, Riverpod, go_router |
+| Local DB | Isar |
+| Notifications | flutter_local_notifications, AlarmManager, WorkManager |
+| Calendar | device_calendar |
+| Auth / cloud | Firebase Auth + Firestore (sync still in progress) |
+| Security | local_auth, flutter_secure_storage, AES for private fields |
+| Voice | record, audioplayers |
+| Icons | hugeicons |
+
+## Project layout
 
 ```
 lib/
-├── main.dart
-├── app.dart
-├── firebase_options.dart
-├── core/
-│   ├── constants/       # Brand colors, app keys
-│   ├── database/        # Isar collections
-│   ├── di/              # Riverpod providers
-│   ├── router/          # go_router
-│   ├── services/        # Isar, notifications, alarms, background
-│   └── theme/           # Material 3 navy theme
-├── features/
-│   ├── auth/            # Firebase Auth (Google, Email, Anonymous)
-│   ├── home/            # Dashboard
-│   ├── tasks/           # CRUD, search, filters, archive, pin
-│   ├── reminders/       # Offline-first reminder engine
-│   ├── ideas/           # Quick capture
-│   ├── notes/           # Long-form notes + voice
-│   ├── calendar/        # Device calendar (Phase 1)
-│   ├── privacy/         # Biometric app lock + private vault
-│   ├── settings/
-│   ├── splash/
-│   └── onboarding/
-└── shared/
-    └── widgets/         # GoldCheckbox, SkyIcon, voice, PrivateContentGate
+├── main.dart / app.dart
+├── core/          # theme, router, services, DB, constants
+├── features/      # home, tasks, reminders, ideas, notes, calendar, privacy, …
+└── shared/        # reusable widgets (icons, voice, gates, surfaces)
 ```
 
-**Clean Architecture** per feature: `data/` → `domain/` → `presentation/`
+Each feature follows `data/` → `domain/` → `presentation/`.
 
-## Reminder Engine (Critical)
+## How reminders work
 
-Reminders are **never Firebase-only**. Flow:
+Reminders are stored locally first, then scheduled on the device. They are not Firebase-only.
 
-1. Save to Isar (local)
-2. Schedule `flutter_local_notifications` (zoned, exact)
-3. Schedule `AlarmManager` exact alarm
-4. Optionally create device calendar event
-5. Store `notificationId` + `calendarEventId`
+1. Save to Isar
+2. Schedule a local notification
+3. Schedule an AlarmManager alarm
+4. Optionally create a device calendar event
+5. Keep `notificationId` / `calendarEventId` on the reminder
 
-Survives: offline, app closed, app killed, device reboot (via boot receiver + WorkManager).
+They should still fire after the app is closed or the phone reboots (boot receiver + WorkManager).
 
-## Tech Stack
+## Colors
 
-| Layer | Technology |
-|-------|------------|
-| Framework | Flutter (latest stable) |
-| State | Riverpod |
-| Local DB | Isar |
-| Auth | Firebase Auth |
-| Cloud | Firestore (Sprint 7) |
-| Push | FCM |
-| Local alerts | flutter_local_notifications + AlarmManager |
-| Background | WorkManager |
-| Calendar | device_calendar (Phase 1) |
-| Security | local_auth + flutter_secure_storage + AES private fields |
-| Voice | record + audioplayers |
-| Icons | hugeicons |
+| Role | Light | Dark |
+|------|-------|------|
+| Brand | `#000080` | `#6EC6FF` |
+| Accent | `#F59E0B` | `#FBBF24` |
+| Gold (completed) | `#D4AF37` | — |
 
-## Brand
+## Setup
 
-| Token | Color |
-|-------|-------|
-| Primary (light) | `#000080` |
-| Primary (dark) | `#6EC6FF` |
-| Secondary (amber) | `#F59E0B` |
-| Secondary (dark) | `#FBBF24` |
-| Background | `#F4F6F9` |
-| Gold Accent | `#F4C542` |
-| Completed Gold | `#D4AF37` |
-
-## Release
-
-See [CHANGELOG.md](CHANGELOG.md) and [docs/release/RELEASE_NOTES.md](docs/release/RELEASE_NOTES.md) for v1.1.0 notes, screenshots, and diagrams.
-
-## Getting Started
-
-### Prerequisites
-
-- Flutter SDK ≥ 3.2
-- Android Studio
-- Firebase project (for auth/sync)
-
-### Setup
+Needs Flutter ≥ 3.2 and Android Studio. Firebase is required only if you want auth/sync.
 
 ```bash
-# Install dependencies
 flutter pub get
-
-# Generate Isar schemas (required)
 dart run build_runner build --delete-conflicting-outputs
 
-# Configure Firebase
+# Optional: Firebase
 dart pub global activate flutterfire_cli
 flutterfire configure
+# Place google-services.json in android/app/
 
-# Add google-services.json to android/app/
-
-# Run on Android
 flutter run
 ```
 
-## Development Roadmap
-
-| Sprint | Focus |
-|--------|-------|
-| 1 | ✅ Flutter setup, theme, navigation, Isar |
-| 2 | Tasks CRUD, search, filters |
-| 3 | Reminder engine, notifications, AlarmManager |
-| 4 | Device calendar integration |
-| 5 | Ideas and Notes rich editor |
-| 6 | Privacy lock, biometrics |
-| 7 | Firebase Auth, Firestore sync |
-| 8 | Animations, performance, polish |
-
-## Phase 2 (Planned)
-
-- Google Calendar API sync
-- Google Drive backup
-- AI task suggestions
-- Voice assistant
-- Home screen widgets
-
-## Tests
-
 ```bash
 flutter test
+flutter analyze
 ```
 
-## CI/CD
+## Releases
 
-Project is structured for CI with `flutter analyze`, `flutter test`, and `build_runner` codegen step.
+- [CHANGELOG.md](CHANGELOG.md)
+- [Release notes](docs/release/RELEASE_NOTES.md)
+- [GitHub Releases](https://github.com/preshan/SkyTask/releases)
+
+## Roadmap
+
+Still planned: Google Calendar API sync, Drive backup, home-screen widgets, richer voice / assistant features. Firestore sync and polish are ongoing.

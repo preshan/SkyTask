@@ -1,78 +1,21 @@
-# SkyTask 1.2.0 — Release Notes
+# SkyTask release notes
 
-**Released:** 2026-08-03 · **Version:** `1.2.0+6`
-
-Sky glass visual refresh: day/night atmosphere, frosted surfaces, clearer home shortcuts, and dark-mode PIN contrast.
-
-## Download
-
-- **[SkyTask-1.2.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.2.0/SkyTask-1.2.0.apk)** (Android, debug-signed for sideload)
-
-## What's new
-
-- **Sky glass theme:** soft day/night sky behind the app, frosted glass panels on home and navigation
-- **Today:** Tasks and Reminders due today (incomplete only); zero counts stay badge-free
-- **Recent reminders:** rolling next 7 days (today + 6) with day badges when there are items
-- **Shortcut badges:** live counts for pinned tasks, pending tasks, private ideas, private reminders
-- **About:** centered credits with the app icon
-- **Dark mode:** readable PIN setup / lock / onboarding; theme-aware icons and text on sky backgrounds
-
-## Screenshots
-
-| Home | Tasks | Create |
-|:----:|:-----:|:------:|
-| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Create](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_create_menu.png) |
-
-| New Task | New Reminder | Settings |
-|:--------:|:------------:|:--------:|
-| ![New Task](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_new_task.png) | ![New Reminder](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/05_new_reminder.png) | ![Settings](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/06_settings.png) |
-
-> Screenshots may still reflect the pre–sky-glass home chrome; UI polish continues.
+APKs are debug-signed for sideload testing (not Play Store builds). Older notes are kept below for history.
 
 ---
 
-# SkyTask 1.1.3 — Release Notes
+## 1.2.0 — 2026-08-03 · `1.2.0+6`
 
-**Released:** 2026-08-03 · **Version:** `1.1.3+5`
+[Download SkyTask-1.2.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.2.0/SkyTask-1.2.0.apk)
 
-Hotfix for release builds crashing when scheduling reminders (voice or text).
+### Changes
+- Day / night sky background and frosted surfaces on home and navigation
+- Today: tasks and reminders due today; Recent reminders for the next 7 days
+- Home shortcut badges with live counts
+- About screen uses the app icon and centered credits
+- Dark mode: PIN setup, lock screen, and onboarding are easier to read
 
-## Download
-
-- **[SkyTask-1.1.3.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.3/SkyTask-1.1.3.apk)** (Android, debug-signed for sideload)
-
-## What's fixed
-
-- **Reminders / notifications:** R8 was stripping Gson `TypeToken` generics used by `flutter_local_notifications`, causing `IllegalStateException` when creating a reminder (including voice). Added ProGuard keep rules + Gson 2.11.
-
-## Note on voice + calendar
-
-Voice reminders are **intentionally not synced** to Google/device calendar (same as private reminders). That is separate from this crash.
-
----
-
-# SkyTask 1.1.2 — Release Notes
-
-**Released:** 2026-08-03 · **Version:** `1.1.2+4`
-
-Home shortcuts, amber accents, and a full Hugeicons pass across the app.
-
-## Download
-
-- **[SkyTask-1.1.2.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.2/SkyTask-1.1.2.apk)** (Android, debug-signed for sideload)
-
-## What's new
-
-- **Home shortcuts:** pinned tasks, pending tasks, private ideas, private reminders
-- **Today tiles:** Tasks / Ideas / Notes with amber count badges (created today)
-- **This week:** Mon–Sun reminder count boxes that open that day’s agenda
-- **Amber secondary** brand accent for badges and highlights
-- **Hugeicons everywhere:** Material icons replaced with `SkyIcon` / Hugeicons
-- **About:** centered credits with LinkedIn and mail icons
-- **Voice UX:** skip description autofocus when you mostly save with voice
-- **Calendar:** clearer selected Agenda / Week / Month contrast
-
-## Screenshots
+### Screenshots
 
 | Home | Tasks | Create |
 |:----:|:-----:|:------:|
@@ -84,155 +27,78 @@ Home shortcuts, amber accents, and a full Hugeicons pass across the app.
 
 ---
 
-# SkyTask 1.1.0 — Release Notes
+## 1.1.3 — 2026-08-03 · `1.1.3+5`
 
-**Released:** 2026-08-02 · **Version:** `1.1.0+2`
+[Download SkyTask-1.1.3.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.3/SkyTask-1.1.3.apk)
 
-SkyTask 1.1 focuses on faster capture (inline Create + voice memos), a navy brand refresh, and encrypting private text at rest.
+### Fixes
+- Crash when creating a reminder in release builds (ProGuard / Gson keep rules for local notifications)
 
-## Download
+### Note
+Voice reminders are not written to the device calendar (same as private reminders). That is by design, not related to the crash above.
 
-- **[SkyTask-1.1.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.0/SkyTask-1.1.0.apk)** (Android, ~66 MB)
-- Signed with the debug keystore for sideload testing (not Play Store distribution)
+---
 
-## Highlights
+## 1.1.2 — 2026-08-03 · `1.1.2+4`
 
-- **Inline Create** in the bottom bar — no floating FAB
-- **Voice memos** on every item type, with play controls on lists
-- **Private text encryption** (AES-256-CBC) with secure key storage
-- **Navy brand** (`#000080`) and Hugeicons throughout
+[Download SkyTask-1.1.2.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.2/SkyTask-1.1.2.apk)
 
-## Screenshots
+### Changes
+- Home shortcuts: pinned / pending / private ideas / private reminders
+- Today tiles and week reminder counts
+- Amber accent; Hugeicons across the app
+- About credits; calendar segment contrast; quieter voice-form autofocus
 
-| Home | Tasks | Create |
-|:----:|:-----:|:------:|
-| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Create](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_create_menu.png) |
+---
 
-> Captured on Android emulator. See also the [1.1.2 screenshots](#screenshots) above for newer UI.
+## 1.1.1 — 2026-08-03
 
-## Architecture diagrams
+[Download SkyTask-1.1.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.1/SkyTask-1.1.1.apk)
 
-### Navigation shell
+### Changes
+- Custom task categories
+- About shows live app version and developer contact links
+- Dark theme uses a lighter brand blue for readability
 
-```mermaid
-flowchart LR
-  subgraph BottomNav["App shell"]
-    H[Home]
-    T[Tasks]
-    C[Create]
-    Cal[Calendar]
-    I[Ideas]
-  end
+---
 
-  C --> Sheet{Create sheet}
-  Sheet --> Task[New Task]
-  Sheet --> Rem[New Reminder]
-  Sheet --> Idea[New Idea]
-  Sheet --> Note[New Note]
-```
+## 1.1.0 — 2026-08-02 · `1.1.0+2`
+
+[Download SkyTask-1.1.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.1.0/SkyTask-1.1.0.apk) (~66 MB)
+
+First public feature cut with inline Create, voice memos, navy branding, and encrypted private text.
+
+### Highlights
+- Create from the bottom bar (task, reminder, idea, note)
+- Voice memos with playback on lists
+- Private text encrypted with AES-256; key in secure storage
+- Navy brand and Hugeicons
 
 ### Reminder pipeline
 
 ```mermaid
 sequenceDiagram
-  participant UI as Form sheet
-  participant Repo as Reminder repository
-  participant Isar as Isar DB
-  participant Notif as NotificationService
+  participant UI as Form
+  participant Repo as Repository
+  participant Isar as Isar
+  participant Notif as Notifications
   participant Alarm as AlarmManager
-  participant Cal as Device calendar
+  participant Cal as Calendar
 
-  UI->>Repo: save reminder
-  Repo->>Isar: persist (encrypt if private)
-  Repo->>Notif: schedule / show
+  UI->>Repo: save
+  Repo->>Isar: persist
+  Repo->>Notif: schedule
   Repo->>Alarm: exact alarm
-  alt not private and not voice-only skip
-    Repo->>Cal: optional calendar event
-  else private
-    Note over Cal: calendar sync skipped
+  alt not private
+    Repo->>Cal: optional event
   end
 ```
 
-### Private content encryption
+### Limitations
+| Area | Detail |
+|------|--------|
+| Voice | Private `.m4a` files are not encrypted on disk |
+| Notes | Attachment paths are not encrypted when private |
 
-```mermaid
-flowchart TD
-  A[User marks item private] --> B[Mapper toIsar]
-  B --> C{isPrivate?}
-  C -->|yes| D[PrivateCryptoService.encrypt]
-  D --> E["Store enc:v1:… in Isar"]
-  C -->|no| F[Store plaintext]
-  E --> G[Read path]
-  F --> G
-  G --> H[Mapper fromIsar]
-  H --> I{enc:v1: prefix?}
-  I -->|yes| J[decrypt with AES key from SecureStorage]
-  I -->|no| K[return as-is]
-  J --> L[UI / PrivateContentGate]
-  K --> L
-```
-
-### Voice memo lifecycle
-
-```mermaid
-stateDiagram-v2
-  [*] --> Idle
-  Idle --> Recording: tap mic
-  Recording --> Idle: stop / PopScope finalize
-  Idle --> Ready: file saved
-  Ready --> Playing: play
-  Playing --> Ready: pause / complete
-  Ready --> Idle: clear
-  note right of Recording
-    First back/dismiss stops
-    recording instead of closing
-  end note
-```
-
-## What’s new (detail)
-
-### Capture & navigation
-- Bottom nav: Home · Tasks · **Create** · Calendar · Ideas
-- Create opens a sheet for Task / Reminder / Idea / Note
-- Forms: description autofocus, category/priority chips, private eye-toggle, voice row
-
-### Voice
-- AAC `.m4a` memos via `record` + `audioplayers`
-- Empty titles become `MMM d, yyyy · h:mm a`
-- Play buttons on home, calendar, and ideas lists
-
-### Privacy & security
-- `PrivateCryptoService`: AES-256-CBC, key in `FlutterSecureStorage`
-- Encrypted fields: titles, descriptions/content, tags (when private)
-- Notifications for private reminders never show the real title
-- Calendar sync skipped for private items; agenda tiles gated
-
-### Brand
-- Primary `#000080`, secondary `#191970`, background `#F4F6F9`
-
-## Known limitations
-
-| Area | Limitation |
-|------|------------|
-| Voice | Private voice files remain plaintext on disk |
-| Notes | Attachment path strings are not encrypted when private |
-| Android 16 KB | Emulator may warn about native lib alignment (Isar/Flutter) |
-
-## Upgrade notes
-
-1. Update to `1.1.0+2` and run a normal install/upgrade.
-2. Existing private items are encrypted on the next write through mappers.
-3. Grant microphone permission to use voice memos.
-
-## Code review (pre-release)
-
-Bugbot reviewed uncommitted changes before this release. Findings addressed in-tree:
-
-| Severity | Finding | Action |
-|----------|---------|--------|
-| High | Cleartext private voice on disk | Documented limitation (v1.2 candidate) |
-| High | Recording lost on sheet dismiss | `PopScope` + safe teardown |
-| Medium | Voice title rewritten on edit | Use `createdAt` when regenerating |
-| Low | Settings back always → home | Prefer `context.pop()` |
-
-Remaining medium items (duplicate past-due notification paths; note attachments) tracked for follow-up.
+### Upgrade
+Install over the previous build as usual. Private items encrypt on the next save through the mappers. Microphone permission is needed for voice memos.
