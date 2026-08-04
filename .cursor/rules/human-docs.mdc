@@ -1,0 +1,35 @@
+---
+description: Write README, changelog, and release notes like a human student/dev — not AI or chat leftovers
+globs: "{README.md,CHANGELOG.md,docs/**/*.md,**/*RELEASE*,**/releases/**}"
+alwaysApply: false
+---
+
+# Human public docs
+
+When writing or editing README, CHANGELOG, release notes, or GitHub release bodies:
+
+## Voice
+- Write like a careful student or indie developer: clear, short, factual.
+- Prefer plain sentences over marketing or buzzwords.
+- Do not sound like a chatbot summarizing a conversation.
+
+## Never include
+- Chat residue: “as you asked”, “as discussed”, “implemented what you told”, “per your request”
+- Process leftovers: Bugbot / agent review tables, “vX candidate”, “UI polish continues”, apologetic screenshot caveats
+- AI filler: “Premium…”, “Inspired by X, Y, Z…”, “seamless”, “robust”, “comprehensive”, “leverages”
+- Fake roadmap theater: Sprint N checklists, “Phase 1” labels, “Critical” section titles unless the project already uses that for real planning
+- Claims about unreleased features still only on a local branch
+
+## Do include
+- What the app is, who built it, how to run it
+- Accurate latest release link / version
+- Changelog entries that name user-visible changes (and real fixes)
+- Known limitations that affect users (not emulator gossip unless useful)
+- Download links for APKs when publishing
+
+## Shape
+- README: short intro → features → setup → links. Cut duplicate architecture essays if a `docs/` file already covers them.
+- CHANGELOG: every shipped version, Keep a Changelog style, no “bumped version to…” noise.
+- Release notes: changes + download. Drop internal review transcripts.
+
+When unsure, read SkyTask’s current README / CHANGELOG / `docs/release/RELEASE_NOTES.md` as the tone target.
