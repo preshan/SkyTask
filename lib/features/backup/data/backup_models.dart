@@ -63,17 +63,3 @@ class BackupPayload {
         .toList();
   }
 }
-
-class DriveBackupItem {
-  const DriveBackupItem({
-    required this.id,
-    required this.name,
-    required this.modifiedTime,
-    this.size,
-  });
-
-  final String id;
-  final String name;
-  final DateTime? modifiedTime;
-  final int? size;
-}

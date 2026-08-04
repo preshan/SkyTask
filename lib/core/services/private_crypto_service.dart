@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:encrypt/encrypt.dart' as enc;
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 /// Simple AES-CBC encryption for private item *text fields* at the data layer.
@@ -41,6 +42,20 @@ class PrivateCryptoService {
     }
     _key = enc.Key.fromBase64(raw);
     _ready = true;
+  }
+
+  /// Unit-test seam: fixed key, no secure storage.
+  @visibleForTesting
+  void debugInitWithKey(Uint8List keyBytes) {
+    assert(keyBytes.length == 32);
+    _key = enc.Key(keyBytes);
+    _ready = true;
+  }
+
+  @visibleForTesting
+  void debugReset() {
+    _key = null;
+    _ready = false;
   }
 
   String? protect(String? plain, {required bool isPrivate}) {

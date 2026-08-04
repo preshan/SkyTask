@@ -5,17 +5,123 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path/path.dart' as p;
+import 'package:permission_handler/permission_handler.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../../core/constants/app_colors.dart';
 import '../../../core/di/content_providers.dart';
+import '../../../core/di/providers.dart';
 import '../../calendar/presentation/providers/calendar_providers.dart';
 import '../data/backup_crypto.dart';
+import '../data/backup_folder_service.dart';
 import '../data/backup_models.dart';
 import '../data/backup_service.dart';
-import '../data/drive_backup_service.dart';
+
+Future<void> showPickBackupFolderFlow(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  final status = await BackupFolderService.instance.ensureStoragePermission();
+  if (!context.mounted) return;
+
+  if (status.isPermanentlyDenied) {
+    final open = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Storage permission'),
+        content: const Text(
+          'Allow storage access in system Settings so SkyTask can save backups '
+          'to your chosen folder.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Open Settings'),
+          ),
+        ],
+      ),
+    );
+    if (open == true) await openAppSettings();
+    return;
+  }
+
+  String? path;
+  try {
+    path = await BackupFolderService.instance.pickFolder();
+  } on BackupFolderNotWritableException catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('$e')),
+    );
+    return;
+  }
+  if (!context.mounted) return;
+  if (path == null) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('No folder selected')),
+    );
+    return;
+  }
+  ref.read(backupFolderPathProvider.notifier).state = path;
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(content: Text('Backup folder set to ${p.basename(path)}')),
+  );
+}
 
 Future<void> showExportBackupFlow(BuildContext context, WidgetRef ref) async {
+  var folder = ref.read(backupFolderPathProvider) ??
+      await BackupFolderService.instance.getPath();
+
+  // Drop a previously saved folder Android will not let us write to (e.g. Alarms).
+  if (folder != null &&
+      !await BackupFolderService.instance.canWriteTo(folder)) {
+    await BackupFolderService.instance.clear();
+    ref.read(backupFolderPathProvider.notifier).state = null;
+    folder = null;
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Previous backup folder is not writable. '
+            'Pick Download or Documents.',
+          ),
+        ),
+      );
+    }
+  }
+
+  if (folder == null || folder.isEmpty) {
+    if (!context.mounted) return;
+    final setNow = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Choose backup folder'),
+        content: const Text(
+          'Pick Download or Documents (not Alarms / Ringtones). '
+          'You may be asked for storage permission.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Choose folder'),
+          ),
+        ],
+      ),
+    );
+    if (setNow != true || !context.mounted) return;
+    await showPickBackupFolderFlow(context, ref);
+    folder = ref.read(backupFolderPathProvider);
+    if (folder == null || folder.isEmpty || !context.mounted) return;
+  }
+  if (!context.mounted) return;
+
   final choice = await showModalBottomSheet<_ExportChoice>(
     context: context,
     showDragHandle: true,
@@ -43,42 +149,60 @@ Future<void> showExportBackupFlow(BuildContext context, WidgetRef ref) async {
   if (choice == _ExportChoice.password) {
     password = await _askNewPassword(context);
     if (password == null || !context.mounted) return;
+    await _waitForDialogSettle(context);
+    if (!context.mounted) return;
   }
 
-  await _runWithProgress(context, 'Creating backup…', () async {
-    final service = BackupService();
-    final file = await service.exportToFile(password: password);
+  try {
+    late Uint8List bytes;
+    await _runWithProgress(context, 'Creating backup…', () async {
+      bytes = await BackupService().exportBytes(password: password);
+    });
     if (!context.mounted) return;
+    await _waitForDialogSettle(context);
+    if (!context.mounted) return;
+
+    // Save after progress closes — SAF save UI must not sit under an overlay.
+    final file = await BackupService().saveBytesToUserLocation(
+      bytes,
+      directoryPath: folder,
+    );
+    if (!context.mounted) return;
+    if (file == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Save cancelled')),
+      );
+      return;
+    }
+
     final action = await showDialog<_AfterExportAction>(
       context: context,
+      useRootNavigator: true,
       builder: (ctx) => AlertDialog(
-        title: const Text('Backup ready'),
-        content: Text(p.basename(file.path)),
+        title: const Text('Backup saved'),
+        content: Text(file.path),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(ctx, _AfterExportAction.share),
-            child: const Text('Share / save'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(ctx, _AfterExportAction.drive),
-            child: const Text('Upload to Drive'),
-          ),
-          FilledButton(
             onPressed: () => Navigator.pop(ctx, _AfterExportAction.done),
             child: const Text('Done'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.pop(ctx, _AfterExportAction.share),
+            child: const Text('Share'),
           ),
         ],
       ),
     );
-    if (!context.mounted || action == null) return;
-    if (action == _AfterExportAction.share) {
-      await SharePlus.instance.share(
-        ShareParams(files: [XFile(file.path)], text: 'SkyTask backup'),
-      );
-    } else if (action == _AfterExportAction.drive) {
-      await _uploadFileToDrive(context, file);
-    }
-  });
+    if (!context.mounted || action != _AfterExportAction.share) return;
+    await SharePlus.instance.share(
+      ShareParams(files: [XFile(file.path)], text: 'SkyTask backup'),
+    );
+  } catch (e) {
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Could not save backup: $e')),
+    );
+  }
 }
 
 Future<void> showImportBackupFlow(BuildContext context, WidgetRef ref) async {
@@ -94,15 +218,6 @@ Future<void> showImportBackupFlow(BuildContext context, WidgetRef ref) async {
   }
   if (bytes == null || !context.mounted) return;
   await _importBytesFlow(context, ref, Uint8List.fromList(bytes));
-}
-
-Future<void> showDriveBackupsSheet(BuildContext context, WidgetRef ref) async {
-  await showModalBottomSheet<void>(
-    context: context,
-    isScrollControlled: true,
-    showDragHandle: true,
-    builder: (ctx) => const _DriveBackupsSheet(),
-  );
 }
 
 Future<void> _importBytesFlow(
@@ -121,10 +236,13 @@ Future<void> _importBytesFlow(
   if (BackupCrypto.isPasswordProtected(bytes)) {
     password = await _askUnlockPassword(context);
     if (password == null || !context.mounted) return;
+    await _waitForDialogSettle(context);
+    if (!context.mounted) return;
   }
 
   final mode = await showDialog<BackupImportMode>(
     context: context,
+    useRootNavigator: true,
     builder: (ctx) => AlertDialog(
       title: const Text('Import backup'),
       content: const Text(
@@ -178,110 +296,29 @@ Future<void> _importBytesFlow(
   }
 }
 
-Future<void> _uploadFileToDrive(BuildContext context, File file) async {
-  try {
-    await _runWithProgress(context, 'Uploading to Google Drive…', () async {
-      final bytes = await file.readAsBytes();
-      await DriveBackupService.instance.uploadBackup(
-        fileName: p.basename(file.path),
-        bytes: Uint8List.fromList(bytes),
-      );
-    });
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Uploaded to Google Drive → SkyTask Backups')),
-    );
-  } catch (e) {
-    if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Drive upload failed: $e')),
-    );
-  }
+Future<String?> _askNewPassword(BuildContext context) {
+  return showDialog<String>(
+    context: context,
+    useRootNavigator: true,
+    builder: (ctx) => const _NewBackupPasswordDialog(),
+  );
 }
 
-Future<String?> _askNewPassword(BuildContext context) async {
-  final pass = TextEditingController();
-  final confirm = TextEditingController();
-  try {
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Backup password'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: pass,
-              obscureText: true,
-              autofocus: true,
-              decoration: const InputDecoration(labelText: 'Password'),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: confirm,
-              obscureText: true,
-              decoration: const InputDecoration(labelText: 'Confirm password'),
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () {
-              if (pass.text.isEmpty) return;
-              if (pass.text != confirm.text) {
-                ScaffoldMessenger.of(ctx).showSnackBar(
-                  const SnackBar(content: Text('Passwords do not match')),
-                );
-                return;
-              }
-              Navigator.pop(ctx, pass.text);
-            },
-            child: const Text('Continue'),
-          ),
-        ],
-      ),
-    );
-  } finally {
-    Future<void>.delayed(const Duration(seconds: 1), () {
-      pass.dispose();
-      confirm.dispose();
-    });
-  }
+Future<String?> _askUnlockPassword(BuildContext context) {
+  return showDialog<String>(
+    context: context,
+    useRootNavigator: true,
+    builder: (ctx) => const _UnlockBackupPasswordDialog(),
+  );
 }
 
-Future<String?> _askUnlockPassword(BuildContext context) async {
-  final pass = TextEditingController();
-  try {
-    return showDialog<String>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Enter backup password'),
-        content: TextField(
-          controller: pass,
-          obscureText: true,
-          autofocus: true,
-          decoration: const InputDecoration(labelText: 'Password'),
-          onSubmitted: (v) => Navigator.pop(ctx, v),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.pop(ctx, pass.text),
-            child: const Text('Unlock'),
-          ),
-        ],
-      ),
-    );
-  } finally {
-    Future<void>.delayed(const Duration(seconds: 1), pass.dispose);
-  }
+/// Wait long enough for a dialog route + keyboard to finish leaving.
+Future<void> _waitForDialogSettle(BuildContext context) async {
+  FocusManager.instance.primaryFocus?.unfocus();
+  // Material dialog transition is ~200ms; one frame is not enough.
+  await Future<void>.delayed(const Duration(milliseconds: 300));
+  if (!context.mounted) return;
+  await WidgetsBinding.instance.endOfFrame;
 }
 
 Future<void> _runWithProgress(
@@ -289,217 +326,189 @@ Future<void> _runWithProgress(
   String label,
   Future<void> Function() work,
 ) async {
-  showDialog<void>(
-    context: context,
-    barrierDismissible: false,
-    builder: (_) => PopScope(
-      canPop: false,
-      child: AlertDialog(
-        content: Row(
-          children: [
-            const CircularProgressIndicator(),
-            const SizedBox(width: 20),
-            Expanded(child: Text(label)),
-          ],
+  await _waitForDialogSettle(context);
+  if (!context.mounted) return;
+
+  // Use an Overlay entry — not another Navigator dialog — so we never stack
+  // on top of a password dialog that is still animating out.
+  final overlay = Overlay.maybeOf(context, rootOverlay: true);
+  if (overlay == null) {
+    await work();
+    return;
+  }
+
+  late OverlayEntry entry;
+  entry = OverlayEntry(
+    builder: (ctx) => Material(
+      color: Colors.black54,
+      child: Center(
+        child: Card(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(
+                  width: 28,
+                  height: 28,
+                  child: CircularProgressIndicator(strokeWidth: 3),
+                ),
+                const SizedBox(width: 20),
+                Flexible(child: Text(label)),
+              ],
+            ),
+          ),
         ),
       ),
     ),
   );
+
+  overlay.insert(entry);
   try {
     await work();
   } finally {
-    if (context.mounted) Navigator.of(context, rootNavigator: true).pop();
+    entry.remove();
+    if (context.mounted) {
+      await Future<void>.delayed(const Duration(milliseconds: 50));
+    }
   }
 }
 
 enum _ExportChoice { plain, password }
 
-enum _AfterExportAction { share, drive, done }
+enum _AfterExportAction { share, done }
 
-class _DriveBackupsSheet extends ConsumerStatefulWidget {
-  const _DriveBackupsSheet();
+class _NewBackupPasswordDialog extends StatefulWidget {
+  const _NewBackupPasswordDialog();
 
   @override
-  ConsumerState<_DriveBackupsSheet> createState() => _DriveBackupsSheetState();
+  State<_NewBackupPasswordDialog> createState() =>
+      _NewBackupPasswordDialogState();
 }
 
-class _DriveBackupsSheetState extends ConsumerState<_DriveBackupsSheet> {
-  bool _loading = true;
-  String? _error;
-  List<DriveBackupItem> _items = [];
+class _NewBackupPasswordDialogState extends State<_NewBackupPasswordDialog> {
+  late final TextEditingController _pass;
+  late final TextEditingController _confirm;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _pass = TextEditingController();
+    _confirm = TextEditingController();
   }
 
-  Future<void> _load() async {
-    setState(() {
-      _loading = true;
-      _error = null;
-    });
-    try {
-      await DriveBackupService.instance.signIn();
-      final items = await DriveBackupService.instance.listBackups();
-      if (!mounted) return;
-      setState(() {
-        _items = items;
-        _loading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-      setState(() {
-        _error = e.toString();
-        _loading = false;
-      });
-    }
+  @override
+  void dispose() {
+    _pass.dispose();
+    _confirm.dispose();
+    super.dispose();
   }
 
-  Future<void> _uploadNew() async {
-    final navigator = Navigator.of(context);
-    final choice = await showModalBottomSheet<_ExportChoice>(
-      context: context,
-      builder: (ctx) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Without password'),
-              onTap: () => Navigator.pop(ctx, _ExportChoice.plain),
-            ),
-            ListTile(
-              title: const Text('With password'),
-              onTap: () => Navigator.pop(ctx, _ExportChoice.password),
-            ),
-          ],
-        ),
-      ),
-    );
-    if (choice == null || !mounted) return;
-    String? password;
-    if (choice == _ExportChoice.password) {
-      password = await _askNewPassword(context);
-      if (password == null || !mounted) return;
-    }
-    try {
-      await _runWithProgress(context, 'Uploading…', () async {
-        final file = await BackupService().exportToFile(password: password);
-        final bytes = await file.readAsBytes();
-        await DriveBackupService.instance.uploadBackup(
-          fileName: p.basename(file.path),
-          bytes: Uint8List.fromList(bytes),
-        );
-      });
-      if (!mounted) return;
-      await _load();
-    } catch (e) {
-      if (!mounted) return;
+  void _continue() {
+    if (_pass.text.isEmpty) return;
+    if (_pass.text != _confirm.text) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Upload failed: $e')),
+        const SnackBar(content: Text('Passwords do not match')),
       );
+      return;
     }
-    // Keep sheet open.
-    if (!mounted) navigator;
-  }
-
-  Future<void> _restore(DriveBackupItem item) async {
-    try {
-      late Uint8List bytes;
-      await _runWithProgress(context, 'Downloading…', () async {
-        bytes = await DriveBackupService.instance.downloadBackup(item.id);
-      });
-      if (!mounted) return;
-      await _importBytesFlow(context, ref, bytes);
-      if (mounted) Navigator.pop(context);
-    } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Restore failed: $e')),
-      );
-    }
+    final value = _pass.text;
+    FocusScope.of(context).unfocus();
+    Navigator.of(context, rootNavigator: true).pop(value);
   }
 
   @override
   Widget build(BuildContext context) {
-    final brand = AppColors.brand(context);
-    return SafeArea(
-      child: SizedBox(
-        height: MediaQuery.sizeOf(context).height * 0.65,
+    return AlertDialog(
+      title: const Text('Backup password'),
+      content: SingleChildScrollView(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'Google Drive backups',
-                      style: Theme.of(context).textTheme.titleMedium,
-                    ),
-                  ),
-                  IconButton(
-                    onPressed: _loading ? null : _load,
-                    icon: const Icon(Icons.refresh),
-                  ),
-                ],
-              ),
+            TextField(
+              controller: _pass,
+              obscureText: true,
+              autofocus: true,
+              decoration: const InputDecoration(labelText: 'Password'),
             ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: FilledButton.icon(
-                onPressed: _loading ? null : _uploadNew,
-                icon: Icon(Icons.cloud_upload_outlined, color: Theme.of(context).colorScheme.onPrimary),
-                label: const Text('Create & upload backup'),
-                style: FilledButton.styleFrom(backgroundColor: brand),
-              ),
-            ),
-            const SizedBox(height: 8),
-            if (_loading)
-              const Expanded(child: Center(child: CircularProgressIndicator()))
-            else if (_error != null)
-              Expanded(
-                child: Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      _error!,
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ),
-              )
-            else if (_items.isEmpty)
-              const Expanded(
-                child: Center(child: Text('No backups in SkyTask Backups yet')),
-              )
-            else
-              Expanded(
-                child: ListView.builder(
-                  itemCount: _items.length,
-                  itemBuilder: (_, i) {
-                    final item = _items[i];
-                    final when = item.modifiedTime?.toLocal().toString() ?? '';
-                    return ListTile(
-                      leading: const Icon(Icons.cloud_download_outlined),
-                      title: Text(item.name),
-                      subtitle: Text(when),
-                      onTap: () => _restore(item),
-                    );
-                  },
-                ),
-              ),
-            TextButton(
-              onPressed: () async {
-                await DriveBackupService.instance.signOut();
-                if (context.mounted) Navigator.pop(context);
-              },
-              child: const Text('Sign out of Google'),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _confirm,
+              obscureText: true,
+              decoration: const InputDecoration(labelText: 'Confirm password'),
+              onSubmitted: (_) => _continue(),
             ),
           ],
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            FocusScope.of(context).unfocus();
+            Navigator.of(context, rootNavigator: true).pop();
+          },
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _continue,
+          child: const Text('Continue'),
+        ),
+      ],
     );
+  }
+}
+
+class _UnlockBackupPasswordDialog extends StatefulWidget {
+  const _UnlockBackupPasswordDialog();
+
+  @override
+  State<_UnlockBackupPasswordDialog> createState() =>
+      _UnlockBackupPasswordDialogState();
+}
+
+class _UnlockBackupPasswordDialogState
+    extends State<_UnlockBackupPasswordDialog> {
+  late final TextEditingController _pass;
+
+  @override
+  void initState() {
+    super.initState();
+    _pass = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _pass.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Enter backup password'),
+      content: TextField(
+        controller: _pass,
+        obscureText: true,
+        autofocus: true,
+        decoration: const InputDecoration(labelText: 'Password'),
+        onSubmitted: (_) => _submit(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context, rootNavigator: true).pop(),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _submit,
+          child: const Text('Unlock'),
+        ),
+      ],
+    );
+  }
+
+  void _submit() {
+    final value = _pass.text;
+    FocusScope.of(context).unfocus();
+    Navigator.of(context, rootNavigator: true).pop(value);
   }
 }

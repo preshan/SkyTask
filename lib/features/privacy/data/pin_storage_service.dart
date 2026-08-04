@@ -3,6 +3,7 @@ import 'dart:math';
 import 'dart:typed_data';
 
 import 'package:crypto/crypto.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 enum AuthMethod { biometric, pin }
@@ -25,8 +26,41 @@ class PinStorageService {
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
   );
 
+  /// When non-null, used instead of [FlutterSecureStorage] (unit tests).
+  static Map<String, String>? _memory;
+
+  @visibleForTesting
+  static void debugUseMemoryStore() => _memory = <String, String>{};
+
+  @visibleForTesting
+  static void debugDisableMemoryStore() => _memory = null;
+
+  Future<String?> _read(String key) async {
+    final mem = _memory;
+    if (mem != null) return mem[key];
+    return _storage.read(key: key);
+  }
+
+  Future<void> _write(String key, String value) async {
+    final mem = _memory;
+    if (mem != null) {
+      mem[key] = value;
+      return;
+    }
+    await _storage.write(key: key, value: value);
+  }
+
+  Future<void> _delete(String key) async {
+    final mem = _memory;
+    if (mem != null) {
+      mem.remove(key);
+      return;
+    }
+    await _storage.delete(key: key);
+  }
+
   Future<AuthMethod?> getAuthMethod() async {
-    final value = await _storage.read(key: _authMethodKey);
+    final value = await _read(_authMethodKey);
     return switch (value) {
       'biometric' => AuthMethod.biometric,
       'pin' => AuthMethod.pin,
@@ -36,12 +70,12 @@ class PinStorageService {
 
   Future<void> savePin(String pin) async {
     final encoded = _hashPinV2(pin);
-    await _storage.write(key: _pinHashKey, value: encoded);
-    await _storage.write(key: _authMethodKey, value: 'pin');
+    await _write(_pinHashKey, encoded);
+    await _write(_authMethodKey, 'pin');
   }
 
   Future<bool> verifyPin(String pin) async {
-    final stored = await _storage.read(key: _pinHashKey);
+    final stored = await _read(_pinHashKey);
     if (stored == null) return false;
 
     if (stored.startsWith('v2:')) {
@@ -57,12 +91,21 @@ class PinStorageService {
 
   Future<void> setBiometricMethod() async {
     // Keep any existing PIN hash so users can fall back if biometrics fail.
-    await _storage.write(key: _authMethodKey, value: 'biometric');
+    await _write(_authMethodKey, 'biometric');
+  }
+
+  Future<void> setPinMethod() async {
+    await _write(_authMethodKey, 'pin');
+  }
+
+  Future<bool> hasPin() async {
+    final stored = await _read(_pinHashKey);
+    return stored != null && stored.isNotEmpty;
   }
 
   Future<void> clear() async {
-    await _storage.delete(key: _pinHashKey);
-    await _storage.delete(key: _authMethodKey);
+    await _delete(_pinHashKey);
+    await _delete(_authMethodKey);
   }
 
   String _hashPinV2(String pin) {

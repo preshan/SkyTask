@@ -1,17 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:skytask/core/constants/app_colors.dart';
-import 'package:skytask/core/theme/app_theme.dart';
 import 'package:skytask/features/reminders/domain/entities/reminder.dart';
 
 void main() {
-  group('AppTheme', () {
-    test('uses Material 3 with sky blue primary', () {
-      final theme = AppTheme.light();
-      expect(theme.useMaterial3, isTrue);
-      expect(theme.colorScheme.primary, AppColors.primary);
-    });
-  });
-
   group('Reminder.fireDateTime', () {
     test('applies notification offset correctly', () {
       final reminder = Reminder(

@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:file_picker/file_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:isar/isar.dart';
 import 'package:path/path.dart' as p;
@@ -37,14 +38,72 @@ class BackupService {
   Future<SharedPreferences> get _preferences async =>
       _prefs ??= await SharedPreferences.getInstance();
 
-  /// Creates a backup file under app documents / backups /.
-  Future<File> exportToFile({String? password}) async {
+  /// Creates a backup file in [directoryPath], or app documents / backups /.
+  Future<File> exportToFile({
+    String? password,
+    String? directoryPath,
+  }) async {
     final bytes = await exportBytes(password: password);
-    final dir = await _backupDir();
     final stamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
-    final file = File(p.join(dir.path, 'SkyTask_backup_$stamp.skytaskbak'));
+    final fileName = 'SkyTask_backup_$stamp.skytaskbak';
+
+    if (directoryPath != null && directoryPath.isNotEmpty) {
+      final dir = Directory(directoryPath);
+      if (!await dir.exists()) {
+        await dir.create(recursive: true);
+      }
+      final file = File(p.join(dir.path, fileName));
+      await file.writeAsBytes(bytes, flush: true);
+      return file;
+    }
+
+    final dir = await _backupDir();
+    final file = File(p.join(dir.path, fileName));
     await file.writeAsBytes(bytes, flush: true);
     return file;
+  }
+
+  /// Preferred folder if writable; otherwise system save dialog (SAF).
+  /// Returns null if the user cancels the save dialog.
+  Future<File?> saveBytesToUserLocation(
+    Uint8List bytes, {
+    String? directoryPath,
+  }) async {
+    final stamp = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
+    final fileName = 'SkyTask_backup_$stamp.skytaskbak';
+
+    if (directoryPath != null && directoryPath.isNotEmpty) {
+      try {
+        final dir = Directory(directoryPath);
+        if (!await dir.exists()) {
+          await dir.create(recursive: true);
+        }
+        final file = File(p.join(dir.path, fileName));
+        await file.writeAsBytes(bytes, flush: true);
+        return file;
+      } on PathAccessException {
+        // Fall through to SAF save dialog.
+      } on FileSystemException {
+        // Fall through to SAF save dialog.
+      }
+    }
+
+    final saved = await FilePicker.saveFile(
+      dialogTitle: 'Save SkyTask backup',
+      fileName: fileName,
+      bytes: bytes,
+    );
+    if (saved == null || saved.isEmpty) return null;
+    return File(saved);
+  }
+
+  /// Preferred folder if writable; otherwise system save dialog (SAF).
+  Future<File?> exportToUserLocation({
+    String? password,
+    String? directoryPath,
+  }) async {
+    final bytes = await exportBytes(password: password);
+    return saveBytesToUserLocation(bytes, directoryPath: directoryPath);
   }
 
   Future<Uint8List> exportBytes({String? password}) async {

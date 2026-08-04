@@ -15,6 +15,11 @@ pubspec.lock
 .DS_Store
 Thumbs.db
 
+# Isar native lib copied for host unit tests
+libisar.dylib
+libisar.so
+isar.dll
+
 # Android
 **/android/**/gradle-wrapper.jar
 **/android/.gradle

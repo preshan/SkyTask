@@ -67,8 +67,16 @@ class _SkyTaskAppState extends ConsumerState<SkyTaskApp>
       themeMode: themeMode,
       routerConfig: router,
       builder: (context, child) {
-        if (isLocked) return const LockScreen();
-        return child ?? const SizedBox.shrink();
+        // Overlay lock instead of replacing `child`. Swapping the navigator
+        // out while a route is still active (PIN confirm / Settings toggle)
+        // trips InheritedWidget dispose asserts (_dependents.isEmpty).
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            child ?? const SizedBox.shrink(),
+            if (isLocked) const LockScreen(),
+          ],
+        );
       },
     );
   }

@@ -2,12 +2,28 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.4.1] — 2026-08-04
+
+### Added
+- Backup folder setting (pick Download / Documents before export)
+- Unlock with fingerprint after PIN is set (Settings → Privacy); PIN remains as backup
+- Automated tests for content CRUD, settings providers, and backup crypto
+
+### Fixed
+- Dialog crashes when typing PIN, backup password, or new category (controller dispose)
+- App lock overlay no longer tears down the navigator mid-confirm
+- Export no longer stacks progress on top of the password dialog
+- Writing backups to system folders like Alarms (blocked by Android) — clear guidance + save fallback
+- Removed Google Drive backup UI (needed extra OAuth setup that does not work out of the box)
+
+### Changed
+- Local export / import only; share sheet still available after save
+
 ## [1.4.0] — 2026-08-04
 
 ### Added
 - Full-app backup export / import (`.skytaskbak`: gzip JSON, optional password)
-- Google Drive backups under a **SkyTask Backups** folder (sign in, upload, list, restore)
-- Settings → Data: Export, Import, and Google Drive backups
+- Settings → Data: Export and Import (share or save the file yourself)
 
 ### Notes
 - Private item text is decrypted into the backup so it restores on another device; app PIN and device encryption keys are not exported

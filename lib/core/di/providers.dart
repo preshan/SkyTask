@@ -7,6 +7,8 @@ import '../constants/app_constants.dart';
 import '../services/isar_service.dart';
 import '../../features/ideas/data/repositories/idea_repository_impl.dart';
 import '../../features/notes/data/repositories/note_repository_impl.dart';
+import '../../features/privacy/data/pin_storage_service.dart';
+import '../../features/privacy/data/privacy_auth_service.dart';
 import '../../features/reminders/data/repositories/reminder_repository_impl.dart';
 import '../../features/reminders/data/services/reminder_scheduler_service.dart';
 import '../../features/tasks/data/repositories/task_repository_impl.dart';
@@ -15,6 +17,13 @@ import '../../features/tasks/data/repositories/task_repository_impl.dart';
 
 final sharedPreferencesProvider = Provider<SharedPreferences>((ref) {
   throw UnimplementedError('Override in main()');
+});
+
+/// User-chosen folder for backup exports (null until set).
+final backupFolderPathProvider = StateProvider<String?>((ref) {
+  return ref
+      .watch(sharedPreferencesProvider)
+      .getString(AppConstants.backupFolderPathKey);
 });
 
 final isarProvider = FutureProvider<Isar>((ref) async {
@@ -75,6 +84,15 @@ final appLockEnabledProvider =
     StateNotifierProvider<AppLockEnabledNotifier, bool>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   return AppLockEnabledNotifier(prefs);
+});
+
+/// Preferred unlock method (PIN vs biometric).
+final unlockAuthMethodProvider = FutureProvider<AuthMethod?>((ref) async {
+  return PinStorageService.instance.getAuthMethod();
+});
+
+final biometricsAvailableProvider = FutureProvider<bool>((ref) async {
+  return PrivacyAuthService.instance.canUseBiometrics;
 });
 
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
