@@ -38,7 +38,15 @@ class _LockScreenState extends ConsumerState<LockScreen> {
       final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
         reason: 'Unlock SkyTask',
       );
-      if (ok) lock.unlock();
+      if (ok) {
+        lock.unlock();
+      } else if (mounted) {
+        setState(() => _error = 'Authentication failed. Try again.');
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _error = 'Biometrics unavailable.');
+      }
     } finally {
       lock.setAuthInProgress(false);
     }
@@ -99,6 +107,10 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           'Use fingerprint or face to unlock',
           style: TextStyle(color: Colors.white70),
         ),
+        if (_error != null) ...[
+          const SizedBox(height: 12),
+          Text(_error!, style: const TextStyle(color: Colors.redAccent)),
+        ],
         const SizedBox(height: 32),
         FilledButton.icon(
           onPressed: _unlockWithBiometrics,

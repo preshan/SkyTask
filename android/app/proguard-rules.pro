@@ -24,3 +24,6 @@
 -keep class com.dexterous.flutterlocalnotifications.** { *; }
 
 -keep class org.xmlpull.** { *; }
+
+# Launcher shortcut icons (referenced from Dart / shortcuts.xml)
+-keep class com.skytask.app.R$drawable { *; }

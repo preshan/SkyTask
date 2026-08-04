@@ -21,6 +21,9 @@ abstract final class AppRoutes {
   static const calendar = '/calendar';
   static const ideas = '/ideas';
   static const settings = '/settings';
+  static const create = '/create';
+
+  static String createKind(String kind) => '$create/$kind';
 
   static String tasksCreatedToday() => '$tasks?createdToday=1';
   static String tasksPinned() => '$tasks?filter=pinned';
@@ -64,6 +67,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         return AppRoutes.home;
       }
 
+      // Deep link / static launcher shortcut → home with create query.
+      if (location.startsWith('${AppRoutes.create}/')) {
+        final kind = state.uri.pathSegments.length > 1
+            ? state.uri.pathSegments[1]
+            : null;
+        if (kind == null || kind.isEmpty) return AppRoutes.home;
+        return '${AppRoutes.home}?create=$kind';
+      }
+
       return null;
     },
     routes: [
@@ -78,6 +90,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppRoutes.privacySetup,
         builder: (_, __) => const PrivacySetupScreen(),
+      ),
+      // Matches skytask://app/create/{kind} when Flutter deep linking is on.
+      GoRoute(
+        path: '${AppRoutes.create}/:kind',
+        redirect: (context, state) {
+          final kind = state.pathParameters['kind'];
+          if (kind == null || kind.isEmpty) return AppRoutes.home;
+          return '${AppRoutes.home}?create=$kind';
+        },
       ),
       ShellRoute(
         builder: (_, __, child) => AppShell(child: child),

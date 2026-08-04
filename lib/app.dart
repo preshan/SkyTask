@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'core/di/providers.dart';
 import 'core/router/app_router.dart';
+import 'core/services/launcher_shortcuts_service.dart';
 import 'core/theme/app_theme.dart';
 import 'features/privacy/presentation/screens/lock_screen.dart';
 
@@ -19,6 +20,10 @@ class _SkyTaskAppState extends ConsumerState<SkyTaskApp>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      LauncherShortcutsService.install(ProviderScope.containerOf(context));
+    });
   }
 
   @override

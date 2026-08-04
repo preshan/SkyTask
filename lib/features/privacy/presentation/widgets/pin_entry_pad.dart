@@ -38,9 +38,14 @@ class PinEntryPadState extends State<PinEntryPad> {
   void _tap(String value) {
     if (_digits.length >= widget.length) return;
     HapticFeedback.lightImpact();
-    setState(() => _digits += value);
-    if (_digits.length == widget.length) {
-      widget.onCompleted(_digits);
+    final next = _digits + value;
+    setState(() => _digits = next);
+    if (next.length == widget.length) {
+      // Defer so parent can swap steps / rebuild without nested setState issues.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        widget.onCompleted(next);
+      });
     }
   }
 
@@ -132,17 +137,24 @@ class PinEntryPadState extends State<PinEntryPad> {
                 }
                 if (key == 'back') {
                   return _PadButton(
-                    icon: SkyIcons.backspace,
                     fill: keyFill,
-                    foreground: accent,
                     onPressed: _backspace,
+                    child: Transform.flip(
+                      flipX: true,
+                      child: SkyIcon(SkyIcons.backspace, color: accent),
+                    ),
                   );
                 }
                 return _PadButton(
-                  label: key,
                   fill: keyFill,
-                  foreground: onSurface,
                   onPressed: () => _tap(key),
+                  child: Text(
+                    key,
+                    style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                          color: onSurface,
+                          fontWeight: FontWeight.w500,
+                        ),
+                  ),
                 );
               }).toList(),
             ),
@@ -154,18 +166,14 @@ class PinEntryPadState extends State<PinEntryPad> {
 
 class _PadButton extends StatelessWidget {
   const _PadButton({
-    this.label,
-    this.icon,
     required this.fill,
-    required this.foreground,
     required this.onPressed,
+    required this.child,
   });
 
-  final String? label;
-  final List<List<dynamic>>? icon;
   final Color fill;
-  final Color foreground;
   final VoidCallback onPressed;
+  final Widget child;
 
   @override
   Widget build(BuildContext context) {
@@ -180,17 +188,7 @@ class _PadButton extends StatelessWidget {
           child: SizedBox(
             width: 64,
             height: 64,
-            child: Center(
-              child: icon != null
-                  ? SkyIcon(icon!, color: foreground)
-                  : Text(
-                      label!,
-                      style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                            color: foreground,
-                            fontWeight: FontWeight.w500,
-                          ),
-                    ),
-            ),
+            child: Center(child: child),
           ),
         ),
       ),

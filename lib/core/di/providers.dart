@@ -70,9 +70,11 @@ final privacySetupCompleteProvider =
   return PrivacySetupCompleteNotifier(prefs);
 });
 
-final appLockEnabledProvider = Provider<bool>((ref) {
+/// Whether the user enabled app lock (fingerprint / PIN). Reactive for Settings.
+final appLockEnabledProvider =
+    StateNotifierProvider<AppLockEnabledNotifier, bool>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
-  return prefs.getBool(AppConstants.appLockEnabledKey) ?? false;
+  return AppLockEnabledNotifier(prefs);
 });
 
 class ThemeModeNotifier extends StateNotifier<ThemeMode> {
@@ -125,22 +127,40 @@ class PrivacySetupCompleteNotifier extends StateNotifier<bool> {
   }
 }
 
+class AppLockEnabledNotifier extends StateNotifier<bool> {
+  AppLockEnabledNotifier(this._prefs)
+      : super(_prefs.getBool(AppConstants.appLockEnabledKey) ?? false);
+
+  final SharedPreferences _prefs;
+
+  Future<void> setEnabled(bool enabled) async {
+    await _prefs.setBool(AppConstants.appLockEnabledKey, enabled);
+    state = enabled;
+  }
+}
+
 final privacyLockProvider =
     StateNotifierProvider<PrivacyLockNotifier, bool>((ref) {
   final prefs = ref.watch(sharedPreferencesProvider);
   final privacySetupDone = ref.watch(privacySetupCompleteProvider);
-  return PrivacyLockNotifier(prefs, lockOnStart: privacySetupDone);
+  final enabled = prefs.getBool(AppConstants.appLockEnabledKey) ?? false;
+  return PrivacyLockNotifier(
+    prefs,
+    lockOnStart: privacySetupDone && enabled,
+  );
 });
 
 class PrivacyLockNotifier extends StateNotifier<bool> {
   PrivacyLockNotifier(this._prefs, {required bool lockOnStart})
       : super(false) {
-    if (lockOnStart && isAppLockEnabled) state = true;
+    if (lockOnStart) state = true;
   }
 
   final SharedPreferences _prefs;
 
   DateTime? _backgroundedAt;
+
+  /// While true, resume must not re-lock (e.g. mid biometric / PIN sheet).
   bool _authInProgress = false;
 
   bool get isAppLockEnabled =>
@@ -180,13 +200,5 @@ class PrivacyLockNotifier extends StateNotifier<bool> {
 
   void setAuthInProgress(bool inProgress) {
     _authInProgress = inProgress;
-  }
-
-  Future<void> setAppLockEnabled(bool enabled) async {
-    await _prefs.setBool(AppConstants.appLockEnabledKey, enabled);
-    if (!enabled) {
-      state = false;
-      _backgroundedAt = null;
-    }
   }
 }

@@ -31,11 +31,11 @@ class ReminderRepositoryImpl implements ReminderRepository {
 
   @override
   Future<List<Reminder>> getPending() async {
-    final now = DateTime.now();
+    // Incomplete reminders only — include overdue so reboot / WorkManager
+    // reschedule can still fire (NotificationService shows past-due immediately).
     final results = await _isar.reminderCollections
         .filter()
         .isCompletedEqualTo(false)
-        .reminderDateTimeGreaterThan(now)
         .findAll();
     return results.map(ReminderMapper.fromCollection).toList();
   }

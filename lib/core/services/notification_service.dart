@@ -4,6 +4,7 @@ import 'package:timezone/data/latest_all.dart' as tz_data;
 import 'package:timezone/timezone.dart' as tz;
 
 import '../constants/app_constants.dart';
+import '../utils/stable_notification_id.dart';
 import '../../features/reminders/domain/entities/reminder.dart';
 
 /// Local notification layer — works offline, app closed, and after reboot.
@@ -79,7 +80,8 @@ class NotificationService {
     // initialize timezones before using tz.local.
     await initialize();
 
-    final notificationId = reminder.notificationId ?? reminder.id.hashCode;
+    final notificationId =
+        reminder.notificationId ?? stableNotificationId(reminder.id);
     final fireAt = reminder.fireDateTime;
     final scheduled = tz.TZDateTime.from(fireAt, tz.local);
     final now = tz.TZDateTime.now(tz.local);

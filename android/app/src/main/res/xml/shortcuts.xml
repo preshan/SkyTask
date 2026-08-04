@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shortcuts xmlns:android="http://schemas.android.com/apk/res/android">
+    <shortcut
+        android:shortcutId="create_task"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_task"
+        android:shortcutShortLabel="@string/shortcut_new_task"
+        android:shortcutLongLabel="@string/shortcut_new_task_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.skytask.app"
+            android:targetClass="com.skytask.app.MainActivity"
+            android:data="skytask://app/create/task" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="create_reminder"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_reminder"
+        android:shortcutShortLabel="@string/shortcut_new_reminder"
+        android:shortcutLongLabel="@string/shortcut_new_reminder_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.skytask.app"
+            android:targetClass="com.skytask.app.MainActivity"
+            android:data="skytask://app/create/reminder" />
+    </shortcut>
+    <shortcut
+        android:shortcutId="create_idea"
+        android:enabled="true"
+        android:icon="@drawable/ic_shortcut_idea"
+        android:shortcutShortLabel="@string/shortcut_new_idea"
+        android:shortcutLongLabel="@string/shortcut_new_idea_long">
+        <intent
+            android:action="android.intent.action.VIEW"
+            android:targetPackage="com.skytask.app"
+            android:targetClass="com.skytask.app.MainActivity"
+            android:data="skytask://app/create/idea" />
+    </shortcut>
+</shortcuts>
