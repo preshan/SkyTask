@@ -14,7 +14,7 @@ Built with Flutter by **Preshan Pradeepa Kariyawasam**.
 |:--------:|:------------:|:--------:|
 | ![New Task](docs/release/screenshots/04_new_task.png) | ![New Reminder](docs/release/screenshots/05_new_reminder.png) | ![Settings](docs/release/screenshots/06_settings.png) |
 
-Latest release: [v1.3.1](https://github.com/preshan/SkyTask/releases/tag/v1.3.1)
+Latest release: [v1.4.0](https://github.com/preshan/SkyTask/releases/tag/v1.4.0)
 
 ## Features
 
@@ -23,6 +23,7 @@ Latest release: [v1.3.1](https://github.com/preshan/SkyTask/releases/tag/v1.3.1)
 - Ideas and notes, including voice memos
 - Device calendar integration (optional; skipped for private items)
 - App lock with PIN or biometrics; private text encrypted at rest
+- Full backup export / import (optional password) and Google Drive backups
 - Dark / light theme with a day–night sky background
 - Android home-screen shortcuts: long-press the app icon → New Task / Reminder / Idea
 
@@ -100,4 +101,8 @@ flutter analyze
 
 ## Roadmap
 
-Still planned: Google Calendar API sync, Drive backup, home-screen widgets, richer voice / assistant features. Firestore sync and polish are ongoing.
+Still planned: Google Calendar API sync, home-screen widgets, richer voice / assistant features. Firestore sync and polish are ongoing.
+
+## Google Drive sign-in
+
+Drive backup uses Google Sign-In with the Drive file scope (app-created files only). If sign-in fails on a release-signed build, add that keystore’s SHA-1 in the Google Cloud / Firebase OAuth client used by the Android app. Debug-signed sideload APKs usually work with the existing debug SHA-1.

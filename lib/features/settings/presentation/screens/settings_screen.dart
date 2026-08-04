@@ -8,6 +8,7 @@ import '../../../../core/constants/app_info.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../shared/widgets/sky_icon.dart';
+import '../../../backup/presentation/backup_dialogs.dart';
 import '../../../calendar/data/device_calendar_service.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
 import '../../../privacy/data/pin_storage_service.dart';
@@ -120,6 +121,27 @@ class SettingsScreen extends ConsumerWidget {
             ),
             value: appLock,
             onChanged: (v) => _onAppLockChanged(context, ref, v),
+          ),
+          const Divider(),
+          _header(context, 'Data'),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.archive),
+            title: const Text('Export backup'),
+            subtitle: const Text('Compressed file · optional password'),
+            onTap: () => showExportBackupFlow(context, ref),
+          ),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.note),
+            title: const Text('Import backup'),
+            subtitle: const Text('From Files or shared storage'),
+            onTap: () => showImportBackupFlow(context, ref),
+          ),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.cloud),
+            title: const Text('Google Drive backups'),
+            subtitle: const Text('Upload, list, and restore'),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
+            onTap: () => showDriveBackupsSheet(context, ref),
           ),
           const Divider(),
           Padding(

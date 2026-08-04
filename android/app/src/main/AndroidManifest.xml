@@ -108,5 +108,8 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="mailto"/>
         </intent>
+        <!-- Google Sign-In / Drive -->
+        <package android:name="com.google.android.gms"/>
+        <package android:name="com.android.vending"/>
     </queries>
 </manifest>

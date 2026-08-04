@@ -4,6 +4,18 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.4.0 — 2026-08-04 · `1.4.0+9`
+
+[Download SkyTask-1.4.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.4.0/SkyTask-1.4.0.apk)
+
+### Changes
+- Export a full backup from Settings → Data (compressed; optional password)
+- Import from Files, or restore from Google Drive (**SkyTask Backups** folder)
+- Share / save locally after export, or upload straight to Drive
+- Private text travels with the backup; your app PIN stays on the device
+
+---
+
 ## 1.3.1 — 2026-08-04 · `1.3.1+8`
 
 [Download SkyTask-1.3.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.3.1/SkyTask-1.3.1.apk)
