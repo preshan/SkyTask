@@ -2,7 +2,7 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
-## [1.2.1] — 2026-08-04
+## [1.3.0] — 2026-08-04
 
 ### Added
 - Android launcher shortcuts for New Task / Reminder / Idea (long-press app icon)

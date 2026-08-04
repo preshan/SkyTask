@@ -4,9 +4,9 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
-## 1.2.1 — 2026-08-04 · `1.2.1+7`
+## 1.3.0 — 2026-08-04 · `1.3.0+7`
 
-[Download SkyTask-1.2.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.2.1/SkyTask-1.2.1.apk)
+[Download SkyTask-1.3.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.3.0/SkyTask-1.3.0.apk)
 
 ### Changes
 - Long-press the SkyTask icon for New Task / Reminder / Idea
