@@ -2,6 +2,12 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.3.1] — 2026-08-04
+
+### Fixed
+- Calendar sync enable: clearer errors when permission is missing (was wrongly blaming a missing Google account)
+- Request calendar access via `permission_handler` for Android 13+ reliability
+
 ## [1.3.0] — 2026-08-04
 
 ### Added

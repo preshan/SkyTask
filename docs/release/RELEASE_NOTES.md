@@ -4,6 +4,15 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.3.1 — 2026-08-04 · `1.3.1+8`
+
+[Download SkyTask-1.3.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.3.1/SkyTask-1.3.1.apk)
+
+### Fixes
+- Enabling calendar sync now asks for calendar permission correctly and shows the real reason if it fails (permission vs no calendars), instead of always saying to add a Google account
+
+---
+
 ## 1.3.0 — 2026-08-04 · `1.3.0+7`
 
 [Download SkyTask-1.3.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.3.0/SkyTask-1.3.0.apk)
