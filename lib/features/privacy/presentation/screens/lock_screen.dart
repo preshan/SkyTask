@@ -17,6 +17,8 @@ class LockScreen extends ConsumerStatefulWidget {
 
 class _LockScreenState extends ConsumerState<LockScreen> {
   AuthMethod? _authMethod;
+  bool _hasPin = false;
+  bool _usePinFallback = false;
   String? _error;
   final _pinPadKey = GlobalKey<PinEntryPadState>();
 
@@ -28,7 +30,18 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
   Future<void> _loadAuthMethod() async {
     final method = await PinStorageService.instance.getAuthMethod();
-    if (mounted) setState(() => _authMethod = method);
+    final hasPin = await PinStorageService.instance.hasPin();
+    if (!mounted) return;
+    setState(() {
+      _authMethod = method;
+      _hasPin = hasPin;
+    });
+    if (method == AuthMethod.biometric) {
+      // Prompt fingerprint as soon as the lock screen appears.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_usePinFallback) _unlockWithBiometrics();
+      });
+    }
   }
 
   Future<void> _unlockWithBiometrics() async {
@@ -71,6 +84,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final showPin = _authMethod == AuthMethod.pin || _usePinFallback;
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(gradient: AppColors.skyGradient),
@@ -80,7 +94,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
               padding: const EdgeInsets.all(32),
               child: _authMethod == null
                   ? const CircularProgressIndicator(color: Colors.white)
-                  : _authMethod == AuthMethod.pin
+                  : showPin
                       ? _buildPinUnlock(context)
                       : _buildBiometricUnlock(context),
             ),
@@ -125,6 +139,19 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             minimumSize: const Size(200, 48),
           ),
         ),
+        if (_hasPin) ...[
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => setState(() {
+              _usePinFallback = true;
+              _error = null;
+            }),
+            child: const Text(
+              'Use PIN instead',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+        ],
       ],
     );
   }
@@ -159,6 +186,19 @@ class _LockScreenState extends ConsumerState<LockScreen> {
             },
           ),
         ),
+        if (_authMethod == AuthMethod.biometric && _usePinFallback) ...[
+          const SizedBox(height: 16),
+          TextButton(
+            onPressed: () => setState(() {
+              _usePinFallback = false;
+              _error = null;
+            }),
+            child: const Text(
+              'Use fingerprint instead',
+              style: TextStyle(color: Colors.white70),
+            ),
+          ),
+        ],
       ],
     );
   }

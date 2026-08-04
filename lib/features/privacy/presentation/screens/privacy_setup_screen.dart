@@ -44,8 +44,12 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
     try {
       await ref.read(privacySetupCompleteProvider.notifier).complete();
       await ref.read(appLockEnabledProvider.notifier).setEnabled(true);
-      ref.read(privacyLockProvider.notifier).lock();
-      if (mounted) context.go(AppRoutes.home);
+      if (!mounted) return;
+      context.go(AppRoutes.home);
+      // Lock after navigation so we don't tear down this route mid-frame.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ref.read(privacyLockProvider.notifier).lock();
+      });
     } catch (e) {
       if (mounted) {
         setState(() {

@@ -8,6 +8,7 @@ import '../../../../core/constants/app_info.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../shared/widgets/sky_icon.dart';
+import '../../../backup/data/backup_folder_service.dart';
 import '../../../backup/presentation/backup_dialogs.dart';
 import '../../../calendar/data/device_calendar_service.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
@@ -122,8 +123,34 @@ class SettingsScreen extends ConsumerWidget {
             value: appLock,
             onChanged: (v) => _onAppLockChanged(context, ref, v),
           ),
+          if (appLock &&
+              (ref.watch(biometricsAvailableProvider).valueOrNull ?? false))
+            SwitchListTile(
+              secondary: const SkyIcon(SkyIcons.fingerprint),
+              title: const Text('Unlock with fingerprint'),
+              subtitle: Text(
+                ref.watch(unlockAuthMethodProvider).valueOrNull ==
+                        AuthMethod.biometric
+                    ? 'Fingerprint or face · PIN still works as backup'
+                    : 'Use fingerprint instead of typing your PIN each time',
+              ),
+              value: ref.watch(unlockAuthMethodProvider).valueOrNull ==
+                  AuthMethod.biometric,
+              onChanged: (v) => _onFingerprintUnlockChanged(context, ref, v),
+            ),
           const Divider(),
           _header(context, 'Data'),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.folder),
+            title: const Text('Backup folder'),
+            subtitle: Text(
+              BackupFolderService.instance.displayLabel(
+                ref.watch(backupFolderPathProvider),
+              ),
+            ),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
+            onTap: () => showPickBackupFolderFlow(context, ref),
+          ),
           ListTile(
             leading: const SkyIcon(SkyIcons.archive),
             title: const Text('Export backup'),
@@ -135,13 +162,6 @@ class SettingsScreen extends ConsumerWidget {
             title: const Text('Import backup'),
             subtitle: const Text('From Files or shared storage'),
             onTap: () => showImportBackupFlow(context, ref),
-          ),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.cloud),
-            title: const Text('Google Drive backups'),
-            subtitle: const Text('Upload, list, and restore'),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
-            onTap: () => showDriveBackupsSheet(context, ref),
           ),
           const Divider(),
           Padding(
@@ -273,47 +293,86 @@ class SettingsScreen extends ConsumerWidget {
 
     await ref.read(appLockEnabledProvider.notifier).setEnabled(enabled);
     if (enabled) {
-      lock.lock();
+      // Defer so SwitchListTile finishes its rebuild before lock overlays.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        lock.lock();
+      });
     } else {
       lock.unlock();
     }
   }
 
-  Future<bool?> _confirmPinDialog(BuildContext context) async {
-    final controller = TextEditingController();
-    try {
-      return showDialog<bool>(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Enter PIN'),
-          content: TextField(
-            controller: controller,
-            keyboardType: TextInputType.number,
-            obscureText: true,
-            maxLength: 4,
-            autofocus: true,
-            decoration: const InputDecoration(hintText: '4-digit PIN'),
+  Future<void> _onFingerprintUnlockChanged(
+    BuildContext context,
+    WidgetRef ref,
+    bool enableFingerprint,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+
+    if (enableFingerprint) {
+      final hasPin = await PinStorageService.instance.hasPin();
+      if (!hasPin) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text('Set a PIN first, then turn on fingerprint unlock'),
           ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(ctx, false),
-              child: const Text('Cancel'),
-            ),
-            FilledButton(
-              onPressed: () async {
-                final ok = await PrivacyAuthService.instance
-                    .verifyPin(controller.text.trim());
-                if (ctx.mounted) Navigator.pop(ctx, ok);
-              },
-              child: const Text('Confirm'),
-            ),
-          ],
+        );
+        return;
+      }
+      if (!context.mounted) return;
+      final pinOk = await _confirmPinDialog(context) ?? false;
+      if (!pinOk) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('PIN required to enable fingerprint')),
+        );
+        return;
+      }
+      final bioOk =
+          await PrivacyAuthService.instance.authenticateWithBiometrics(
+        reason: 'Confirm fingerprint to unlock SkyTask',
+      );
+      if (!bioOk) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Fingerprint confirmation failed')),
+        );
+        return;
+      }
+      await PinStorageService.instance.setBiometricMethod();
+      ref.invalidate(unlockAuthMethodProvider);
+      messenger.showSnackBar(
+        const SnackBar(
+          content: Text('Fingerprint unlock on · PIN still works as backup'),
         ),
       );
-    } finally {
-      // Delay dispose until dialog closes.
-      Future<void>.delayed(const Duration(seconds: 1), controller.dispose);
+      return;
     }
+
+    // Turn fingerprint preference off → unlock with PIN again.
+    final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
+      reason: 'Confirm to switch back to PIN unlock',
+    );
+    if (!ok) {
+      if (!context.mounted) return;
+      final pinOk = await _confirmPinDialog(context) ?? false;
+      if (!pinOk) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Could not verify — staying on fingerprint')),
+        );
+        return;
+      }
+    }
+    await PinStorageService.instance.setPinMethod();
+    ref.invalidate(unlockAuthMethodProvider);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('PIN unlock restored')),
+    );
+  }
+
+  Future<bool?> _confirmPinDialog(BuildContext context) {
+    return showDialog<bool>(
+      context: context,
+      builder: (ctx) => const _ConfirmPinDialog(),
+    );
   }
 
   Future<void> _pickCalendar(BuildContext context, WidgetRef ref) async {
@@ -450,6 +509,61 @@ class _ContactLink extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ConfirmPinDialog extends StatefulWidget {
+  const _ConfirmPinDialog();
+
+  @override
+  State<_ConfirmPinDialog> createState() => _ConfirmPinDialogState();
+}
+
+class _ConfirmPinDialogState extends State<_ConfirmPinDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  Future<void> _confirm() async {
+    final ok =
+        await PrivacyAuthService.instance.verifyPin(_controller.text.trim());
+    if (mounted) Navigator.pop(context, ok);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Enter PIN'),
+      content: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        obscureText: true,
+        maxLength: 4,
+        autofocus: true,
+        decoration: const InputDecoration(hintText: '4-digit PIN'),
+        onSubmitted: (_) => _confirm(),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context, false),
+          child: const Text('Cancel'),
+        ),
+        FilledButton(
+          onPressed: _confirm,
+          child: const Text('Confirm'),
+        ),
+      ],
     );
   }
 }

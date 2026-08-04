@@ -4,14 +4,27 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.4.1 — 2026-08-04 · `1.4.1+10`
+
+[Download SkyTask-1.4.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.4.1/SkyTask-1.4.1.apk)
+
+### Changes
+- Pick a backup folder (Download / Documents) before exporting
+- Turn on fingerprint unlock after you already have a PIN
+- Fixes red-screen crashes in password, PIN, and new-category dialogs
+- Safer app lock overlay; backup save no longer fights the password dialog
+- Google Drive backup removed for now (use Share / save instead)
+
+---
+
 ## 1.4.0 — 2026-08-04 · `1.4.0+9`
 
 [Download SkyTask-1.4.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.4.0/SkyTask-1.4.0.apk)
 
 ### Changes
 - Export a full backup from Settings → Data (compressed; optional password)
-- Import from Files, or restore from Google Drive (**SkyTask Backups** folder)
-- Share / save locally after export, or upload straight to Drive
+- Import from Files or shared storage
+- Share / save the backup file after export (Drive, Files, email, etc. via the system share sheet)
 - Private text travels with the backup; your app PIN stays on the device
 
 ---
