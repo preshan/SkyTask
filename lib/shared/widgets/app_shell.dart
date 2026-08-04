@@ -4,21 +4,23 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/router/app_router.dart';
-import '../../features/ideas/presentation/widgets/idea_form_sheet.dart';
-import '../../features/notes/presentation/widgets/note_form_sheet.dart';
-import '../../features/reminders/presentation/widgets/reminder_form_sheet.dart';
-import '../../features/tasks/presentation/widgets/task_form_sheet.dart';
+import '../create/create_kind.dart';
 import 'frosted_surface.dart';
 import 'sky_atmosphere_background.dart';
 import 'sky_icon.dart';
 
 /// Bottom nav: Home · Tasks · Create · Calendar · Ideas
 /// Create sits in-line with the other icons (not a floating FAB).
-class AppShell extends ConsumerWidget {
+class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child});
 
   final Widget child;
 
+  @override
+  ConsumerState<AppShell> createState() => _AppShellState();
+}
+
+class _AppShellState extends ConsumerState<AppShell> {
   static const _tabs = [
     _Tab(SkyIcons.home, SkyIcons.homeFilled, 'Home', AppRoutes.home),
     _Tab(SkyIcons.tasks, SkyIcons.tasksFilled, 'Tasks', AppRoutes.tasks),
@@ -26,6 +28,24 @@ class AppShell extends ConsumerWidget {
         AppRoutes.calendar),
     _Tab(SkyIcons.ideas, SkyIcons.ideasFilled, 'Ideas', AppRoutes.ideas),
   ];
+
+  bool _openingCreate = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _consumeCreateRequest());
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Launcher deep link: /home?create=task|reminder|idea
+    if (GoRouterState.of(context).uri.queryParameters['create'] != null) {
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _consumeCreateRequest());
+    }
+  }
 
   int? _indexForLocation(String location) {
     if (location.startsWith(AppRoutes.settings)) return null;
@@ -35,15 +55,100 @@ class AppShell extends ConsumerWidget {
     return 0;
   }
 
+  Future<void> _consumeCreateRequest() async {
+    if (!mounted || _openingCreate) return;
+
+    final fromQuery = createKindFromQuery(
+      GoRouterState.of(context).uri.queryParameters['create'],
+    );
+    final fromShortcut = ref.read(pendingCreateKindProvider);
+    final kind = fromQuery ?? fromShortcut;
+    if (kind == null) return;
+
+    _openingCreate = true;
+    ref.read(pendingCreateKindProvider.notifier).state = null;
+
+    final path = GoRouterState.of(context).uri.path;
+    if (GoRouterState.of(context).uri.queryParameters.containsKey('create')) {
+      context.go(path);
+    }
+
+    await openCreateSheet(context, ref, kind);
+    if (mounted) _openingCreate = false;
+  }
+
+  Future<void> _showCreateMenu() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (ctx) {
+        return SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Create',
+                  style: Theme.of(ctx).textTheme.titleMedium,
+                ),
+                const SizedBox(height: 8),
+                _CreateOption(
+                  icon: SkyIcons.task,
+                  label: 'New Task',
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await openCreateSheet(context, ref, CreateKind.task);
+                  },
+                ),
+                _CreateOption(
+                  icon: SkyIcons.alarm,
+                  label: 'New Reminder',
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await openCreateSheet(context, ref, CreateKind.reminder);
+                  },
+                ),
+                _CreateOption(
+                  icon: SkyIcons.lightbulb,
+                  label: 'New Idea',
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await openCreateSheet(context, ref, CreateKind.idea);
+                  },
+                ),
+                _CreateOption(
+                  icon: SkyIcons.note,
+                  label: 'New Note',
+                  onTap: () async {
+                    Navigator.pop(ctx);
+                    await openCreateSheet(context, ref, CreateKind.note);
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final location = GoRouterState.of(context).uri.path;
     final selectedIndex = _indexForLocation(location);
+
+    ref.listen<CreateKind?>(pendingCreateKindProvider, (prev, next) {
+      if (next != null) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _consumeCreateRequest());
+      }
+    });
 
     return SkyAtmosphereBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
-        body: child,
+        body: widget.child,
         bottomNavigationBar: FrostedSurface(
           borderRadius: 0,
           elevated: true,
@@ -71,9 +176,7 @@ class AppShell extends ConsumerWidget {
                       ),
                     ),
                     Expanded(
-                      child: _CreateNavItem(
-                        onTap: () => _showCreateMenu(context, ref),
-                      ),
+                      child: _CreateNavItem(onTap: _showCreateMenu),
                     ),
                     Expanded(
                       child: _NavItem(
@@ -98,62 +201,6 @@ class AppShell extends ConsumerWidget {
       ),
     );
   }
-
-  Future<void> _showCreateMenu(BuildContext context, WidgetRef ref) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Create',
-                  style: Theme.of(ctx).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 8),
-                _CreateOption(
-                  icon: SkyIcons.task,
-                  label: 'New Task',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await showTaskFormSheet(context, ref);
-                  },
-                ),
-                _CreateOption(
-                  icon: SkyIcons.alarm,
-                  label: 'New Reminder',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await showReminderFormSheet(context, ref);
-                  },
-                ),
-                _CreateOption(
-                  icon: SkyIcons.lightbulb,
-                  label: 'New Idea',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await showIdeaFormSheet(context, ref);
-                  },
-                ),
-                _CreateOption(
-                  icon: SkyIcons.note,
-                  label: 'New Note',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await showNoteFormSheet(context, ref);
-                  },
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
 }
 
 class _NavItem extends StatelessWidget {
@@ -170,7 +217,8 @@ class _NavItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
-    final color = selected ? scheme.primary : scheme.onSurface.withValues(alpha: 0.55);
+    final color =
+        selected ? scheme.primary : scheme.onSurface.withValues(alpha: 0.55);
 
     return InkWell(
       onTap: onTap,

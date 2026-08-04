@@ -5,10 +5,10 @@ import '../../features/reminders/domain/entities/reminder.dart';
 import 'isar_service.dart';
 import 'notification_service.dart';
 import 'private_crypto_service.dart';
-import '../../features/reminders/data/mappers/reminder_mapper.dart';
+import '../utils/stable_notification_id.dart';
 import '../../features/reminders/data/repositories/reminder_repository_impl.dart';
 
-/// Android AlarmManager exact-alarm layer for Google Calendar–grade reliability.
+/// Android AlarmManager exact-alarm layer for reliable local reminder wake-ups.
 class AlarmService {
   AlarmService._();
   static final AlarmService instance = AlarmService._();
@@ -22,7 +22,8 @@ class AlarmService {
   /// Schedules an exact alarm that re-fires the local notification pipeline.
   Future<void> scheduleReminder(Reminder reminder) async {
     final fireAt = reminder.fireDateTime;
-    final alarmId = reminder.notificationId ?? reminder.id.hashCode;
+    final alarmId =
+        reminder.notificationId ?? stableNotificationId(reminder.id);
 
     await AndroidAlarmManager.oneShotAt(
       fireAt,

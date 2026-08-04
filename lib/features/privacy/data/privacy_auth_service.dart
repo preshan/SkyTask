@@ -27,13 +27,18 @@ class PrivacyAuthService {
   Future<AuthMethod?> get authMethod => _pinStorage.getAuthMethod();
 
   Future<bool> authenticateWithBiometrics({String? reason}) async {
-    return _auth.authenticate(
-      localizedReason: reason ?? 'Authenticate to unlock SkyTask',
-      options: const AuthenticationOptions(
-        stickyAuth: true,
-        biometricOnly: true,
-      ),
-    );
+    try {
+      return await _auth.authenticate(
+        localizedReason: reason ?? 'Authenticate to unlock SkyTask',
+        options: const AuthenticationOptions(
+          stickyAuth: true,
+          // Allow device PIN/pattern as fallback when biometrics fail.
+          biometricOnly: false,
+        ),
+      );
+    } catch (_) {
+      return false;
+    }
   }
 
   Future<bool> verifyPin(String pin) => _pinStorage.verifyPin(pin);

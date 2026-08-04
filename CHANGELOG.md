@@ -2,6 +2,24 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.2.1] — 2026-08-04
+
+### Added
+- Android launcher shortcuts for New Task / Reminder / Idea (long-press app icon)
+
+### Fixed
+- PIN confirm step stuck after create (pad state reused)
+- Backspace icon facing the wrong way on the PIN pad
+- App lock switch not updating in Settings
+- Overdue reminders skipped on reboot reschedule
+- Turning off app lock no longer possible without re-auth
+- Stronger PIN storage (salted PBKDF2; upgrades legacy hashes on unlock)
+- Privacy setup errors surface instead of spinning forever
+- More stable notification / alarm ids
+
+### Changed
+- Removed non-functional Private vault toggle from Settings
+
 ## [1.2.0] — 2026-08-03
 
 ### Added

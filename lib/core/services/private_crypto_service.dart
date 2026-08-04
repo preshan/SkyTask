@@ -5,7 +5,12 @@ import 'dart:typed_data';
 import 'package:encrypt/encrypt.dart' as enc;
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
-/// Simple AES encryption for private item fields at the data layer.
+/// Simple AES-CBC encryption for private item *text fields* at the data layer.
+///
+/// Important limitations (by design today):
+/// - Decrypt-on-read is eager in mappers; [PrivateContentGate] is UI masking only.
+/// - Voice `.m4a` paths are not encrypted on disk.
+/// - CBC has no integrity tag; prefer AES-GCM in a future migration.
 ///
 /// Key lives in [FlutterSecureStorage]. Ciphertext is marked with [prefix]
 /// so older plaintext rows still load after migration.
@@ -16,7 +21,10 @@ class PrivateCryptoService {
   static const prefix = 'enc:v1:';
   static const _keyStorageKey = 'private_content_aes_key';
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   enc.Key? _key;
   bool _ready = false;
 

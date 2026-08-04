@@ -41,10 +41,19 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
 
   Future<void> _finishSetup() async {
     setState(() => _loading = true);
-    await ref.read(privacySetupCompleteProvider.notifier).complete();
-    await ref.read(privacyLockProvider.notifier).setAppLockEnabled(true);
-    ref.read(privacyLockProvider.notifier).lock();
-    if (mounted) context.go(AppRoutes.home);
+    try {
+      await ref.read(privacySetupCompleteProvider.notifier).complete();
+      await ref.read(appLockEnabledProvider.notifier).setEnabled(true);
+      ref.read(privacyLockProvider.notifier).lock();
+      if (mounted) context.go(AppRoutes.home);
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loading = false;
+          _error = 'Could not finish setup. Try again.';
+        });
+      }
+    }
   }
 
   Future<void> _useBiometrics() async {
@@ -52,30 +61,31 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
       _loading = true;
       _error = null;
     });
-    final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
-      reason: 'Confirm biometrics to secure SkyTask',
-    );
-    if (!mounted) return;
-    if (!ok) {
+    try {
+      final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
+        reason: 'Confirm biometrics to secure SkyTask',
+      );
+      if (!mounted) return;
+      if (!ok) {
+        setState(() {
+          _loading = false;
+          _error = 'Biometric authentication failed. Try again or create a PIN.';
+        });
+        return;
+      }
+      await PinStorageService.instance.setBiometricMethod();
+      await _finishSetup();
+    } catch (_) {
+      if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = 'Biometric authentication failed. Try again or create a PIN.';
+        _error = 'Biometrics unavailable. Create a PIN instead.';
       });
-      return;
     }
-    await PinStorageService.instance.setBiometricMethod();
-    await _finishSetup();
-  }
-
-  void _onPinCreated(String pin) {
-    setState(() {
-      _draftPin = pin;
-      _step = _SetupStep.confirmPin;
-      _error = null;
-    });
   }
 
   Future<void> _onPinConfirmed(String pin) async {
+    if (_loading) return;
     if (pin != _draftPin) {
       setState(() {
         _error = 'PINs do not match. Try again.';
@@ -84,9 +94,29 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
       });
       return;
     }
-    setState(() => _loading = true);
-    await PinStorageService.instance.savePin(pin);
-    await _finishSetup();
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    try {
+      await PinStorageService.instance.savePin(pin);
+      await _finishSetup();
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = 'Could not save PIN. Try again.';
+      });
+    }
+  }
+
+  void _onPinCreated(String pin) {
+    if (_loading) return;
+    setState(() {
+      _draftPin = pin;
+      _step = _SetupStep.confirmPin;
+      _error = null;
+    });
   }
 
   @override
@@ -213,11 +243,16 @@ class _PrivacySetupScreenState extends ConsumerState<PrivacySetupScreen> {
         ),
         const Spacer(),
         PinEntryPad(
+          key: ValueKey(_step),
           title: title,
           subtitle: subtitle,
           errorText: _error,
           onCompleted: onCompleted,
         ),
+        if (_loading) ...[
+          const SizedBox(height: 24),
+          const CircularProgressIndicator(),
+        ],
         const Spacer(flex: 2),
       ],
     );

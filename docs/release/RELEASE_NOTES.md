@@ -4,6 +4,19 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.2.1 — 2026-08-04 · `1.2.1+7`
+
+[Download SkyTask-1.2.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.2.1/SkyTask-1.2.1.apk)
+
+### Changes
+- Long-press the SkyTask icon for New Task / Reminder / Idea
+- PIN create → confirm flow works reliably; backspace icon corrected
+- App lock switch updates correctly; turning it off asks for PIN / biometrics
+- Overdue reminders are re-armed after reboot
+- Stronger PIN hashing (salted PBKDF2)
+
+---
+
 ## 1.2.0 — 2026-08-03 · `1.2.0+6`
 
 [Download SkyTask-1.2.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.2.0/SkyTask-1.2.0.apk)

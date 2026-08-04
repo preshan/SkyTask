@@ -13,7 +13,6 @@ abstract final class AppConstants {
 
   // Secure storage keys
   static const String appLockEnabledKey = 'app_lock_enabled';
-  static const String privateVaultEnabledKey = 'private_vault_enabled';
   static const String themeModeKey = 'theme_mode';
   static const String onboardingCompleteKey = 'onboarding_complete';
   static const String privacySetupCompleteKey = 'privacy_setup_complete';

@@ -9,6 +9,8 @@ import '../../../../core/router/app_router.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../calendar/data/device_calendar_service.dart';
 import '../../../calendar/presentation/providers/calendar_providers.dart';
+import '../../../privacy/data/pin_storage_service.dart';
+import '../../../privacy/data/privacy_auth_service.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -102,15 +104,7 @@ class SettingsScreen extends ConsumerWidget {
               'Fingerprint, face, or PIN · locks after 30s in background',
             ),
             value: appLock,
-            onChanged: (v) =>
-                ref.read(privacyLockProvider.notifier).setAppLockEnabled(v),
-          ),
-          const SwitchListTile(
-            secondary: SkyIcon(SkyIcons.shield),
-            title: Text('Private vault'),
-            subtitle: Text('Hide private item content'),
-            value: true,
-            onChanged: null,
+            onChanged: (v) => _onAppLockChanged(context, ref, v),
           ),
           const Divider(),
           Padding(
@@ -207,6 +201,82 @@ class SettingsScreen extends ConsumerWidget {
         Text(AppInfo.developerEmail),
       ],
     );
+  }
+
+  Future<void> _onAppLockChanged(
+    BuildContext context,
+    WidgetRef ref,
+    bool enabled,
+  ) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final lock = ref.read(privacyLockProvider.notifier);
+    if (!enabled) {
+      // Turning lock off must prove identity — unlocked session alone is not enough.
+      final method = await PinStorageService.instance.getAuthMethod();
+      var ok = false;
+      try {
+        if (method == AuthMethod.pin) {
+          if (!context.mounted) return;
+          ok = await _confirmPinDialog(context) ?? false;
+        } else {
+          ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
+            reason: 'Confirm to turn off app lock',
+          );
+        }
+      } catch (_) {
+        ok = false;
+      }
+      if (!ok) {
+        messenger.showSnackBar(
+          const SnackBar(content: Text('Could not verify — app lock stays on')),
+        );
+        return;
+      }
+    }
+
+    await ref.read(appLockEnabledProvider.notifier).setEnabled(enabled);
+    if (enabled) {
+      lock.lock();
+    } else {
+      lock.unlock();
+    }
+  }
+
+  Future<bool?> _confirmPinDialog(BuildContext context) async {
+    final controller = TextEditingController();
+    try {
+      return showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Text('Enter PIN'),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            obscureText: true,
+            maxLength: 4,
+            autofocus: true,
+            decoration: const InputDecoration(hintText: '4-digit PIN'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Cancel'),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final ok = await PrivacyAuthService.instance
+                    .verifyPin(controller.text.trim());
+                if (ctx.mounted) Navigator.pop(ctx, ok);
+              },
+              child: const Text('Confirm'),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      // Delay dispose until dialog closes.
+      Future<void>.delayed(const Duration(seconds: 1), controller.dispose);
+    }
   }
 
   Future<void> _pickCalendar(BuildContext context, WidgetRef ref) async {

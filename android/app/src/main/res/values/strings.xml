@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="shortcut_new_task">New Task</string>
+    <string name="shortcut_new_task_long">Create a new task</string>
+    <string name="shortcut_new_reminder">New Reminder</string>
+    <string name="shortcut_new_reminder_long">Create a new reminder</string>
+    <string name="shortcut_new_idea">New Idea</string>
+    <string name="shortcut_new_idea_long">Capture a new idea</string>
+</resources>
