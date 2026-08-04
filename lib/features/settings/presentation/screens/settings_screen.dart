@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_info.dart';
@@ -70,19 +71,33 @@ class SettingsScreen extends ConsumerWidget {
             ),
             value: calendarSettings.syncEnabled,
             onChanged: (enabled) async {
-              final ok = await ref
+              final result = await ref
                   .read(calendarSettingsProvider.notifier)
                   .setSyncEnabled(enabled);
               if (!context.mounted) return;
-              if (!ok) {
+              if (!result.success) {
+                final message = switch (result.failure) {
+                  CalendarSyncFailure.permanentlyDenied =>
+                    'Calendar permission is blocked. Allow it in system Settings.',
+                  CalendarSyncFailure.permissionDenied =>
+                    'Calendar permission is required to sync reminders.',
+                  CalendarSyncFailure.noCalendars =>
+                    'No writable calendars found. Open the Calendar app once, or check Google account calendar sync in Android Settings.',
+                  null => 'Could not enable calendar sync.',
+                };
                 ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text(
-                      'Could not enable sync. Add a Google account in Android Settings, grant calendar permission, then try again.',
-                    ),
+                  SnackBar(
+                    content: Text(message),
+                    action: result.failure ==
+                            CalendarSyncFailure.permanentlyDenied
+                        ? SnackBarAction(
+                            label: 'Settings',
+                            onPressed: openAppSettings,
+                          )
+                        : null,
                   ),
                 );
-              } else {
+              } else if (enabled) {
                 refreshReminders(ref);
               }
             },

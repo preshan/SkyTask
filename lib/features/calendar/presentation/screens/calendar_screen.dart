@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/voice_memo_service.dart';
@@ -9,6 +10,7 @@ import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../../reminders/presentation/widgets/reminder_form_sheet.dart';
+import '../../data/device_calendar_service.dart';
 import '../../domain/calendar_entry.dart';
 import '../providers/calendar_providers.dart';
 
@@ -316,26 +318,54 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Future<void> _enableGoogleSync(BuildContext context) async {
-    final ok =
+    final result =
         await ref.read(calendarSettingsProvider.notifier).setSyncEnabled(true);
     if (!context.mounted) return;
-    if (ok) {
+    if (result.success) {
       refreshReminders(ref);
+      final settings = ref.read(calendarSettingsProvider);
+      final name = settings.defaultCalendarName ?? 'your calendar';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Google Calendar sync enabled. New reminders will appear in your calendar.',
+            settings.isGoogleCalendar
+                ? 'Sync enabled. New reminders will appear in Google Calendar ($name).'
+                : 'Sync enabled. New reminders will appear in $name.',
           ),
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'Could not enable sync. Add a Google account in Android Settings, then try again.',
+      await _showSyncFailure(context, result.failure);
+    }
+  }
+
+  Future<void> _showSyncFailure(
+    BuildContext context,
+    CalendarSyncFailure? failure,
+  ) async {
+    final message = switch (failure) {
+      CalendarSyncFailure.permanentlyDenied =>
+        'Calendar permission is blocked. Open Settings → Apps → SkyTask → Permissions and allow Calendar.',
+      CalendarSyncFailure.permissionDenied =>
+        'Calendar permission is required to sync reminders.',
+      CalendarSyncFailure.noCalendars =>
+        'No writable calendars found. Open the Calendar app once, or check that your Google account is syncing calendars in Android Settings.',
+      null => 'Could not enable calendar sync. Try again.',
+    };
+
+    final messenger = ScaffoldMessenger.of(context);
+    if (failure == CalendarSyncFailure.permanentlyDenied) {
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(message),
+          action: SnackBarAction(
+            label: 'Settings',
+            onPressed: openAppSettings,
           ),
         ),
       );
+    } else {
+      messenger.showSnackBar(SnackBar(content: Text(message)));
     }
   }
 }
@@ -360,8 +390,8 @@ class _GoogleSyncBanner extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'SkyTask can write reminders to your Google Calendar through Android. '
-              'Make sure a Google account is signed in on this device.',
+              'SkyTask can write reminders to your device calendar (including Google Calendar when that account is syncing on this phone). '
+              'You will be asked for calendar permission.',
             ),
             const SizedBox(height: 12),
             FilledButton.icon(

@@ -54,19 +54,39 @@ class CalendarSettingsNotifier extends StateNotifier<CalendarSettings> {
     );
   }
 
-  Future<bool> setSyncEnabled(bool enabled) async {
+  Future<CalendarSyncEnableResult> setSyncEnabled(bool enabled) async {
     if (enabled) {
       final granted = await _calendarService.requestPermissions();
-      if (!granted) return false;
+      if (!granted) {
+        final permanent = await _calendarService.isPermanentlyDenied();
+        return CalendarSyncEnableResult.fail(
+          permanent
+              ? CalendarSyncFailure.permanentlyDenied
+              : CalendarSyncFailure.permissionDenied,
+        );
+      }
 
-      final calendars = await _calendarService.getWritableCalendars();
-      if (calendars.isEmpty) return false;
+      // Some devices need a beat after grant before calendars appear.
+      var calendars = await _calendarService.getWritableCalendars();
+      if (calendars.isEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        calendars = await _calendarService.getWritableCalendars();
+      }
+      if (calendars.isEmpty) {
+        return const CalendarSyncEnableResult.fail(
+          CalendarSyncFailure.noCalendars,
+        );
+      }
 
       final selected = _calendarService.pickPreferredCalendar(
         calendars,
         currentId: state.defaultCalendarId,
       );
-      if (selected?.id == null) return false;
+      if (selected?.id == null) {
+        return const CalendarSyncEnableResult.fail(
+          CalendarSyncFailure.noCalendars,
+        );
+      }
 
       final isGoogle = _calendarService.isGoogleCalendar(selected!);
       await _prefs.setBool(AppConstants.calendarSyncEnabledKey, true);
@@ -82,7 +102,7 @@ class CalendarSettingsNotifier extends StateNotifier<CalendarSettings> {
         defaultCalendarName: selected.name,
         isGoogleCalendar: isGoogle,
       );
-      return true;
+      return const CalendarSyncEnableResult.ok();
     }
 
     await _prefs.setBool(AppConstants.calendarSyncEnabledKey, false);
@@ -92,7 +112,7 @@ class CalendarSettingsNotifier extends StateNotifier<CalendarSettings> {
       defaultCalendarName: state.defaultCalendarName,
       isGoogleCalendar: state.isGoogleCalendar,
     );
-    return true;
+    return const CalendarSyncEnableResult.ok();
   }
 
   Future<void> setDefaultCalendar({

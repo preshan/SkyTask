@@ -1,30 +1,95 @@
 import 'package:device_calendar/device_calendar.dart' hide Reminder;
+import 'package:flutter/foundation.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:timezone/timezone.dart' as tz;
 
 import '../../reminders/domain/entities/reminder.dart';
 
-/// Phase 1: Device calendar integration (Android Calendar Provider).
-/// On Android, Google calendars sync through the device calendar when a
-/// Google account is added in system Settings.
+/// Why enabling calendar sync failed (for accurate UI copy).
+enum CalendarSyncFailure {
+  permissionDenied,
+  permanentlyDenied,
+  noCalendars,
+}
+
+/// Result of [CalendarSettingsNotifier.setSyncEnabled].
+class CalendarSyncEnableResult {
+  const CalendarSyncEnableResult.ok()
+      : success = true,
+        failure = null;
+
+  const CalendarSyncEnableResult.fail(this.failure) : success = false;
+
+  final bool success;
+  final CalendarSyncFailure? failure;
+}
+
+/// Device calendar via Android Calendar Provider (includes Google calendars
+/// when a Google account is added in system Settings and syncing).
 class DeviceCalendarService {
   DeviceCalendarService._();
   static final DeviceCalendarService instance = DeviceCalendarService._();
 
   final DeviceCalendarPlugin _plugin = DeviceCalendarPlugin();
 
+  /// Requests calendar access using [permission_handler] (reliable on Android 13+)
+  /// and also notifies the device_calendar plugin.
   Future<bool> requestPermissions() async {
-    final result = await _plugin.requestPermissions();
-    return result.isSuccess && result.data == true;
+    final status = await _requestCalendarPermission();
+    if (!status.isGranted) {
+      debugPrint('Calendar permission status: $status');
+      return false;
+    }
+
+    // Keep device_calendar's internal flag in sync when possible.
+    try {
+      await _plugin.requestPermissions();
+    } catch (e) {
+      debugPrint('device_calendar requestPermissions: $e');
+    }
+    return true;
   }
 
   Future<bool> hasPermissions() async {
-    final result = await _plugin.hasPermissions();
-    return result.isSuccess && result.data == true;
+    final full = await Permission.calendarFullAccess.status;
+    if (full.isGranted) return true;
+    final writeOnly = await Permission.calendarWriteOnly.status;
+    if (writeOnly.isGranted) return true;
+    try {
+      final result = await _plugin.hasPermissions();
+      return result.isSuccess && result.data == true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> isPermanentlyDenied() async {
+    final status = await Permission.calendarFullAccess.status;
+    if (status.isPermanentlyDenied) return true;
+    final writeOnly = await Permission.calendarWriteOnly.status;
+    return writeOnly.isPermanentlyDenied;
+  }
+
+  Future<PermissionStatus> _requestCalendarPermission() async {
+    var status = await Permission.calendarFullAccess.status;
+    if (status.isGranted) return status;
+
+    status = await Permission.calendarFullAccess.request();
+    if (status.isGranted) return status;
+
+    // Older Android / OEM paths map write-only separately.
+    final writeOnly = await Permission.calendarWriteOnly.request();
+    return writeOnly.isGranted ? writeOnly : status;
   }
 
   Future<List<Calendar>> getWritableCalendars() async {
     final result = await _plugin.retrieveCalendars();
-    if (!result.isSuccess || result.data == null) return [];
+    if (!result.isSuccess || result.data == null) {
+      debugPrint(
+        'retrieveCalendars failed: ${result.errors.map((e) => e.errorMessage).join(', ')}',
+      );
+      return [];
+    }
     return result.data!.where((c) => c.isReadOnly != true).toList();
   }
 
@@ -47,14 +112,20 @@ class DeviceCalendarService {
     return calendars.first;
   }
 
+  /// Google calendars on Android often use accountType `com.google` and an email
+  /// as accountName — not the literal string "google".
   bool isGoogleCalendar(Calendar calendar) {
     final account = calendar.accountName?.toLowerCase() ?? '';
     final type = calendar.accountType?.toLowerCase() ?? '';
     final name = calendar.name?.toLowerCase() ?? '';
-    return account.contains('google') ||
+    return type.contains('com.google') ||
+        type.contains('google') ||
+        account.contains('google') ||
         account.contains('gmail') ||
-        type.contains('com.google') ||
-        name.contains('google');
+        account.endsWith('@gmail.com') ||
+        account.endsWith('@googlemail.com') ||
+        name.contains('google') ||
+        name.contains('gmail');
   }
 
   Future<List<Event>> retrieveEvents({
@@ -141,8 +212,8 @@ abstract class GoogleCalendarService {
 
 class GoogleCalendarServiceImpl implements GoogleCalendarService {
   @override
-  Future<String?> createEvent(Reminder reminder) async {
-    return null;
+  Future<String?> createEvent(Reminder reminder) {
+    return Future.value(null);
   }
 
   @override
