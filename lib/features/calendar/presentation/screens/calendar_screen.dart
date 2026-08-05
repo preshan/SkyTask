@@ -407,7 +407,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       CalendarSyncFailure.permissionDenied =>
         'Calendar permission is required to sync reminders.',
       CalendarSyncFailure.noCalendars =>
-        'No writable calendars found. Open the Calendar app once, or check that your Google account is syncing calendars in Android Settings.',
+        'No writable calendar found. Add a Google account and turn on Calendar sync in Android Settings, or open the Calendar app once. Allow Calendar permission for SkyTask — it can create a local calendar as a fallback.',
       null => 'Could not enable calendar sync. Try again.',
     };
 
@@ -443,19 +443,20 @@ class _GoogleSyncBanner extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              'Add reminders to Google Calendar',
+              'Add reminders to your calendar',
               style: TextStyle(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 8),
             const Text(
-              'SkyTask can write reminders to your device calendar (including Google Calendar when that account is syncing on this phone). '
+              'SkyTask writes reminders to a calendar on this phone. '
+              'If a Google account is signed in and Calendar sync is on, that includes Google Calendar. '
               'You will be asked for calendar permission.',
             ),
             const SizedBox(height: 12),
             FilledButton.icon(
               onPressed: onEnable,
               icon: const SkyIcon(SkyIcons.calendar),
-              label: const Text('Enable Google Calendar sync'),
+              label: const Text('Enable calendar sync'),
             ),
           ],
         ),

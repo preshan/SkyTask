@@ -9,6 +9,7 @@ import '../../../../core/di/content_providers.dart';
 import '../../../../core/constants/capture_preference.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
+import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
 import '../../../../shared/widgets/icon_toggle.dart';
 import '../../../../shared/widgets/private_icon_toggle.dart';
@@ -209,28 +210,11 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
     if (mounted) Navigator.pop(context);
   }
 
-  Future<void> _addCategory() async {
-    final name = await showDialog<String>(
-      context: context,
-      builder: (ctx) => const _NewCategoryDialog(),
-    );
-    if (name == null || !mounted) return;
-    final normalized = TaskCategories.normalize(name);
-    if (normalized.isEmpty) return;
-    await ref.read(customTaskCategoriesProvider.notifier).add(normalized);
-    if (!mounted) return;
-    setState(() => _category = normalized);
-  }
-
   @override
   Widget build(BuildContext context) {
     final dueTooltip = _dueDate == null
         ? 'Set due date'
         : 'Due ${DateFormat.yMMMd().format(_dueDate!)} · long-press to clear';
-    final custom = ref.watch(customTaskCategoriesProvider);
-    final allTasks = ref.watch(_categoryUsageTasksProvider).valueOrNull ??
-        const <Task>[];
-    final categories = TaskCategories.ordered(custom: custom, tasks: allTasks);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -266,62 +250,10 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             textCapitalization: TextCapitalization.sentences,
           ),
           const SizedBox(height: 16),
-          Text('Category', style: Theme.of(context).textTheme.labelLarge),
-          const SizedBox(height: 8),
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: categories.length + 1,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                if (index == categories.length) {
-                  return FilterChip(
-                    avatar: SkyIcon(
-                      SkyIcons.add,
-                      size: 16,
-                      color: AppColors.brand(context),
-                    ),
-                    label: const Text('Add'),
-                    selected: false,
-                    showCheckmark: false,
-                    onSelected: _saving ? null : (_) => _addCategory(),
-                    side: BorderSide(
-                      color: AppColors.brand(context).withValues(alpha: 0.35),
-                    ),
-                    labelStyle: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    ),
-                    visualDensity: VisualDensity.compact,
-                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  );
-                }
-                final category = categories[index];
-                final selected =
-                    _category.toLowerCase() == category.toLowerCase();
-                return FilterChip(
-                  label: Text(category),
-                  selected: selected,
-                  showCheckmark: false,
-                  onSelected: _saving
-                      ? null
-                      : (_) => setState(() => _category = category),
-                  selectedColor: AppColors.brand(context).withValues(alpha: 0.25),
-                  side: BorderSide(
-                    color: selected
-                        ? AppColors.brand(context)
-                        : AppColors.brand(context).withValues(alpha: 0.25),
-                  ),
-                  labelStyle: TextStyle(
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                    fontSize: 13,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                );
-              },
-            ),
+          CategoryChipSelector(
+            value: _category,
+            enabled: !_saving,
+            onChanged: (v) => setState(() => _category = v),
           ),
           const SizedBox(height: 16),
           Text('Priority', style: Theme.of(context).textTheme.labelLarge),
@@ -459,61 +391,3 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
         TaskPriority.high => AppColors.error,
       };
 }
-
-class _NewCategoryDialog extends StatefulWidget {
-  const _NewCategoryDialog();
-
-  @override
-  State<_NewCategoryDialog> createState() => _NewCategoryDialogState();
-}
-
-class _NewCategoryDialogState extends State<_NewCategoryDialog> {
-  late final TextEditingController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  void _submit() => Navigator.pop(context, _controller.text);
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('New category'),
-      content: TextField(
-        controller: _controller,
-        autofocus: true,
-        textCapitalization: TextCapitalization.words,
-        decoration: const InputDecoration(
-          hintText: 'e.g. Health, Study',
-          border: OutlineInputBorder(),
-        ),
-        onSubmitted: (_) => _submit(),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancel'),
-        ),
-        FilledButton(
-          onPressed: _submit,
-          child: const Text('Add'),
-        ),
-      ],
-    );
-  }
-}
-
-final _categoryUsageTasksProvider = FutureProvider<List<Task>>((ref) async {
-  ref.watch(tasksRevisionProvider);
-  final repo = await ref.read(taskRepositoryProvider.future);
-  return repo.getAll(includeArchived: true);
-});

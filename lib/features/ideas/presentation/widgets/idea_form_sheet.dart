@@ -4,8 +4,10 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/constants/capture_preference.dart';
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
+import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
 import '../../../../shared/widgets/private_icon_toggle.dart';
 import '../../../../shared/widgets/voice_memo_recorder.dart';
@@ -41,6 +43,7 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
   late final TextEditingController _contentController;
   late final TextEditingController _tagsController;
   late final FocusNode _contentFocus;
+  late String _category;
   late bool _isPrivate;
   String? _voicePath;
   final _voiceController = VoiceMemoController();
@@ -61,6 +64,9 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
     _contentController = TextEditingController(text: idea?.content ?? '');
     _tagsController = TextEditingController(text: idea?.tags.join(', ') ?? '');
     _contentFocus = FocusNode();
+    _category = TaskCategories.normalize(
+      idea?.category ?? TaskCategories.personal,
+    );
     _isPrivate = idea?.isPrivate ?? false;
     _voicePath = idea?.voicePath;
 
@@ -110,6 +116,7 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
           ? widget.idea!.copyWith(
               title: title,
               content: _contentController.text.trim(),
+              category: _category,
               tags: _parseTags(),
               isPrivate: _isPrivate,
               voicePath: voicePath,
@@ -120,6 +127,7 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
               id: const Uuid().v4(),
               title: title,
               content: _contentController.text.trim(),
+              category: _category,
               tags: _parseTags(),
               isPrivate: _isPrivate,
               voicePath: voicePath,
@@ -128,6 +136,11 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
             );
 
       await repo.save(idea);
+      if (!TaskCategories.isDefault(idea.category)) {
+        await ref
+            .read(customTaskCategoriesProvider.notifier)
+            .add(idea.category);
+      }
       await ref.read(preferVoiceCaptureProvider.notifier).recordSave(
         hasVoice: hasVoice,
         hasTypedBody: _contentController.text.trim().isNotEmpty,
@@ -184,6 +197,12 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _contentFocus.requestFocus(),
+          ),
+          const SizedBox(height: 16),
+          CategoryChipSelector(
+            value: _category,
+            enabled: !_saving,
+            onChanged: (v) => setState(() => _category = v),
           ),
           const SizedBox(height: 12),
           TextField(

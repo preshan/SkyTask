@@ -377,6 +377,7 @@ class BackupService {
         'title': r.title,
         'description': r.description,
         'reminderDateTime': r.reminderDateTime.toIso8601String(),
+        'category': r.category,
         'repeatType': r.repeatType.name,
         'notificationOffset': r.notificationOffset.name,
         'customOffsetMinutes': r.customOffsetMinutes,
@@ -397,6 +398,7 @@ class BackupService {
       description: m['description'] as String?,
       reminderDateTime:
           _parseDate(m['reminderDateTime']) ?? DateTime.now(),
+      category: m['category'] as String? ?? TaskCategories.personal,
       repeatType: RepeatType.values.byName(
         m['repeatType'] as String? ?? RepeatType.none.name,
       ),
@@ -417,6 +419,7 @@ class BackupService {
         'id': i.id,
         'title': i.title,
         'content': i.content,
+        'category': i.category,
         'tags': i.tags,
         'isPrivate': i.isPrivate,
         'voicePath': voiceRel,
@@ -432,6 +435,7 @@ class BackupService {
       id: m['id'] as String,
       title: m['title'] as String? ?? '',
       content: m['content'] as String? ?? '',
+      category: m['category'] as String? ?? TaskCategories.personal,
       tags: (m['tags'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isPrivate: m['isPrivate'] as bool? ?? false,
       voicePath: absVoice(m['voicePath'] as String?),
@@ -444,6 +448,7 @@ class BackupService {
         'id': n.id,
         'title': n.title,
         'content': n.content,
+        'category': n.category,
         'attachments': n.attachments,
         'isPrivate': n.isPrivate,
         'voicePath': voiceRel,
@@ -459,6 +464,7 @@ class BackupService {
       id: m['id'] as String,
       title: m['title'] as String? ?? '',
       content: m['content'] as String? ?? '',
+      category: m['category'] as String? ?? TaskCategories.personal,
       attachments:
           (m['attachments'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isPrivate: m['isPrivate'] as bool? ?? false,

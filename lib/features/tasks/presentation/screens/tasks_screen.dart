@@ -71,9 +71,11 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(_tasksListProvider);
     final custom = ref.watch(customTaskCategoriesProvider);
+    final used = (tasksAsync.valueOrNull ?? const <Task>[])
+        .map((t) => t.category);
     final categories = TaskCategories.ordered(
       custom: custom,
-      tasks: tasksAsync.valueOrNull ?? const [],
+      usedLabels: used,
     );
 
     return Scaffold(

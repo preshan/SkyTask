@@ -63,13 +63,13 @@ class SettingsScreen extends ConsumerWidget {
           _header(context, 'Calendar Sync'),
           SwitchListTile(
             secondary: const SkyIcon(SkyIcons.calendar),
-            title: const Text('Google Calendar sync'),
+            title: const Text('Calendar sync'),
             subtitle: Text(
               calendarSettings.syncEnabled
                   ? calendarSettings.isGoogleCalendar
                       ? 'Reminders sync to Google: ${calendarSettings.defaultCalendarName}'
                       : 'Reminders sync to ${calendarSettings.defaultCalendarName}'
-                  : 'Write SkyTask reminders to your Google Calendar',
+                  : 'Write reminders to a device calendar (Google if available)',
             ),
             value: calendarSettings.syncEnabled,
             onChanged: (enabled) async {
@@ -80,11 +80,11 @@ class SettingsScreen extends ConsumerWidget {
               if (!result.success) {
                 final message = switch (result.failure) {
                   CalendarSyncFailure.permanentlyDenied =>
-                    'Calendar permission is blocked. Allow it in system Settings.',
+                    'Calendar permission is blocked. Allow Calendar (read & write) in system Settings.',
                   CalendarSyncFailure.permissionDenied =>
-                    'Calendar permission is required to sync reminders.',
+                    'Calendar read & write permission is required to sync reminders.',
                   CalendarSyncFailure.noCalendars =>
-                    'No writable calendars found. Open the Calendar app once, or check Google account calendar sync in Android Settings.',
+                    'No writable calendar found. Add a Google account (Settings → Accounts), open the Calendar app once, then try again. SkyTask can also create a local calendar if Calendar permission is allowed.',
                   null => 'Could not enable calendar sync.',
                 };
                 ScaffoldMessenger.of(context).showSnackBar(

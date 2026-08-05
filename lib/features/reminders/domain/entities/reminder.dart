@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/services/voice_memo_service.dart';
 
 enum RepeatType { none, daily, weekly, monthly, yearly }
@@ -19,6 +20,7 @@ class Reminder extends Equatable {
     required this.title,
     this.description,
     required this.reminderDateTime,
+    this.category = TaskCategories.personal,
     this.repeatType = RepeatType.none,
     this.notificationOffset = NotificationOffset.atTime,
     this.customOffsetMinutes,
@@ -36,6 +38,7 @@ class Reminder extends Equatable {
   final String title;
   final String? description;
   final DateTime reminderDateTime;
+  final String category;
   final RepeatType repeatType;
   final NotificationOffset notificationOffset;
   final int? customOffsetMinutes;
@@ -69,6 +72,7 @@ class Reminder extends Equatable {
     String? title,
     String? description,
     DateTime? reminderDateTime,
+    String? category,
     RepeatType? repeatType,
     NotificationOffset? notificationOffset,
     int? customOffsetMinutes,
@@ -88,6 +92,7 @@ class Reminder extends Equatable {
       title: title ?? this.title,
       description: description ?? this.description,
       reminderDateTime: reminderDateTime ?? this.reminderDateTime,
+      category: category ?? this.category,
       repeatType: repeatType ?? this.repeatType,
       notificationOffset: notificationOffset ?? this.notificationOffset,
       customOffsetMinutes: customOffsetMinutes ?? this.customOffsetMinutes,
@@ -110,6 +115,7 @@ class Reminder extends Equatable {
         title,
         description,
         reminderDateTime,
+        category,
         repeatType,
         notificationOffset,
         customOffsetMinutes,

@@ -2424,75 +2424,80 @@ const ReminderCollectionSchema = CollectionSchema(
       name: r'calendarEventId',
       type: IsarType.string,
     ),
-    r'createdAt': PropertySchema(
+    r'categoryLabel': PropertySchema(
       id: 1,
+      name: r'categoryLabel',
+      type: IsarType.string,
+    ),
+    r'createdAt': PropertySchema(
+      id: 2,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'customOffsetMinutes': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'customOffsetMinutes',
       type: IsarType.long,
     ),
     r'description': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'description',
       type: IsarType.string,
     ),
     r'googleEventId': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'googleEventId',
       type: IsarType.string,
     ),
     r'isCompleted': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
     r'isPrivate': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'isPrivate',
       type: IsarType.bool,
     ),
     r'notificationId': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'notificationId',
       type: IsarType.long,
     ),
     r'notificationOffset': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'notificationOffset',
       type: IsarType.byte,
       enumMap: _ReminderCollectionnotificationOffsetEnumValueMap,
     ),
     r'reminderDateTime': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'reminderDateTime',
       type: IsarType.dateTime,
     ),
     r'repeatType': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'repeatType',
       type: IsarType.byte,
       enumMap: _ReminderCollectionrepeatTypeEnumValueMap,
     ),
     r'title': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'uuid',
       type: IsarType.string,
     ),
     r'voicePath': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'voicePath',
       type: IsarType.string,
     )
@@ -2537,6 +2542,7 @@ int _reminderCollectionEstimateSize(
       bytesCount += 3 + value.length * 3;
     }
   }
+  bytesCount += 3 + object.categoryLabel.length * 3;
   {
     final value = object.description;
     if (value != null) {
@@ -2567,20 +2573,21 @@ void _reminderCollectionSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeString(offsets[0], object.calendarEventId);
-  writer.writeDateTime(offsets[1], object.createdAt);
-  writer.writeLong(offsets[2], object.customOffsetMinutes);
-  writer.writeString(offsets[3], object.description);
-  writer.writeString(offsets[4], object.googleEventId);
-  writer.writeBool(offsets[5], object.isCompleted);
-  writer.writeBool(offsets[6], object.isPrivate);
-  writer.writeLong(offsets[7], object.notificationId);
-  writer.writeByte(offsets[8], object.notificationOffset.index);
-  writer.writeDateTime(offsets[9], object.reminderDateTime);
-  writer.writeByte(offsets[10], object.repeatType.index);
-  writer.writeString(offsets[11], object.title);
-  writer.writeDateTime(offsets[12], object.updatedAt);
-  writer.writeString(offsets[13], object.uuid);
-  writer.writeString(offsets[14], object.voicePath);
+  writer.writeString(offsets[1], object.categoryLabel);
+  writer.writeDateTime(offsets[2], object.createdAt);
+  writer.writeLong(offsets[3], object.customOffsetMinutes);
+  writer.writeString(offsets[4], object.description);
+  writer.writeString(offsets[5], object.googleEventId);
+  writer.writeBool(offsets[6], object.isCompleted);
+  writer.writeBool(offsets[7], object.isPrivate);
+  writer.writeLong(offsets[8], object.notificationId);
+  writer.writeByte(offsets[9], object.notificationOffset.index);
+  writer.writeDateTime(offsets[10], object.reminderDateTime);
+  writer.writeByte(offsets[11], object.repeatType.index);
+  writer.writeString(offsets[12], object.title);
+  writer.writeDateTime(offsets[13], object.updatedAt);
+  writer.writeString(offsets[14], object.uuid);
+  writer.writeString(offsets[15], object.voicePath);
 }
 
 ReminderCollection _reminderCollectionDeserialize(
@@ -2591,25 +2598,26 @@ ReminderCollection _reminderCollectionDeserialize(
 ) {
   final object = ReminderCollection();
   object.calendarEventId = reader.readStringOrNull(offsets[0]);
-  object.createdAt = reader.readDateTime(offsets[1]);
-  object.customOffsetMinutes = reader.readLongOrNull(offsets[2]);
-  object.description = reader.readStringOrNull(offsets[3]);
-  object.googleEventId = reader.readStringOrNull(offsets[4]);
+  object.categoryLabel = reader.readString(offsets[1]);
+  object.createdAt = reader.readDateTime(offsets[2]);
+  object.customOffsetMinutes = reader.readLongOrNull(offsets[3]);
+  object.description = reader.readStringOrNull(offsets[4]);
+  object.googleEventId = reader.readStringOrNull(offsets[5]);
   object.id = id;
-  object.isCompleted = reader.readBool(offsets[5]);
-  object.isPrivate = reader.readBool(offsets[6]);
-  object.notificationId = reader.readLongOrNull(offsets[7]);
+  object.isCompleted = reader.readBool(offsets[6]);
+  object.isPrivate = reader.readBool(offsets[7]);
+  object.notificationId = reader.readLongOrNull(offsets[8]);
   object.notificationOffset = _ReminderCollectionnotificationOffsetValueEnumMap[
-          reader.readByteOrNull(offsets[8])] ??
+          reader.readByteOrNull(offsets[9])] ??
       NotificationOffset.atTime;
-  object.reminderDateTime = reader.readDateTime(offsets[9]);
+  object.reminderDateTime = reader.readDateTime(offsets[10]);
   object.repeatType = _ReminderCollectionrepeatTypeValueEnumMap[
-          reader.readByteOrNull(offsets[10])] ??
+          reader.readByteOrNull(offsets[11])] ??
       RepeatType.none;
-  object.title = reader.readString(offsets[11]);
-  object.updatedAt = reader.readDateTime(offsets[12]);
-  object.uuid = reader.readString(offsets[13]);
-  object.voicePath = reader.readStringOrNull(offsets[14]);
+  object.title = reader.readString(offsets[12]);
+  object.updatedAt = reader.readDateTime(offsets[13]);
+  object.uuid = reader.readString(offsets[14]);
+  object.voicePath = reader.readStringOrNull(offsets[15]);
   return object;
 }
 
@@ -2623,36 +2631,38 @@ P _reminderCollectionDeserializeProp<P>(
     case 0:
       return (reader.readStringOrNull(offset)) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 3:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 4:
       return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 6:
       return (reader.readBool(offset)) as P;
     case 7:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 8:
+      return (reader.readLongOrNull(offset)) as P;
+    case 9:
       return (_ReminderCollectionnotificationOffsetValueEnumMap[
               reader.readByteOrNull(offset)] ??
           NotificationOffset.atTime) as P;
-    case 9:
-      return (reader.readDateTime(offset)) as P;
     case 10:
+      return (reader.readDateTime(offset)) as P;
+    case 11:
       return (_ReminderCollectionrepeatTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           RepeatType.none) as P;
-    case 11:
-      return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readDateTime(offset)) as P;
-    case 13:
       return (reader.readString(offset)) as P;
+    case 13:
+      return (reader.readDateTime(offset)) as P;
     case 14:
+      return (reader.readString(offset)) as P;
+    case 15:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3035,6 +3045,142 @@ extension ReminderCollectionQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'calendarEventId',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'categoryLabel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'categoryLabel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      categoryLabelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'categoryLabel',
         value: '',
       ));
     });
@@ -4302,6 +4448,20 @@ extension ReminderCollectionQuerySortBy
   }
 
   QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      sortByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      sortByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
       sortByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'createdAt', Sort.asc);
@@ -4511,6 +4671,20 @@ extension ReminderCollectionQuerySortThenBy
       thenByCalendarEventIdDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'calendarEventId', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      thenByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      thenByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
     });
   }
 
@@ -4736,6 +4910,14 @@ extension ReminderCollectionQueryWhereDistinct
   }
 
   QueryBuilder<ReminderCollection, ReminderCollection, QDistinct>
+      distinctByCategoryLabel({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'categoryLabel',
+          caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QDistinct>
       distinctByCreatedAt() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'createdAt');
@@ -4850,6 +5032,13 @@ extension ReminderCollectionQueryProperty
     });
   }
 
+  QueryBuilder<ReminderCollection, String, QQueryOperations>
+      categoryLabelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'categoryLabel');
+    });
+  }
+
   QueryBuilder<ReminderCollection, DateTime, QQueryOperations>
       createdAtProperty() {
     return QueryBuilder.apply(this, (query) {
@@ -4957,43 +5146,48 @@ const IdeaCollectionSchema = CollectionSchema(
   name: r'IdeaCollection',
   id: 7831426635571439987,
   properties: {
-    r'content': PropertySchema(
+    r'categoryLabel': PropertySchema(
       id: 0,
+      name: r'categoryLabel',
+      type: IsarType.string,
+    ),
+    r'content': PropertySchema(
+      id: 1,
       name: r'content',
       type: IsarType.string,
     ),
     r'createdAt': PropertySchema(
-      id: 1,
+      id: 2,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'isPrivate': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'isPrivate',
       type: IsarType.bool,
     ),
     r'tags': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'tags',
       type: IsarType.stringList,
     ),
     r'title': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'uuid',
       type: IsarType.string,
     ),
     r'voicePath': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'voicePath',
       type: IsarType.string,
     )
@@ -5032,6 +5226,7 @@ int _ideaCollectionEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.categoryLabel.length * 3;
   bytesCount += 3 + object.content.length * 3;
   bytesCount += 3 + object.tags.length * 3;
   {
@@ -5057,14 +5252,15 @@ void _ideaCollectionSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeString(offsets[0], object.content);
-  writer.writeDateTime(offsets[1], object.createdAt);
-  writer.writeBool(offsets[2], object.isPrivate);
-  writer.writeStringList(offsets[3], object.tags);
-  writer.writeString(offsets[4], object.title);
-  writer.writeDateTime(offsets[5], object.updatedAt);
-  writer.writeString(offsets[6], object.uuid);
-  writer.writeString(offsets[7], object.voicePath);
+  writer.writeString(offsets[0], object.categoryLabel);
+  writer.writeString(offsets[1], object.content);
+  writer.writeDateTime(offsets[2], object.createdAt);
+  writer.writeBool(offsets[3], object.isPrivate);
+  writer.writeStringList(offsets[4], object.tags);
+  writer.writeString(offsets[5], object.title);
+  writer.writeDateTime(offsets[6], object.updatedAt);
+  writer.writeString(offsets[7], object.uuid);
+  writer.writeString(offsets[8], object.voicePath);
 }
 
 IdeaCollection _ideaCollectionDeserialize(
@@ -5074,15 +5270,16 @@ IdeaCollection _ideaCollectionDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = IdeaCollection();
-  object.content = reader.readString(offsets[0]);
-  object.createdAt = reader.readDateTime(offsets[1]);
+  object.categoryLabel = reader.readString(offsets[0]);
+  object.content = reader.readString(offsets[1]);
+  object.createdAt = reader.readDateTime(offsets[2]);
   object.id = id;
-  object.isPrivate = reader.readBool(offsets[2]);
-  object.tags = reader.readStringList(offsets[3]) ?? [];
-  object.title = reader.readString(offsets[4]);
-  object.updatedAt = reader.readDateTime(offsets[5]);
-  object.uuid = reader.readString(offsets[6]);
-  object.voicePath = reader.readStringOrNull(offsets[7]);
+  object.isPrivate = reader.readBool(offsets[3]);
+  object.tags = reader.readStringList(offsets[4]) ?? [];
+  object.title = reader.readString(offsets[5]);
+  object.updatedAt = reader.readDateTime(offsets[6]);
+  object.uuid = reader.readString(offsets[7]);
+  object.voicePath = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -5096,18 +5293,20 @@ P _ideaCollectionDeserializeProp<P>(
     case 0:
       return (reader.readString(offset)) as P;
     case 1:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readBool(offset)) as P;
-    case 3:
-      return (reader.readStringList(offset) ?? []) as P;
-    case 4:
-      return (reader.readString(offset)) as P;
-    case 5:
       return (reader.readDateTime(offset)) as P;
-    case 6:
+    case 3:
+      return (reader.readBool(offset)) as P;
+    case 4:
+      return (reader.readStringList(offset) ?? []) as P;
+    case 5:
       return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readDateTime(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -5310,6 +5509,142 @@ extension IdeaCollectionQueryWhere
 
 extension IdeaCollectionQueryFilter
     on QueryBuilder<IdeaCollection, IdeaCollection, QFilterCondition> {
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'categoryLabel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'categoryLabel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
+      categoryLabelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'categoryLabel',
+        value: '',
+      ));
+    });
+  }
+
   QueryBuilder<IdeaCollection, IdeaCollection, QAfterFilterCondition>
       contentEqualTo(
     String value, {
@@ -6283,6 +6618,20 @@ extension IdeaCollectionQueryLinks
 
 extension IdeaCollectionQuerySortBy
     on QueryBuilder<IdeaCollection, IdeaCollection, QSortBy> {
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy>
+      sortByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy>
+      sortByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy> sortByContent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'content', Sort.asc);
@@ -6375,6 +6724,20 @@ extension IdeaCollectionQuerySortBy
 
 extension IdeaCollectionQuerySortThenBy
     on QueryBuilder<IdeaCollection, IdeaCollection, QSortThenBy> {
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy>
+      thenByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy>
+      thenByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<IdeaCollection, IdeaCollection, QAfterSortBy> thenByContent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'content', Sort.asc);
@@ -6479,6 +6842,14 @@ extension IdeaCollectionQuerySortThenBy
 
 extension IdeaCollectionQueryWhereDistinct
     on QueryBuilder<IdeaCollection, IdeaCollection, QDistinct> {
+  QueryBuilder<IdeaCollection, IdeaCollection, QDistinct>
+      distinctByCategoryLabel({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'categoryLabel',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<IdeaCollection, IdeaCollection, QDistinct> distinctByContent(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -6540,6 +6911,13 @@ extension IdeaCollectionQueryProperty
   QueryBuilder<IdeaCollection, int, QQueryOperations> idProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'id');
+    });
+  }
+
+  QueryBuilder<IdeaCollection, String, QQueryOperations>
+      categoryLabelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'categoryLabel');
     });
   }
 
@@ -6608,38 +6986,43 @@ const NoteCollectionSchema = CollectionSchema(
       name: r'attachments',
       type: IsarType.stringList,
     ),
-    r'content': PropertySchema(
+    r'categoryLabel': PropertySchema(
       id: 1,
+      name: r'categoryLabel',
+      type: IsarType.string,
+    ),
+    r'content': PropertySchema(
+      id: 2,
       name: r'content',
       type: IsarType.string,
     ),
     r'createdAt': PropertySchema(
-      id: 2,
+      id: 3,
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
     r'isPrivate': PropertySchema(
-      id: 3,
+      id: 4,
       name: r'isPrivate',
       type: IsarType.bool,
     ),
     r'title': PropertySchema(
-      id: 4,
+      id: 5,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 5,
+      id: 6,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'uuid',
       type: IsarType.string,
     ),
     r'voicePath': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'voicePath',
       type: IsarType.string,
     )
@@ -6685,6 +7068,7 @@ int _noteCollectionEstimateSize(
       bytesCount += value.length * 3;
     }
   }
+  bytesCount += 3 + object.categoryLabel.length * 3;
   bytesCount += 3 + object.content.length * 3;
   bytesCount += 3 + object.title.length * 3;
   bytesCount += 3 + object.uuid.length * 3;
@@ -6704,13 +7088,14 @@ void _noteCollectionSerialize(
   Map<Type, List<int>> allOffsets,
 ) {
   writer.writeStringList(offsets[0], object.attachments);
-  writer.writeString(offsets[1], object.content);
-  writer.writeDateTime(offsets[2], object.createdAt);
-  writer.writeBool(offsets[3], object.isPrivate);
-  writer.writeString(offsets[4], object.title);
-  writer.writeDateTime(offsets[5], object.updatedAt);
-  writer.writeString(offsets[6], object.uuid);
-  writer.writeString(offsets[7], object.voicePath);
+  writer.writeString(offsets[1], object.categoryLabel);
+  writer.writeString(offsets[2], object.content);
+  writer.writeDateTime(offsets[3], object.createdAt);
+  writer.writeBool(offsets[4], object.isPrivate);
+  writer.writeString(offsets[5], object.title);
+  writer.writeDateTime(offsets[6], object.updatedAt);
+  writer.writeString(offsets[7], object.uuid);
+  writer.writeString(offsets[8], object.voicePath);
 }
 
 NoteCollection _noteCollectionDeserialize(
@@ -6721,14 +7106,15 @@ NoteCollection _noteCollectionDeserialize(
 ) {
   final object = NoteCollection();
   object.attachments = reader.readStringList(offsets[0]) ?? [];
-  object.content = reader.readString(offsets[1]);
-  object.createdAt = reader.readDateTime(offsets[2]);
+  object.categoryLabel = reader.readString(offsets[1]);
+  object.content = reader.readString(offsets[2]);
+  object.createdAt = reader.readDateTime(offsets[3]);
   object.id = id;
-  object.isPrivate = reader.readBool(offsets[3]);
-  object.title = reader.readString(offsets[4]);
-  object.updatedAt = reader.readDateTime(offsets[5]);
-  object.uuid = reader.readString(offsets[6]);
-  object.voicePath = reader.readStringOrNull(offsets[7]);
+  object.isPrivate = reader.readBool(offsets[4]);
+  object.title = reader.readString(offsets[5]);
+  object.updatedAt = reader.readDateTime(offsets[6]);
+  object.uuid = reader.readString(offsets[7]);
+  object.voicePath = reader.readStringOrNull(offsets[8]);
   return object;
 }
 
@@ -6744,16 +7130,18 @@ P _noteCollectionDeserializeProp<P>(
     case 1:
       return (reader.readString(offset)) as P;
     case 2:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 3:
-      return (reader.readBool(offset)) as P;
-    case 4:
-      return (reader.readString(offset)) as P;
-    case 5:
       return (reader.readDateTime(offset)) as P;
-    case 6:
+    case 4:
+      return (reader.readBool(offset)) as P;
+    case 5:
       return (reader.readString(offset)) as P;
+    case 6:
+      return (reader.readDateTime(offset)) as P;
     case 7:
+      return (reader.readString(offset)) as P;
+    case 8:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -7178,6 +7566,142 @@ extension NoteCollectionQueryFilter
         upper,
         includeUpper,
       );
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'categoryLabel',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'categoryLabel',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'categoryLabel',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'categoryLabel',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterFilterCondition>
+      categoryLabelIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'categoryLabel',
+        value: '',
+      ));
     });
   }
 
@@ -7929,6 +8453,20 @@ extension NoteCollectionQueryLinks
 
 extension NoteCollectionQuerySortBy
     on QueryBuilder<NoteCollection, NoteCollection, QSortBy> {
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy>
+      sortByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy>
+      sortByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy> sortByContent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'content', Sort.asc);
@@ -8021,6 +8559,20 @@ extension NoteCollectionQuerySortBy
 
 extension NoteCollectionQuerySortThenBy
     on QueryBuilder<NoteCollection, NoteCollection, QSortThenBy> {
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy>
+      thenByCategoryLabel() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.asc);
+    });
+  }
+
+  QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy>
+      thenByCategoryLabelDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'categoryLabel', Sort.desc);
+    });
+  }
+
   QueryBuilder<NoteCollection, NoteCollection, QAfterSortBy> thenByContent() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'content', Sort.asc);
@@ -8132,6 +8684,14 @@ extension NoteCollectionQueryWhereDistinct
     });
   }
 
+  QueryBuilder<NoteCollection, NoteCollection, QDistinct>
+      distinctByCategoryLabel({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'categoryLabel',
+          caseSensitive: caseSensitive);
+    });
+  }
+
   QueryBuilder<NoteCollection, NoteCollection, QDistinct> distinctByContent(
       {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
@@ -8194,6 +8754,13 @@ extension NoteCollectionQueryProperty
       attachmentsProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'attachments');
+    });
+  }
+
+  QueryBuilder<NoteCollection, String, QQueryOperations>
+      categoryLabelProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'categoryLabel');
     });
   }
 

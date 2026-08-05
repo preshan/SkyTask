@@ -32,61 +32,82 @@ class DeviceCalendarService {
 
   final DeviceCalendarPlugin _plugin = DeviceCalendarPlugin();
 
-  /// Requests calendar access using [permission_handler] (reliable on Android 13+)
-  /// and also notifies the device_calendar plugin.
+  /// Requests calendar READ + WRITE. The device_calendar plugin requires both;
+  /// write-only alone is not enough to list or create calendars.
   Future<bool> requestPermissions() async {
-    final status = await _requestCalendarPermission();
-    if (!status.isGranted) {
-      debugPrint('Calendar permission status: $status');
+    final granted = await _ensureReadAndWriteGranted();
+    if (!granted) {
+      debugPrint('Calendar: READ+WRITE not granted');
       return false;
     }
 
-    // Keep device_calendar's internal flag in sync when possible.
+    // Keep device_calendar's internal check in sync.
     try {
-      await _plugin.requestPermissions();
+      final plugin = await _plugin.requestPermissions();
+      debugPrint(
+        'Calendar: plugin.requestPermissions '
+        'ok=${plugin.isSuccess} data=${plugin.data} '
+        'err=${plugin.errors.map((e) => e.errorMessage).join(', ')}',
+      );
     } catch (e) {
       debugPrint('device_calendar requestPermissions: $e');
+    }
+
+    // Verify the plugin itself sees both permissions (it checks Activity).
+    final pluginOk = await _pluginHasPermissions();
+    if (!pluginOk) {
+      debugPrint('Calendar: plugin.hasPermissions still false after grant');
+      // One more attempt — OEMs sometimes need the plugin dialog path.
+      try {
+        await _plugin.requestPermissions();
+      } catch (_) {}
+      return _pluginHasPermissions();
     }
     return true;
   }
 
   Future<bool> hasPermissions() async {
+    final read = await Permission.calendarFullAccess.status;
+    if (read.isGranted) return true;
+    return _pluginHasPermissions();
+  }
+
+  Future<bool> isPermanentlyDenied() async {
     final full = await Permission.calendarFullAccess.status;
-    if (full.isGranted) return true;
+    if (full.isPermanentlyDenied) return true;
     final writeOnly = await Permission.calendarWriteOnly.status;
-    if (writeOnly.isGranted) return true;
+    return writeOnly.isPermanentlyDenied;
+  }
+
+  Future<bool> _ensureReadAndWriteGranted() async {
+    // calendarFullAccess → READ_CALENDAR + WRITE_CALENDAR on Android.
+    var full = await Permission.calendarFullAccess.status;
+    if (!full.isGranted && !full.isPermanentlyDenied) {
+      full = await Permission.calendarFullAccess.request();
+    }
+    if (full.isGranted) return true;
+
+    // Older / OEM split: ask write-only, then retry full (for read).
+    var write = await Permission.calendarWriteOnly.status;
+    if (!write.isGranted && !write.isPermanentlyDenied) {
+      write = await Permission.calendarWriteOnly.request();
+    }
+    if (!write.isGranted) return false;
+
+    full = await Permission.calendarFullAccess.status;
+    if (!full.isGranted && !full.isPermanentlyDenied) {
+      full = await Permission.calendarFullAccess.request();
+    }
+    return full.isGranted;
+  }
+
+  Future<bool> _pluginHasPermissions() async {
     try {
       final result = await _plugin.hasPermissions();
       return result.isSuccess && result.data == true;
     } catch (_) {
       return false;
     }
-  }
-
-  Future<bool> isPermanentlyDenied() async {
-    final status = await Permission.calendarFullAccess.status;
-    if (status.isPermanentlyDenied) return true;
-    final writeOnly = await Permission.calendarWriteOnly.status;
-    return writeOnly.isPermanentlyDenied;
-  }
-
-  Future<PermissionStatus> _requestCalendarPermission() async {
-    var status = await Permission.calendarFullAccess.status;
-    if (status.isGranted) {
-      // Ensure write is also granted on OEM paths that split permissions.
-      final writeOnly = await Permission.calendarWriteOnly.status;
-      if (!writeOnly.isGranted && !writeOnly.isPermanentlyDenied) {
-        await Permission.calendarWriteOnly.request();
-      }
-      return status;
-    }
-
-    status = await Permission.calendarFullAccess.request();
-    if (status.isGranted) return status;
-
-    // Older Android / OEM paths map write-only separately.
-    final writeOnly = await Permission.calendarWriteOnly.request();
-    return writeOnly.isGranted ? writeOnly : status;
   }
 
   Future<List<Calendar>> retrieveAllCalendars() async {
@@ -97,12 +118,18 @@ class DeviceCalendarService {
       );
       return [];
     }
-    return result.data!;
+    final all = result.data!;
+    debugPrint(
+      'Calendar: retrieveAll=${all.length} '
+      '[${all.map((c) => '${c.name}(id=${c.id}, ro=${c.isReadOnly}, '
+          'acct=${c.accountName}/${c.accountType})').join('; ')}]',
+    );
+    return all;
   }
 
   Future<List<Calendar>> getWritableCalendars() async {
     final all = await retrieveAllCalendars();
-    final writable = all.where((c) => c.isReadOnly != true).toList();
+    final writable = all.where(_isWritable).toList();
     if (writable.isEmpty && all.isNotEmpty) {
       debugPrint(
         'Calendar: ${all.length} found, 0 writable '
@@ -113,6 +140,9 @@ class DeviceCalendarService {
     }
     return writable;
   }
+
+  bool _isWritable(Calendar c) =>
+      c.isReadOnly != true && (c.id?.isNotEmpty ?? false);
 
   Future<List<Calendar>> getReadableCalendars() async {
     return retrieveAllCalendars();
@@ -128,7 +158,8 @@ class DeviceCalendarService {
   Future<Calendar?> ensureWritableCalendar({String? preferredId}) async {
     var writable = await getWritableCalendars();
     if (writable.isEmpty) {
-      await Future<void>.delayed(const Duration(milliseconds: 400));
+      // Provider can lag right after the permission dialog.
+      await Future<void>.delayed(const Duration(milliseconds: 600));
       writable = await getWritableCalendars();
     }
 
@@ -136,28 +167,52 @@ class DeviceCalendarService {
     if (existing != null) return existing;
 
     debugPrint('Calendar: creating local SkyTask calendar fallback');
-    try {
-      final created = await _plugin.createCalendar(
-        'SkyTask',
-        localAccountName: 'SkyTask',
-      );
-      if (!created.isSuccess || created.data == null) {
-        debugPrint(
-          'createCalendar failed: ${created.errors.map((e) => e.errorMessage).join(', ')}',
+    final created = await _createLocalSkyTaskCalendar();
+    if (created != null) return created;
+
+    // Last retry after create / account provider settle.
+    await Future<void>.delayed(const Duration(milliseconds: 800));
+    writable = await getWritableCalendars();
+    return pickPreferredCalendar(writable, currentId: preferredId);
+  }
+
+  Future<Calendar?> _createLocalSkyTaskCalendar() async {
+    for (final accountName in ['SkyTask', 'Device Calendar']) {
+      try {
+        final created = await _plugin.createCalendar(
+          'SkyTask',
+          localAccountName: accountName,
         );
-        return null;
+        if (!created.isSuccess ||
+            created.data == null ||
+            created.data!.isEmpty) {
+          debugPrint(
+            'createCalendar($accountName) failed: '
+            '${created.errors.map((e) => e.errorMessage).join(', ')}',
+          );
+          continue;
+        }
+        final newId = created.data!;
+        debugPrint(
+          'Calendar: created local calendar id=$newId acct=$accountName',
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+        final writable = await getWritableCalendars();
+        final match = pickPreferredCalendar(writable, currentId: newId);
+        if (match != null) return match;
+        // Plugin may return the id before the calendar is listed as writable.
+        return Calendar(
+          id: newId,
+          name: 'SkyTask',
+          accountName: accountName,
+          accountType: 'LOCAL',
+          isReadOnly: false,
+        );
+      } catch (e) {
+        debugPrint('createCalendar($accountName) error: $e');
       }
-      final newId = created.data!;
-      await Future<void>.delayed(const Duration(milliseconds: 200));
-      writable = await getWritableCalendars();
-      final match = pickPreferredCalendar(writable, currentId: newId);
-      if (match != null) return match;
-      // Plugin may return the id before the calendar is listed as writable.
-      return Calendar(id: newId, name: 'SkyTask');
-    } catch (e) {
-      debugPrint('createCalendar error: $e');
-      return null;
     }
+    return null;
   }
 
   Calendar? pickPreferredCalendar(List<Calendar> calendars, {String? currentId}) {
@@ -170,7 +225,11 @@ class DeviceCalendarService {
     }
 
     final google = calendars.where(isGoogleCalendar).toList();
-    if (google.isNotEmpty) return google.first;
+    if (google.isNotEmpty) {
+      final primary = google.where((c) => c.isDefault == true).toList();
+      if (primary.isNotEmpty) return primary.first;
+      return google.first;
+    }
     return calendars.first;
   }
 
