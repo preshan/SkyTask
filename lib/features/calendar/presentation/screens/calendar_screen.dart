@@ -186,8 +186,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ...skyTaskAppBarActions(context),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(56 + bannerExtra),
+          preferredSize: Size.fromHeight(78 + bannerExtra),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               if (_dayFocus)
                 Material(
@@ -224,40 +225,64 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
-                child: Row(
+                padding: const EdgeInsets.fromLTRB(12, 2, 12, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    for (final tab in CalendarSourceTab.values)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: _CalendarFilterChip(
-                          label: tab == CalendarSourceTab.skyTask
-                              ? 'SkyTask'
-                              : 'All',
-                          selected: _sourceTab == tab,
-                          onSelected: () => _setSourceTab(tab),
-                        ),
-                      ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
-                child: Row(
-                  children: [
-                    for (final view in CalendarView.values)
-                      Padding(
-                        padding: const EdgeInsets.only(right: 6),
-                        child: _CalendarFilterChip(
-                          label: switch (view) {
-                            CalendarView.agenda => 'Agenda',
-                            CalendarView.week => 'Week',
-                            CalendarView.month => 'Month',
-                          },
-                          selected: _view == view,
-                          onSelected: () => _setView(view),
-                        ),
-                      ),
+                    Text(
+                      'Reminder types',
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Theme.of(context)
+                                .colorScheme
+                                .onSurface
+                                .withValues(alpha: 0.55),
+                            fontWeight: FontWeight.w500,
+                            letterSpacing: 0.2,
+                          ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        for (final tab in CalendarSourceTab.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: _CalendarFilterChip(
+                              label: tab == CalendarSourceTab.skyTask
+                                  ? 'SkyTask'
+                                  : 'All',
+                              selected: _sourceTab == tab,
+                              onSelected: () => _setSourceTab(tab),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                    Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: Theme.of(context)
+                          .dividerColor
+                          .withValues(alpha: 0.45),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        for (final view in CalendarView.values)
+                          Padding(
+                            padding: const EdgeInsets.only(right: 6),
+                            child: _CalendarFilterChip(
+                              label: switch (view) {
+                                CalendarView.agenda => 'Agenda',
+                                CalendarView.week => 'Week',
+                                CalendarView.month => 'Month',
+                              },
+                              selected: _view == view,
+                              onSelected: () => _setView(view),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
                   ],
                 ),
               ),
@@ -775,23 +800,32 @@ class _CalendarFilterChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = AppColors.brand(context);
+    final onSurface = Theme.of(context).colorScheme.onSurface;
     final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
           fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-          height: 1.1,
+          fontSize: 12,
+          height: 1,
+          color: onSurface.withValues(alpha: selected ? 0.9 : 0.7),
         );
 
-    return ChoiceChip(
-      label: Text(label, style: labelStyle),
-      selected: selected,
-      showCheckmark: false,
-      onSelected: (_) => onSelected(),
-      visualDensity: VisualDensity.compact,
-      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
-      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
-      selectedColor: brand.withValues(alpha: 0.22),
-      side: BorderSide(
-        color: selected ? brand : brand.withValues(alpha: 0.28),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onSelected,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          decoration: BoxDecoration(
+            color: selected ? brand.withValues(alpha: 0.18) : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? brand : brand.withValues(alpha: 0.22),
+              width: 1,
+            ),
+          ),
+          child: Text(label, style: labelStyle),
+        ),
       ),
     );
   }

@@ -10,6 +10,7 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ### Changes
 - Create menu redesigned as a 2×2 icon grid (Task / Reminder / Idea / Note)
+- Calendar filters: smaller pills, “Reminder types” label, and a separator before view tabs
 
 ---
 
