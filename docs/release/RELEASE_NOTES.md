@@ -4,6 +4,16 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.7.2 — 2026-08-05 · `1.7.2+15`
+
+[Download SkyTask-1.7.2.apk](https://github.com/preshan/SkyTask/releases/download/v1.7.2/SkyTask-1.7.2.apk)
+
+### Changes
+- Compact "+" on Tasks, Calendar, and Ideas & Notes AppBars for quick create
+- Smaller calendar SkyTask/All and Agenda/Week/Month chip filters
+
+---
+
 ## 1.7.1 — 2026-08-05 · `1.7.1+14`
 
 [Download SkyTask-1.7.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.7.1/SkyTask-1.7.1.apk)
