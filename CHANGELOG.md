@@ -6,6 +6,7 @@ Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://ke
 
 ### Changed
 - Create menu is a 2×2 grid with larger icons and short labels (Task, Reminder, Idea, Note)
+- Calendar filters: compact pills with a “Reminder types” label and separator above Agenda/Week/Month
 
 ## [1.7.2] — 2026-08-05
 
