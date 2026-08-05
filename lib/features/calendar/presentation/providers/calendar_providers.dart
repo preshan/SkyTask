@@ -66,21 +66,8 @@ class CalendarSettingsNotifier extends StateNotifier<CalendarSettings> {
         );
       }
 
-      // Some devices need a beat after grant before calendars appear.
-      var calendars = await _calendarService.getWritableCalendars();
-      if (calendars.isEmpty) {
-        await Future<void>.delayed(const Duration(milliseconds: 400));
-        calendars = await _calendarService.getWritableCalendars();
-      }
-      if (calendars.isEmpty) {
-        return const CalendarSyncEnableResult.fail(
-          CalendarSyncFailure.noCalendars,
-        );
-      }
-
-      final selected = _calendarService.pickPreferredCalendar(
-        calendars,
-        currentId: state.defaultCalendarId,
+      final selected = await _calendarService.ensureWritableCalendar(
+        preferredId: state.defaultCalendarId,
       );
       if (selected?.id == null) {
         return const CalendarSyncEnableResult.fail(
@@ -133,75 +120,93 @@ class CalendarSettingsNotifier extends StateNotifier<CalendarSettings> {
 }
 
 final calendarEntriesProvider =
-    FutureProvider.family<List<CalendarEntry>, DateRange>((ref, range) async {
+    FutureProvider.family<List<CalendarEntry>, CalendarQuery>((ref, query) async {
   ref.watch(remindersRevisionProvider);
+  final range = query.range;
 
-  final repo = await ref.read(reminderRepositoryProvider.future);
-  final reminders = await repo.getAll();
-
-  final entries = reminders
-      .where((r) => range.contains(r.reminderDateTime))
-      .map(
-        (r) => CalendarEntry(
-          id: r.id,
-          title: r.title,
-          start: r.reminderDateTime,
-          end: r.reminderDateTime.add(const Duration(minutes: 30)),
-          description: r.description,
-          source: CalendarEntrySource.reminder,
-          reminder: r,
-          isPrivate: r.isPrivate,
-          isCompleted: r.isCompleted,
-          hasCalendarSync: r.calendarEventId != null,
-        ),
-      )
-      .toList();
-
-  final settings = ref.read(calendarSettingsProvider);
-  if (settings.syncEnabled && settings.defaultCalendarId != null) {
-    try {
-      final hasPermission = await _calendarService.hasPermissions();
-      if (hasPermission) {
-        final deviceEvents = await _calendarService.retrieveEvents(
-          calendarIds: [settings.defaultCalendarId!],
-          start: range.start,
-          end: range.end,
-        );
-
-        final linkedEventIds = reminders
-            .map((r) => r.calendarEventId)
-            .whereType<String>()
-            .toSet();
-
-        for (final event in deviceEvents) {
-          if (event.eventId == null ||
-              linkedEventIds.contains(event.eventId)) {
-            continue;
-          }
-          final start = event.start?.toLocal();
-          if (start == null) continue;
-          entries.add(
-            CalendarEntry(
-              id: 'device-${event.eventId}',
-              title: event.title ?? 'Untitled event',
-              start: start,
-              end: event.end?.toLocal(),
-              description: event.description,
-              source: CalendarEntrySource.deviceCalendar,
-            ),
-          );
-        }
-      }
-    } catch (_) {
-      // Show local reminders even if device calendar read fails.
-    }
+  if (query.source == CalendarSourceTab.skyTask) {
+    final repo = await ref.read(reminderRepositoryProvider.future);
+    final reminders = await repo.getAll();
+    final entries = reminders
+        .where((r) => range.contains(r.reminderDateTime))
+        .map(
+          (r) => CalendarEntry(
+            id: r.id,
+            title: r.title,
+            start: r.reminderDateTime,
+            end: r.reminderDateTime.add(const Duration(minutes: 30)),
+            description: r.description,
+            source: CalendarEntrySource.reminder,
+            reminder: r,
+            isPrivate: r.isPrivate,
+            isCompleted: r.isCompleted,
+            hasCalendarSync: r.calendarEventId != null,
+          ),
+        )
+        .toList()
+      ..sort((a, b) => a.start.compareTo(b.start));
+    return entries;
   }
 
-  entries.sort((a, b) => a.start.compareTo(b.start));
-  return entries;
+  // All device calendars — independent of syncEnabled.
+  // Permission is requested by the Calendar screen when opening this tab.
+  try {
+    final hasPermission = await _calendarService.hasPermissions();
+    if (!hasPermission) return const [];
+
+    final calendars = await _calendarService.getReadableCalendars();
+    final ids = calendars
+        .map((c) => c.id)
+        .whereType<String>()
+        .where((id) => id.isNotEmpty)
+        .toList();
+    if (ids.isEmpty) return const [];
+
+    final deviceEvents = await _calendarService.retrieveEvents(
+      calendarIds: ids,
+      start: range.start,
+      end: range.end,
+    );
+
+    final entries = <CalendarEntry>[];
+    for (final event in deviceEvents) {
+      if (event.eventId == null) continue;
+      final start = event.start?.toLocal();
+      if (start == null) continue;
+      entries.add(
+        CalendarEntry(
+          id: 'device-${event.eventId}',
+          title: event.title ?? 'Untitled event',
+          start: start,
+          end: event.end?.toLocal(),
+          description: event.description,
+          source: CalendarEntrySource.deviceCalendar,
+        ),
+      );
+    }
+    entries.sort((a, b) => a.start.compareTo(b.start));
+    return entries;
+  } catch (_) {
+    return const [];
+  }
 });
 
 final _calendarService = DeviceCalendarService.instance;
+
+enum CalendarSourceTab { skyTask, all }
+
+class CalendarQuery extends Equatable {
+  const CalendarQuery({
+    required this.range,
+    this.source = CalendarSourceTab.skyTask,
+  });
+
+  final DateRange range;
+  final CalendarSourceTab source;
+
+  @override
+  List<Object?> get props => [range, source];
+}
 
 class DateRange extends Equatable {
   const DateRange({required this.start, required this.end});

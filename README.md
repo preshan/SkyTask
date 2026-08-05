@@ -14,14 +14,14 @@ Built with Flutter by **Preshan Pradeepa Kariyawasam**.
 |:--------:|:------------:|:--------:|
 | ![New Task](docs/release/screenshots/04_new_task.png) | ![New Reminder](docs/release/screenshots/05_new_reminder.png) | ![Settings](docs/release/screenshots/06_settings.png) |
 
-Latest release: [v1.4.1](https://github.com/preshan/SkyTask/releases/tag/v1.4.1)
+Latest release: [v1.5.0](https://github.com/preshan/SkyTask/releases/tag/v1.5.0)
 
 ## Features
 
 - Tasks with categories, priority, pin, archive, and search
 - Reminders that keep working offline (local notifications + AlarmManager)
 - Ideas and notes, including voice memos
-- Device calendar integration (optional; skipped for private items)
+- Device calendar integration (SkyTask / All tabs; sync skipped for private items)
 - App lock with PIN or biometrics; private text encrypted at rest
 - Full backup export / import (optional password); share or save the file yourself
 - Dark / light theme with a day–night sky background

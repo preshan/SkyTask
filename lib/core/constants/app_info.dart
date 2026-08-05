@@ -12,7 +12,9 @@ abstract final class AppInfo {
 
   static const developerName = 'Preshan Pradeepa Kariyawasam';
   static const developerLinkedIn = 'https://www.linkedin.com/in/preshan/';
+  static const developerGitHub = 'https://github.com/preshan';
   static const developerEmail = 'preshanpradeepa@gmail.com';
+  static const repoUrl = 'https://github.com/preshan/SkyTask';
   static const copyrightYear = '2026';
   static const copyright =
       '© $copyrightYear SkyTask. All rights reserved.';

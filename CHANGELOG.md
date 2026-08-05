@@ -2,6 +2,17 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.5.0] — 2026-08-05
+
+### Added
+- Calendar source tabs: SkyTask reminders vs all device calendars
+- Local SkyTask calendar created when no writable calendar exists yet
+- About / Settings credits link to the GitHub repo and developer profile
+
+### Fixed
+- Calendar sync enable when the device has no writable calendar accounts
+- Write-only calendar permission requested on OEM paths that split access
+
 ## [1.4.1] — 2026-08-04
 
 ### Added
