@@ -4,8 +4,10 @@ import 'package:uuid/uuid.dart';
 
 import '../../../calendar/presentation/providers/calendar_providers.dart';
 import '../../../../core/constants/capture_preference.dart';
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
+import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/private_icon_toggle.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_memo_recorder.dart';
@@ -42,6 +44,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
   late final FocusNode _descriptionFocus;
   late DateTime _dateTime;
   late NotificationOffset _offset;
+  late String _category;
   late bool _isPrivate;
   String? _voicePath;
   final _voiceController = VoiceMemoController();
@@ -65,6 +68,9 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
     _dateTime = existing?.reminderDateTime ??
         DateTime.now().add(const Duration(hours: 1));
     _offset = existing?.notificationOffset ?? NotificationOffset.atTime;
+    _category = TaskCategories.normalize(
+      existing?.category ?? TaskCategories.personal,
+    );
     _isPrivate = existing?.isPrivate ?? false;
     _voicePath = existing?.voicePath;
 
@@ -137,6 +143,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           title: title,
           description: description,
           reminderDateTime: _dateTime,
+          category: _category,
           notificationOffset: _offset,
           isPrivate: _isPrivate,
           voicePath: voicePath,
@@ -149,23 +156,35 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
               settings.canSyncToCalendar && !updated.isVoice && !updated.isPrivate,
           calendarId: settings.defaultCalendarId,
         );
+        if (!TaskCategories.isDefault(updated.category)) {
+          await ref
+              .read(customTaskCategoriesProvider.notifier)
+              .add(updated.category);
+        }
       } else {
+        final created = Reminder(
+          id: const Uuid().v4(),
+          title: title,
+          description: description,
+          reminderDateTime: _dateTime,
+          category: _category,
+          notificationOffset: _offset,
+          isPrivate: _isPrivate,
+          voicePath: voicePath,
+          createdAt: now,
+          updatedAt: now,
+        );
         await scheduler.schedule(
-          reminder: Reminder(
-            id: const Uuid().v4(),
-            title: title,
-            description: description,
-            reminderDateTime: _dateTime,
-            notificationOffset: _offset,
-            isPrivate: _isPrivate,
-            voicePath: voicePath,
-            createdAt: now,
-            updatedAt: now,
-          ),
+          reminder: created,
           addToCalendar:
               settings.canSyncToCalendar && !hasVoice && !_isPrivate,
           calendarId: settings.defaultCalendarId,
         );
+        if (!TaskCategories.isDefault(created.category)) {
+          await ref
+              .read(customTaskCategoriesProvider.notifier)
+              .add(created.category);
+        }
       }
 
       if (previousVoice != null && previousVoice != voicePath) {
@@ -282,6 +301,12 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
             ),
             maxLines: 2,
             textCapitalization: TextCapitalization.sentences,
+          ),
+          const SizedBox(height: 16),
+          CategoryChipSelector(
+            value: _category,
+            enabled: !_saving,
+            onChanged: (v) => setState(() => _category = v),
           ),
           const SizedBox(height: 12),
           ListTile(

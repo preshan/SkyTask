@@ -4,8 +4,10 @@ import 'package:uuid/uuid.dart';
 
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/constants/capture_preference.dart';
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
+import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
 import '../../../../shared/widgets/private_icon_toggle.dart';
 import '../../../../shared/widgets/voice_memo_recorder.dart';
@@ -40,6 +42,7 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
   late final TextEditingController _titleController;
   late final TextEditingController _contentController;
   late final FocusNode _contentFocus;
+  late String _category;
   late bool _isPrivate;
   String? _voicePath;
   final _voiceController = VoiceMemoController();
@@ -59,6 +62,9 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
     _titleController = TextEditingController(text: initialTitle);
     _contentController = TextEditingController(text: note?.content ?? '');
     _contentFocus = FocusNode();
+    _category = TaskCategories.normalize(
+      note?.category ?? TaskCategories.personal,
+    );
     _isPrivate = note?.isPrivate ?? false;
     _voicePath = note?.voicePath;
 
@@ -99,6 +105,7 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
           ? widget.note!.copyWith(
               title: title,
               content: _contentController.text.trim(),
+              category: _category,
               isPrivate: _isPrivate,
               voicePath: voicePath,
               clearVoicePath: voicePath == null,
@@ -108,6 +115,7 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
               id: const Uuid().v4(),
               title: title,
               content: _contentController.text.trim(),
+              category: _category,
               isPrivate: _isPrivate,
               voicePath: voicePath,
               createdAt: now,
@@ -115,6 +123,11 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
             );
 
       await repo.save(note);
+      if (!TaskCategories.isDefault(note.category)) {
+        await ref
+            .read(customTaskCategoriesProvider.notifier)
+            .add(note.category);
+      }
       await ref.read(preferVoiceCaptureProvider.notifier).recordSave(
         hasVoice: hasVoice,
         hasTypedBody: _contentController.text.trim().isNotEmpty,
@@ -171,6 +184,12 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
             textCapitalization: TextCapitalization.sentences,
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _contentFocus.requestFocus(),
+          ),
+          const SizedBox(height: 16),
+          CategoryChipSelector(
+            value: _category,
+            enabled: !_saving,
+            onChanged: (v) => setState(() => _category = v),
           ),
           const SizedBox(height: 12),
           TextField(

@@ -1,16 +1,20 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../di/content_providers.dart';
 import '../di/providers.dart';
-import '../../features/tasks/domain/entities/task.dart';
+import '../../features/calendar/presentation/providers/calendar_providers.dart';
 
-/// Task category catalog — Work & Personal by default; users can add more.
+/// Shared category catalog for tasks, reminders, ideas, and notes.
+///
+/// Work & Personal ship by default. Custom names live in SharedPreferences
+/// (`custom_task_categories`) so one list is reused everywhere.
 abstract final class TaskCategories {
   static const work = 'Work';
   static const personal = 'Personal';
   static const defaults = [work, personal];
 
-  static const _prefsKey = 'custom_task_categories';
+  static const prefsKey = 'custom_task_categories';
 
   static String normalize(String raw) {
     final trimmed = raw.trim().replaceAll(RegExp(r'\s+'), ' ');
@@ -21,14 +25,14 @@ abstract final class TaskCategories {
   static bool isDefault(String name) =>
       defaults.any((d) => d.toLowerCase() == name.toLowerCase());
 
-  /// Merge defaults + saved customs + labels seen on tasks, most-used first.
+  /// Merge defaults + saved customs + labels seen on content, most-used first.
   static List<String> ordered({
     required List<String> custom,
-    required List<Task> tasks,
+    required Iterable<String> usedLabels,
   }) {
     final counts = <String, int>{};
-    for (final task in tasks) {
-      final key = normalize(task.category);
+    for (final raw in usedLabels) {
+      final key = normalize(raw);
       counts[key] = (counts[key] ?? 0) + 1;
     }
 
@@ -71,7 +75,7 @@ abstract final class TaskCategories {
   }
 
   static List<String> loadCustom(SharedPreferences prefs) {
-    return (prefs.getStringList(_prefsKey) ?? [])
+    return (prefs.getStringList(prefsKey) ?? [])
         .map(normalize)
         .where((c) => c.isNotEmpty && !isDefault(c))
         .toList();
@@ -87,7 +91,7 @@ abstract final class TaskCategories {
         .toSet()
         .toList()
       ..sort((a, b) => a.toLowerCase().compareTo(b.toLowerCase()));
-    await prefs.setStringList(_prefsKey, cleaned);
+    await prefs.setStringList(prefsKey, cleaned);
   }
 }
 
@@ -121,3 +125,31 @@ class CustomTaskCategoriesNotifier extends StateNotifier<List<String>> {
     state = TaskCategories.loadCustom(_prefs);
   }
 }
+
+/// Category labels used across tasks, reminders, ideas, and notes.
+final categoryUsageLabelsProvider = FutureProvider<List<String>>((ref) async {
+  ref.watch(tasksRevisionProvider);
+  ref.watch(remindersRevisionProvider);
+  ref.watch(ideasRevisionProvider);
+  ref.watch(notesRevisionProvider);
+
+  final labels = <String>[];
+
+  final tasks = await (await ref.read(taskRepositoryProvider.future))
+      .getAll(includeArchived: true);
+  labels.addAll(tasks.map((t) => t.category));
+
+  final reminders =
+      await (await ref.read(reminderRepositoryProvider.future)).getAll();
+  labels.addAll(reminders.map((r) => r.category));
+
+  final ideas =
+      await (await ref.read(ideaRepositoryProvider.future)).getAll();
+  labels.addAll(ideas.map((i) => i.category));
+
+  final notes =
+      await (await ref.read(noteRepositoryProvider.future)).getAll();
+  labels.addAll(notes.map((n) => n.category));
+
+  return labels;
+});

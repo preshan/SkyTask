@@ -46,6 +46,9 @@ class ReminderCollection {
   String? description;
   late DateTime reminderDateTime;
 
+  /// Shared with tasks / ideas / notes (Work, Personal, or custom).
+  String categoryLabel = '';
+
   @enumerated
   late RepeatType repeatType;
 
@@ -73,6 +76,10 @@ class IdeaCollection {
 
   late String title;
   late String content;
+
+  /// Shared with tasks / reminders / notes (Work, Personal, or custom).
+  String categoryLabel = '';
+
   List<String> tags = [];
   late bool isPrivate;
   String? voicePath;
@@ -90,6 +97,10 @@ class NoteCollection {
 
   late String title;
   late String content;
+
+  /// Shared with tasks / reminders / ideas (Work, Personal, or custom).
+  String categoryLabel = '';
+
   List<String> attachments = [];
   late bool isPrivate;
   String? voicePath;

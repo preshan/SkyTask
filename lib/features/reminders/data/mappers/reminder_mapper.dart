@@ -1,3 +1,4 @@
+import '../../../../core/constants/task_categories.dart';
 import '../../../../core/database/isar_collections.dart' as isar;
 import '../../../../core/services/private_crypto_service.dart';
 import '../../domain/entities/reminder.dart';
@@ -6,11 +7,15 @@ class ReminderMapper {
   static final _crypto = PrivateCryptoService.instance;
 
   static Reminder fromCollection(isar.ReminderCollection c) {
+    final label = c.categoryLabel.trim().isNotEmpty
+        ? TaskCategories.normalize(c.categoryLabel)
+        : TaskCategories.personal;
     return Reminder(
       id: c.uuid,
       title: _crypto.reveal(c.title) ?? c.title,
       description: _crypto.reveal(c.description),
       reminderDateTime: c.reminderDateTime,
+      category: label,
       repeatType: RepeatType.values[c.repeatType.index],
       notificationOffset:
           NotificationOffset.values[c.notificationOffset.index],
@@ -35,6 +40,7 @@ class ReminderMapper {
       ..description =
           _crypto.protect(reminder.description, isPrivate: private)
       ..reminderDateTime = reminder.reminderDateTime
+      ..categoryLabel = TaskCategories.normalize(reminder.category)
       ..repeatType = isar.RepeatType.values[reminder.repeatType.index]
       ..notificationOffset =
           isar.NotificationOffset.values[reminder.notificationOffset.index]

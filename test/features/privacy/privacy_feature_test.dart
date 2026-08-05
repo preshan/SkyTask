@@ -61,7 +61,7 @@ void main() {
     test('ordered includes defaults and custom', () {
       final ordered = TaskCategories.ordered(
         custom: ['Health'],
-        tasks: const [],
+        usedLabels: const [],
       );
       expect(ordered, contains(TaskCategories.work));
       expect(ordered, contains(TaskCategories.personal));

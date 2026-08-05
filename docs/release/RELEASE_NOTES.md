@@ -4,6 +4,16 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.6.0 — 2026-08-05 · `1.6.0+12`
+
+[Download SkyTask-1.6.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.6.0/SkyTask-1.6.0.apk)
+
+### Changes
+- Categories on reminders, ideas, and notes (same list as tasks: Work, Personal, customs)
+- Calendar sync enable is more reliable (read + write permission; local SkyTask calendar fallback)
+
+---
+
 ## 1.5.0 — 2026-08-05 · `1.5.0+11`
 
 [Download SkyTask-1.5.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.5.0/SkyTask-1.5.0.apk)

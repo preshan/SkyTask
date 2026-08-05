@@ -2,6 +2,16 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.6.0] — 2026-08-05
+
+### Added
+- Categories on reminders, ideas, and notes (same Work / Personal / custom list as tasks)
+- Shared category picker: add a category once, use it everywhere
+
+### Fixed
+- Calendar sync enable: require read + write permission and create a local SkyTask calendar more reliably when none are writable
+- Clearer calendar sync copy when Google account calendars are not on the device yet
+
 ## [1.5.0] — 2026-08-05
 
 ### Added
