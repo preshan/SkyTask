@@ -82,9 +82,38 @@ class _AppShellState extends ConsumerState<AppShell> {
       context: context,
       showDragHandle: true,
       builder: (ctx) {
+        final divider = Theme.of(ctx).dividerColor.withValues(alpha: 0.55);
+        final options = [
+          (
+            icon: SkyIcons.task,
+            label: 'Task',
+            kind: CreateKind.task,
+          ),
+          (
+            icon: SkyIcons.alarm,
+            label: 'Reminder',
+            kind: CreateKind.reminder,
+          ),
+          (
+            icon: SkyIcons.lightbulb,
+            label: 'Idea',
+            kind: CreateKind.idea,
+          ),
+          (
+            icon: SkyIcons.note,
+            label: 'Note',
+            kind: CreateKind.note,
+          ),
+        ];
+
+        Future<void> open(CreateKind kind) async {
+          Navigator.pop(ctx);
+          await openCreateSheet(context, ref, kind);
+        }
+
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 0, 8, 16),
+            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -92,38 +121,74 @@ class _AppShellState extends ConsumerState<AppShell> {
                   'Create',
                   style: Theme.of(ctx).textTheme.titleMedium,
                 ),
-                const SizedBox(height: 8),
-                _CreateOption(
-                  icon: SkyIcons.task,
-                  label: 'New Task',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await openCreateSheet(context, ref, CreateKind.task);
-                  },
-                ),
-                _CreateOption(
-                  icon: SkyIcons.alarm,
-                  label: 'New Reminder',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await openCreateSheet(context, ref, CreateKind.reminder);
-                  },
-                ),
-                _CreateOption(
-                  icon: SkyIcons.lightbulb,
-                  label: 'New Idea',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await openCreateSheet(context, ref, CreateKind.idea);
-                  },
-                ),
-                _CreateOption(
-                  icon: SkyIcons.note,
-                  label: 'New Note',
-                  onTap: () async {
-                    Navigator.pop(ctx);
-                    await openCreateSheet(context, ref, CreateKind.note);
-                  },
+                const SizedBox(height: 16),
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: divider),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: SizedBox(
+                      height: 220,
+                      child: Stack(
+                        children: [
+                          Column(
+                            children: [
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: _CreateGridCell(
+                                        icon: options[0].icon,
+                                        label: options[0].label,
+                                        onTap: () => open(options[0].kind),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _CreateGridCell(
+                                        icon: options[1].icon,
+                                        label: options[1].label,
+                                        onTap: () => open(options[1].kind),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: _CreateGridCell(
+                                        icon: options[2].icon,
+                                        label: options[2].label,
+                                        onTap: () => open(options[2].kind),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      child: _CreateGridCell(
+                                        icon: options[3].icon,
+                                        label: options[3].label,
+                                        onTap: () => open(options[3].kind),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          // Crosshair "+" dividers
+                          Positioned.fill(
+                            child: IgnorePointer(
+                              child: CustomPaint(
+                                painter: _CreateGridCrossPainter(color: divider),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -292,8 +357,8 @@ class _CreateNavItem extends StatelessWidget {
   }
 }
 
-class _CreateOption extends StatelessWidget {
-  const _CreateOption({
+class _CreateGridCell extends StatelessWidget {
+  const _CreateGridCell({
     required this.icon,
     required this.label,
     required this.onTap,
@@ -306,22 +371,62 @@ class _CreateOption extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final brand = AppColors.brand(context);
-    return ListTile(
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: brand.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
-        ),
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
         child: Center(
-          child: SkyIcon(icon, color: brand, size: 22),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 56,
+                height: 56,
+                decoration: BoxDecoration(
+                  color: brand.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SkyIcon(icon, color: brand, size: 28),
+                ),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: onSurface,
+                    ),
+              ),
+            ],
+          ),
         ),
       ),
-      title: Text(label),
-      onTap: onTap,
     );
   }
+}
+
+class _CreateGridCrossPainter extends CustomPainter {
+  _CreateGridCrossPainter({required this.color});
+
+  final Color color;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 1;
+    final midX = size.width / 2;
+    final midY = size.height / 2;
+    canvas.drawLine(Offset(midX, 0), Offset(midX, size.height), paint);
+    canvas.drawLine(Offset(0, midY), Offset(size.width, midY), paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _CreateGridCrossPainter oldDelegate) =>
+      oldDelegate.color != color;
 }
 
 class _Tab {
