@@ -37,6 +37,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late DateRange _range;
   late bool _dayFocus;
   late bool _privateOnly;
+  CalendarSourceTab _sourceTab = CalendarSourceTab.skyTask;
+  bool _allCalendarPermissionDenied = false;
 
   @override
   void initState() {
@@ -99,6 +101,29 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     });
   }
 
+  Future<void> _setSourceTab(CalendarSourceTab tab) async {
+    if (tab == CalendarSourceTab.all) {
+      final service = DeviceCalendarService.instance;
+      var granted = await service.hasPermissions();
+      if (!granted) {
+        granted = await service.requestPermissions();
+      }
+      if (!mounted) return;
+      setState(() {
+        _sourceTab = tab;
+        _allCalendarPermissionDenied = !granted;
+      });
+      if (granted) {
+        ref.invalidate(calendarEntriesProvider);
+      }
+      return;
+    }
+    setState(() {
+      _sourceTab = tab;
+      _allCalendarPermissionDenied = false;
+    });
+  }
+
   void _clearDayFocus() {
     setState(() {
       _dayFocus = false;
@@ -126,11 +151,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final entriesAsync = ref.watch(calendarEntriesProvider(_range));
+    final query = CalendarQuery(range: _range, source: _sourceTab);
+    final entriesAsync = ref.watch(calendarEntriesProvider(query));
     final settings = ref.watch(calendarSettingsProvider);
     final title = _dayFocus
         ? DateFormat.MMMd().format(_anchor)
         : 'Calendar';
+    final bannerExtra =
+        (_dayFocus ? 48.0 : 0.0) + (_privateOnly ? 48.0 : 0.0);
 
     return Scaffold(
       appBar: AppBar(
@@ -149,9 +177,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ...skyTaskAppBarActions(context),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(
-            48 + (_dayFocus ? 48.0 : 0) + (_privateOnly ? 48.0 : 0),
-          ),
+          preferredSize: Size.fromHeight(96 + bannerExtra),
           child: Column(
             children: [
               if (_dayFocus)
@@ -189,6 +215,24 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                 ),
               Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                child: SegmentedButton<CalendarSourceTab>(
+                  segments: const [
+                    ButtonSegment(
+                      value: CalendarSourceTab.skyTask,
+                      label: Text('SkyTask'),
+                    ),
+                    ButtonSegment(
+                      value: CalendarSourceTab.all,
+                      label: Text('All'),
+                    ),
+                  ],
+                  selected: {_sourceTab},
+                  onSelectionChanged: (s) => _setSourceTab(s.first),
+                  style: _segmentStyle(context),
+                ),
+              ),
+              Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 child: SegmentedButton<CalendarView>(
                   segments: const [
@@ -207,29 +251,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ],
                   selected: {_view},
                   onSelectionChanged: (s) => _setView(s.first),
-                  style: ButtonStyle(
-                    foregroundColor: WidgetStateProperty.resolveWith((states) {
-                      final scheme = Theme.of(context).colorScheme;
-                      if (states.contains(WidgetState.selected)) {
-                        return scheme.onPrimary;
-                      }
-                      return scheme.onSurface;
-                    }),
-                    backgroundColor: WidgetStateProperty.resolveWith((states) {
-                      final scheme = Theme.of(context).colorScheme;
-                      if (states.contains(WidgetState.selected)) {
-                        return scheme.primary;
-                      }
-                      return scheme.surface;
-                    }),
-                    iconColor: WidgetStateProperty.resolveWith((states) {
-                      final scheme = Theme.of(context).colorScheme;
-                      if (states.contains(WidgetState.selected)) {
-                        return scheme.onPrimary;
-                      }
-                      return scheme.onSurface;
-                    }),
-                  ),
+                  style: _segmentStyle(context),
                 ),
               ),
             ],
@@ -242,11 +264,13 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
         data: (entries) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (!settings.syncEnabled)
+            if (_sourceTab == CalendarSourceTab.skyTask &&
+                !settings.syncEnabled)
               _GoogleSyncBanner(
                 onEnable: () => _enableGoogleSync(context),
               )
-            else
+            else if (_sourceTab == CalendarSourceTab.skyTask &&
+                settings.syncEnabled)
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: Text(
@@ -257,11 +281,16 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                 ),
               ),
             Expanded(
-              child: _buildView(
-                _privateOnly
-                    ? entries.where((e) => e.isPrivate).toList()
-                    : entries,
-              ),
+              child: _sourceTab == CalendarSourceTab.all &&
+                      _allCalendarPermissionDenied
+                  ? _AllCalendarPermissionEmpty(
+                      onAllow: () => _setSourceTab(CalendarSourceTab.all),
+                    )
+                  : _buildView(
+                      _privateOnly
+                          ? entries.where((e) => e.isPrivate).toList()
+                          : entries,
+                    ),
             ),
           ],
         ),
@@ -269,17 +298,46 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     );
   }
 
+  ButtonStyle _segmentStyle(BuildContext context) {
+    return ButtonStyle(
+      foregroundColor: WidgetStateProperty.resolveWith((states) {
+        final scheme = Theme.of(context).colorScheme;
+        if (states.contains(WidgetState.selected)) {
+          return scheme.onPrimary;
+        }
+        return scheme.onSurface;
+      }),
+      backgroundColor: WidgetStateProperty.resolveWith((states) {
+        final scheme = Theme.of(context).colorScheme;
+        if (states.contains(WidgetState.selected)) {
+          return scheme.primary;
+        }
+        return scheme.surface;
+      }),
+      iconColor: WidgetStateProperty.resolveWith((states) {
+        final scheme = Theme.of(context).colorScheme;
+        if (states.contains(WidgetState.selected)) {
+          return scheme.onPrimary;
+        }
+        return scheme.onSurface;
+      }),
+    );
+  }
+
   Widget _buildView(List<CalendarEntry> entries) {
     if (entries.isEmpty) {
+      final emptyMessage = switch ((_sourceTab, _privateOnly, _dayFocus)) {
+        (CalendarSourceTab.all, _, _) =>
+          'No calendar events in this period.',
+        (_, true, _) => 'No private reminders in this period.',
+        (_, _, true) => 'No reminders on this day.\nTap + to create one.',
+        _ => 'No SkyTask reminders in this period.\nTap + to create a reminder.',
+      };
       return Center(
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Text(
-            _privateOnly
-                ? 'No private reminders in this period.'
-                : _dayFocus
-                    ? 'No reminders on this day.\nTap + to create one.'
-                    : 'No events in this period.\nTap + to create a reminder.',
+            emptyMessage,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodyLarge,
           ),
@@ -398,6 +456,36 @@ class _GoogleSyncBanner extends StatelessWidget {
               onPressed: onEnable,
               icon: const SkyIcon(SkyIcons.calendar),
               label: const Text('Enable Google Calendar sync'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AllCalendarPermissionEmpty extends StatelessWidget {
+  const _AllCalendarPermissionEmpty({required this.onAllow});
+
+  final VoidCallback onAllow;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Allow calendar access to see events from Google and other calendars on this phone.',
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyLarge,
+            ),
+            const SizedBox(height: 16),
+            FilledButton(
+              onPressed: onAllow,
+              child: const Text('Allow calendar'),
             ),
           ],
         ),

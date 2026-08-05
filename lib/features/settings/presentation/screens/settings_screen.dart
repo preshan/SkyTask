@@ -207,16 +207,41 @@ class SettingsScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 12),
-                Text(
-                  AppInfo.copyright,
-                  style: mist,
-                  textAlign: TextAlign.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('© ${AppInfo.copyrightYear} ', style: mist),
+                    GestureDetector(
+                      onTap: () => _openLink(AppInfo.repoUrl),
+                      child: Text(
+                        AppInfo.name,
+                        style: mist?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                    Text('. All rights reserved.', style: mist),
+                  ],
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  'Developed by ${AppInfo.developerName}',
-                  style: mist,
-                  textAlign: TextAlign.center,
+                Wrap(
+                  alignment: WrapAlignment.center,
+                  crossAxisAlignment: WrapCrossAlignment.center,
+                  children: [
+                    Text('Developed by ', style: mist),
+                    GestureDetector(
+                      onTap: () => _openLink(AppInfo.developerGitHub),
+                      child: Text(
+                        AppInfo.developerName,
+                        style: mist?.copyWith(
+                          color: Theme.of(context).colorScheme.primary,
+                          decoration: TextDecoration.underline,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 12),
                 _ContactLink(
@@ -245,16 +270,41 @@ class SettingsScreen extends ConsumerWidget {
   }
 
   void _showAbout(BuildContext context) {
+    final linkStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.primary,
+          decoration: TextDecoration.underline,
+        );
     showAboutDialog(
       context: context,
       applicationName: AppInfo.name,
       applicationVersion: AppInfo.versionLabel,
-      applicationLegalese: AppInfo.copyright,
+      applicationLegalese: null,
       children: [
         const SizedBox(height: 12),
         Text(AppInfo.tagline),
         const SizedBox(height: 8),
-        Text('Developed by ${AppInfo.developerName}'),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            Text('© ${AppInfo.copyrightYear} '),
+            GestureDetector(
+              onTap: () => _openLink(AppInfo.repoUrl),
+              child: Text(AppInfo.name, style: linkStyle),
+            ),
+            const Text('. All rights reserved.'),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Wrap(
+          crossAxisAlignment: WrapCrossAlignment.center,
+          children: [
+            const Text('Developed by '),
+            GestureDetector(
+              onTap: () => _openLink(AppInfo.developerGitHub),
+              child: Text(AppInfo.developerName, style: linkStyle),
+            ),
+          ],
+        ),
         Text(AppInfo.developerEmail),
       ],
     );
@@ -380,9 +430,21 @@ class SettingsScreen extends ConsumerWidget {
         await DeviceCalendarService.instance.getWritableCalendars();
     if (!context.mounted) return;
     if (calendars.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('No writable calendars found')),
-      );
+      final created =
+          await DeviceCalendarService.instance.ensureWritableCalendar();
+      if (!context.mounted) return;
+      if (created?.id == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No writable calendars found')),
+        );
+        return;
+      }
+      await ref.read(calendarSettingsProvider.notifier).setDefaultCalendar(
+            id: created!.id!,
+            name: created.name ?? 'SkyTask',
+            isGoogleCalendar:
+                DeviceCalendarService.instance.isGoogleCalendar(created),
+          );
       return;
     }
 
