@@ -2,6 +2,16 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.7.0] — 2026-08-05
+
+### Added
+- Soft pastel colors for categories (Work / Personal fixed; customs pick a random color you can change)
+- Long-press a category chip to edit or delete; deleting reassigns items to another category first
+- Colored category labels on task, idea, note, and calendar list rows
+
+### Changed
+- Denser list tiles (smaller title/subtitle text and tighter padding) so more items fit on screen
+
 ## [1.6.0] — 2026-08-05
 
 ### Added

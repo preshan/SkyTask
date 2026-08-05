@@ -4,6 +4,17 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.7.0 — 2026-08-05 · `1.7.0+13`
+
+[Download SkyTask-1.7.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.7.0/SkyTask-1.7.0.apk)
+
+### Changes
+- Soft pastel colors on categories; long-press to edit or delete (items move to another category first)
+- Colored category labels on list rows
+- Denser task / idea / note / calendar lists so more items fit on screen
+
+---
+
 ## 1.6.0 — 2026-08-05 · `1.6.0+12`
 
 [Download SkyTask-1.6.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.6.0/SkyTask-1.6.0.apk)

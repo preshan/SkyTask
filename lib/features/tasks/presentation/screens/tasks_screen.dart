@@ -8,6 +8,8 @@ import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/category_chip_selector.dart';
+import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
@@ -71,11 +73,13 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(_tasksListProvider);
     final custom = ref.watch(customTaskCategoriesProvider);
+    final overrides = ref.watch(defaultCategoryColorsProvider);
     final used = (tasksAsync.valueOrNull ?? const <Task>[])
         .map((t) => t.category);
     final categories = TaskCategories.ordered(
       custom: custom,
       usedLabels: used,
+      defaultOverrides: overrides,
     );
 
     return Scaffold(
@@ -180,10 +184,26 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
                 ),
                 ...categories.map(
                   (category) => _CategoryChip(
-                    label: category,
+                    label: category.name,
+                    color: category.color,
                     selected: _categoryFilter?.toLowerCase() ==
-                        category.toLowerCase(),
-                    onTap: () => setState(() => _categoryFilter = category),
+                        category.name.toLowerCase(),
+                    onTap: () =>
+                        setState(() => _categoryFilter = category.name),
+                    onLongPress: () => showCategoryManageSheet(
+                      context: context,
+                      ref: ref,
+                      category: category,
+                      currentSelection: _categoryFilter ?? '',
+                      onDeletedOrRenamed: (next) {
+                        setState(() {
+                          if (_categoryFilter?.toLowerCase() ==
+                              category.name.toLowerCase()) {
+                            _categoryFilter = next;
+                          }
+                        });
+                      },
+                    ),
                   ),
                 ),
               ],
@@ -281,35 +301,52 @@ class _CategoryChip extends StatelessWidget {
     required this.label,
     required this.selected,
     required this.onTap,
+    this.color,
+    this.onLongPress,
   });
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final int? color;
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
+    final fill = color != null ? Color(color!) : null;
+    final onFill = fill != null && fill.computeLuminance() > 0.55
+        ? const Color(0xFF3D3D3D)
+        : (fill != null ? Colors.white : null);
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
-      child: FilterChip(
-        label: Text(label),
-        selected: selected,
-        showCheckmark: false,
-        onSelected: (_) => onTap(),
-        selectedColor: AppColors.brand(context).withValues(alpha: 0.25),
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        side: BorderSide(
-          color: selected
-              ? AppColors.brand(context)
-              : AppColors.brand(context).withValues(alpha: 0.25),
+      child: GestureDetector(
+        onLongPress: onLongPress,
+        child: FilterChip(
+          label: Text(label),
+          selected: selected,
+          showCheckmark: false,
+          onSelected: (_) => onTap(),
+          selectedColor: fill ?? AppColors.brand(context).withValues(alpha: 0.25),
+          backgroundColor: fill?.withValues(alpha: 0.45) ??
+              Theme.of(context).colorScheme.surface,
+          side: BorderSide(
+            color: selected
+                ? (fill ?? AppColors.brand(context))
+                : (fill?.withValues(alpha: 0.7) ??
+                    AppColors.brand(context).withValues(alpha: 0.25)),
+          ),
+          labelStyle: TextStyle(
+            color: selected
+                ? (onFill ?? Theme.of(context).colorScheme.onSurface)
+                : (onFill?.withValues(alpha: 0.85) ??
+                    Theme.of(context).colorScheme.onSurface),
+            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+            fontSize: 13,
+          ),
+          visualDensity: VisualDensity.compact,
+          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
         ),
-        labelStyle: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-          fontSize: 13,
-        ),
-        visualDensity: VisualDensity.compact,
-        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
       ),
     );
   }
@@ -326,20 +363,34 @@ class _TaskCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final subtitle = [
-      task.category,
+    final meta = [
       if (task.dueDate != null)
         'Due ${DateFormat.MMMd().format(task.dueDate!)}',
       if (task.isVoice) 'Voice',
     ].join(' • ');
 
+    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          decoration: task.completed ? TextDecoration.lineThrough : null,
+          height: 1.15,
+          fontWeight: FontWeight.w500,
+        );
+    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        );
+
     return AnimatedOpacity(
       opacity: task.completed ? 0.6 : 1,
       duration: const Duration(milliseconds: 300),
       child: Card(
+        margin: const EdgeInsets.only(bottom: 4),
         child: PrivateContentGate(
           isPrivate: task.isPrivate,
           child: ListTile(
+            dense: true,
+            visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
+            contentPadding:
+                const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+            minVerticalPadding: 4,
             onTap: onTap,
             leading: GoldCheckbox(
               value: task.completed,
@@ -355,11 +406,29 @@ class _TaskCard extends ConsumerWidget {
                 isVoice: task.isVoice,
                 createdAt: task.createdAt,
               ),
-              style: task.completed
-                  ? const TextStyle(decoration: TextDecoration.lineThrough)
-                  : null,
+              style: titleStyle,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-            subtitle: Text(subtitle),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 2),
+              child: Row(
+                children: [
+                  CategoryLabel(task.category),
+                  if (meta.isNotEmpty) ...[
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        meta,
+                        style: subtitleStyle,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
             trailing: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -368,7 +437,7 @@ class _TaskCard extends ConsumerWidget {
                 if (task.pinned) const SkyIcon(SkyIcons.pin, size: 18),
                 if (task.archived)
                   const SkyIcon(SkyIcons.archive, size: 18),
-                const SkyIcon(SkyIcons.chevronRight),
+                const SkyIcon(SkyIcons.chevronRight, size: 18),
               ],
             ),
           ),

@@ -81,6 +81,7 @@ abstract final class SkyIcons {
   static const info = HugeIcons.strokeRoundedInformationCircle;
   static const palette = HugeIcons.strokeRoundedPaintBoard;
   static const edit = HugeIcons.strokeRoundedEdit01;
+  static const delete = HugeIcons.strokeRoundedDelete02;
   static const backspace = HugeIcons.strokeRoundedEraser01;
   static const security = HugeIcons.strokeRoundedSecurityLock;
   static const linkedIn = HugeIcons.strokeRoundedLinkedin01;

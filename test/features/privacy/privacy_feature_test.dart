@@ -50,22 +50,68 @@ void main() {
       expect(TaskCategories.isDefault('Health'), isFalse);
     });
 
-    test('custom categories roundtrip via prefs', () async {
+    test('custom categories roundtrip via prefs with colors', () async {
       SharedPreferences.setMockInitialValues({});
       final prefs = await SharedPreferences.getInstance();
-      await TaskCategories.saveCustom(prefs, ['Health', 'Study']);
+      await TaskCategories.saveCustom(prefs, [
+        AppCategory(name: 'Health', color: TaskCategories.pastelPalette[2]),
+        AppCategory(name: 'Study', color: TaskCategories.pastelPalette[3]),
+      ]);
       final loaded = TaskCategories.loadCustom(prefs);
-      expect(loaded, containsAll(['Health', 'Study']));
+      expect(loaded.map((c) => c.name), containsAll(['Health', 'Study']));
+      expect(
+        loaded.firstWhere((c) => c.name == 'Health').color,
+        TaskCategories.pastelPalette[2],
+      );
     });
 
-    test('ordered includes defaults and custom', () {
+    test('migrates legacy string list to colored categories', () async {
+      SharedPreferences.setMockInitialValues({
+        TaskCategories.prefsKey: <String>['Health', 'Study'],
+      });
+      final prefs = await SharedPreferences.getInstance();
+      final loaded = TaskCategories.loadCustom(prefs);
+      expect(loaded.map((c) => c.name), containsAll(['Health', 'Study']));
+      expect(loaded.every((c) => c.color != 0), isTrue);
+    });
+
+    test('ordered includes defaults and custom with colors', () {
       final ordered = TaskCategories.ordered(
-        custom: ['Health'],
+        custom: [
+          AppCategory(name: 'Health', color: TaskCategories.pastelPalette[2]),
+        ],
         usedLabels: const [],
       );
-      expect(ordered, contains(TaskCategories.work));
-      expect(ordered, contains(TaskCategories.personal));
-      expect(ordered, contains('Health'));
+      expect(ordered.map((c) => c.name), contains(TaskCategories.work));
+      expect(ordered.map((c) => c.name), contains(TaskCategories.personal));
+      expect(ordered.map((c) => c.name), contains('Health'));
+      expect(
+        TaskCategories.colorFor(TaskCategories.work),
+        TaskCategories.workColor,
+      );
+      expect(
+        TaskCategories.colorFor(TaskCategories.personal),
+        TaskCategories.personalColor,
+      );
+    });
+
+    test('importCustomFromBackup accepts legacy strings and maps', () async {
+      SharedPreferences.setMockInitialValues({});
+      final prefs = await SharedPreferences.getInstance();
+      await TaskCategories.importCustomFromBackup(prefs, ['Legacy']);
+      expect(
+        TaskCategories.loadCustom(prefs).map((c) => c.name),
+        contains('Legacy'),
+      );
+      await TaskCategories.importCustomFromBackup(prefs, [
+        {'name': 'Mapped', 'color': TaskCategories.pastelPalette[4]},
+      ]);
+      final loaded = TaskCategories.loadCustom(prefs);
+      expect(loaded.map((c) => c.name), contains('Mapped'));
+      expect(
+        loaded.firstWhere((c) => c.name == 'Mapped').color,
+        TaskCategories.pastelPalette[4],
+      );
     });
   });
 
