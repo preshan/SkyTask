@@ -91,12 +91,38 @@ class _PrivateContentGateState extends State<PrivateContentGate> {
     }
 
     return ListTile(
-      leading: const SkyIcon(SkyIcons.lock),
-      title: const Text('Private Item'),
+      dense: true,
+      visualDensity: const VisualDensity(horizontal: 0, vertical: -2),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      title: Row(
+        children: [
+          SkyIcon(
+            SkyIcons.lock,
+            size: 18,
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+          ),
+          const SizedBox(width: 8),
+          const Expanded(
+            child: Text(
+              'Private Item',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
       subtitle: Text(widget.hiddenLabel),
-      trailing: IconButton(
-        icon: const SkyIcon(SkyIcons.unlock),
-        onPressed: _unlock,
+      trailing: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          IconButton(
+            icon: const SkyIcon(SkyIcons.unlock, size: 20),
+            onPressed: _unlock,
+            visualDensity: VisualDensity.compact,
+            padding: EdgeInsets.zero,
+            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+          ),
+        ],
       ),
       onTap: _unlock,
     );

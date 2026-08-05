@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/category_label.dart';
+import '../../../../shared/widgets/list_tile_trailing.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
@@ -738,15 +739,8 @@ class _CalendarEntryTile extends StatelessWidget {
           dense: true,
           visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           minVerticalPadding: 4,
-          leading: SkyIcon(
-            entry.reminder?.isVoice == true
-                ? SkyIcons.mic
-                : (isDevice ? SkyIcons.event : SkyIcons.alarm),
-            size: 22,
-            color: entry.isCompleted ? Colors.grey : AppColors.brand(context),
-          ),
           title: Text(
             displayTitle,
             style: titleStyle,
@@ -772,8 +766,7 @@ class _CalendarEntryTile extends StatelessWidget {
               ],
             ),
           ),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+          trailing: ListTileTrailing(
             children: [
               if (entry.reminder?.isVoice == true &&
                   entry.reminder?.voicePath != null)

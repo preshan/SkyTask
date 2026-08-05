@@ -8,6 +8,7 @@ import '../../../../core/services/voice_memo_service.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/category_label.dart';
+import '../../../../shared/widgets/list_tile_trailing.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
@@ -317,14 +318,9 @@ class _IdeaCard extends StatelessWidget {
           dense: true,
           visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           minVerticalPadding: 4,
           onTap: onTap,
-          leading: SkyIcon(
-            idea.isVoice ? SkyIcons.mic : SkyIcons.lightbulb,
-            size: 22,
-            color: AppColors.brandSecondary(context),
-          ),
           title: Text(
             displayItemTitle(
               title: idea.title,
@@ -368,9 +364,7 @@ class _IdeaCard extends StatelessWidget {
               ],
             ),
           ),
-          isThreeLine: body.isNotEmpty,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+          trailing: ListTileTrailing(
             children: [
               if (idea.isVoice && idea.voicePath != null)
                 VoicePlayButton(path: idea.voicePath!),
@@ -410,14 +404,9 @@ class _NoteCard extends StatelessWidget {
           dense: true,
           visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
           minVerticalPadding: 4,
           onTap: onTap,
-          leading: SkyIcon(
-            note.isVoice ? SkyIcons.mic : SkyIcons.notes,
-            size: 22,
-            color: AppColors.brandSecondary(context),
-          ),
           title: Text(
             displayItemTitle(
               title: note.title,
@@ -446,9 +435,7 @@ class _NoteCard extends StatelessWidget {
               ],
             ),
           ),
-          isThreeLine: body.isNotEmpty,
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
+          trailing: ListTileTrailing(
             children: [
               if (note.isVoice && note.voicePath != null)
                 VoicePlayButton(path: note.voicePath!),

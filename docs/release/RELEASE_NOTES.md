@@ -4,6 +4,15 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.7.1 — 2026-08-05 · `1.7.1+14`
+
+[Download SkyTask-1.7.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.7.1/SkyTask-1.7.1.apk)
+
+### Changes
+- Cleaner list rows: no decorative type icons; chevron and private lock vertically centered
+
+---
+
 ## 1.7.0 — 2026-08-05 · `1.7.0+13`
 
 [Download SkyTask-1.7.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.7.0/SkyTask-1.7.0.apk)

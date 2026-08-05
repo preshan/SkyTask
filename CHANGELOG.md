@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.7.1] — 2026-08-05
+
+### Fixed
+- List cards: remove decorative leading type icons; vertically center chevron and private lock
+
 ## [1.7.0] — 2026-08-05
 
 ### Added
