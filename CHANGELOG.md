@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.8.0] — 2026-08-05
+
+### Changed
+- Create menu is a 2×2 grid with larger icons and short labels (Task, Reminder, Idea, Note)
+
 ## [1.7.2] — 2026-08-05
 
 ### Added

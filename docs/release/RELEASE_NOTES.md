@@ -4,6 +4,15 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.8.0 — 2026-08-05 · `1.8.0+16`
+
+[Download SkyTask-1.8.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.8.0/SkyTask-1.8.0.apk)
+
+### Changes
+- Create menu redesigned as a 2×2 icon grid (Task / Reminder / Idea / Note)
+
+---
+
 ## 1.7.2 — 2026-08-05 · `1.7.2+15`
 
 [Download SkyTask-1.7.2.apk](https://github.com/preshan/SkyTask/releases/download/v1.7.2/SkyTask-1.7.2.apk)
