@@ -196,7 +196,9 @@ class BackupService {
       notes: noteMaps,
       prefs: {
         AppConstants.themeModeKey: prefs.getString(AppConstants.themeModeKey),
-        'custom_task_categories': TaskCategories.loadCustom(prefs),
+        'custom_task_categories': TaskCategories.loadCustom(prefs)
+            .map((c) => c.toJson())
+            .toList(),
         AppConstants.captureVoiceSavesKey:
             prefs.getInt(AppConstants.captureVoiceSavesKey) ?? 0,
         AppConstants.captureTypedDescSavesKey:
@@ -268,11 +270,8 @@ class BackupService {
       await prefs.setString(AppConstants.themeModeKey, theme);
     }
     final cats = payload.prefs['custom_task_categories'];
-    if (cats is List) {
-      await TaskCategories.saveCustom(
-        prefs,
-        cats.map((e) => e.toString()).toList(),
-      );
+    if (cats != null) {
+      await TaskCategories.importCustomFromBackup(prefs, cats);
     }
     final voiceSaves = payload.prefs[AppConstants.captureVoiceSavesKey];
     if (voiceSaves is int) {

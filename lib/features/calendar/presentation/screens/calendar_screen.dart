@@ -6,6 +6,7 @@ import 'package:permission_handler/permission_handler.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
@@ -713,35 +714,63 @@ class _CalendarEntryTile extends StatelessWidget {
     );
     final time = DateFormat.jm().format(entry.start);
     final isDevice = entry.source == CalendarEntrySource.deviceCalendar;
+    final meta = [
+      time,
+      if (entry.reminder?.isVoice == true) 'Voice',
+      if (entry.hasCalendarSync) 'Synced to calendar',
+      if (isDevice) 'Device calendar',
+      if (entry.description != null) entry.description!,
+    ].join(' • ');
+    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          decoration: entry.isCompleted ? TextDecoration.lineThrough : null,
+          height: 1.15,
+          fontWeight: FontWeight.w500,
+        );
+    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        );
 
     return Card(
-      margin: EdgeInsets.only(bottom: compact ? 6 : 10),
+      margin: EdgeInsets.only(bottom: compact ? 3 : 4),
       child: PrivateContentGate(
         isPrivate: entry.isPrivate,
         child: ListTile(
-          dense: compact,
+          dense: true,
+          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          minVerticalPadding: 4,
           leading: SkyIcon(
             entry.reminder?.isVoice == true
                 ? SkyIcons.mic
                 : (isDevice ? SkyIcons.event : SkyIcons.alarm),
+            size: 22,
             color: entry.isCompleted ? Colors.grey : AppColors.brand(context),
           ),
           title: Text(
             displayTitle,
-            style: entry.isCompleted
-                ? const TextStyle(decoration: TextDecoration.lineThrough)
-                : null,
-          ),
-          subtitle: Text(
-            [
-              time,
-              if (entry.reminder?.isVoice == true) 'Voice',
-              if (entry.hasCalendarSync) 'Synced to calendar',
-              if (isDevice) 'Device calendar',
-              if (entry.description != null) entry.description!,
-            ].join(' • '),
-            maxLines: 2,
+            style: titleStyle,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Row(
+              children: [
+                if (entry.reminder != null) ...[
+                  CategoryLabel(entry.reminder!.category),
+                  const SizedBox(width: 6),
+                ],
+                Expanded(
+                  child: Text(
+                    meta,
+                    style: subtitleStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
           ),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -749,7 +778,8 @@ class _CalendarEntryTile extends StatelessWidget {
               if (entry.reminder?.isVoice == true &&
                   entry.reminder?.voicePath != null)
                 VoicePlayButton(path: entry.reminder!.voicePath!),
-              if (onTap != null) const SkyIcon(SkyIcons.chevronRight),
+              if (onTap != null)
+                const SkyIcon(SkyIcons.chevronRight, size: 18),
             ],
           ),
           onTap: onTap,

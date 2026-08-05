@@ -7,6 +7,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
@@ -297,13 +298,31 @@ class _IdeaCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final body = idea.isVoice && idea.content.isEmpty
+        ? 'Voice memo'
+        : idea.content;
+    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          height: 1.15,
+          fontWeight: FontWeight.w500,
+        );
+    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        );
+
     return Card(
+      margin: const EdgeInsets.only(bottom: 4),
       child: PrivateContentGate(
         isPrivate: idea.isPrivate,
         child: ListTile(
+          dense: true,
+          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          minVerticalPadding: 4,
           onTap: onTap,
           leading: SkyIcon(
             idea.isVoice ? SkyIcons.mic : SkyIcons.lightbulb,
+            size: 22,
             color: AppColors.brandSecondary(context),
           ),
           title: Text(
@@ -312,33 +331,50 @@ class _IdeaCard extends StatelessWidget {
               isVoice: idea.isVoice,
               createdAt: idea.createdAt,
             ),
-          ),
-          subtitle: Text(
-            idea.isVoice && idea.content.isEmpty
-                ? 'Voice memo'
-                : idea.content,
-            maxLines: 2,
+            style: titleStyle,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    CategoryLabel(idea.category),
+                    if (idea.tags.isNotEmpty) ...[
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          idea.tags.take(2).join(', '),
+                          style: subtitleStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+                if (body.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    body,
+                    style: subtitleStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          isThreeLine: body.isNotEmpty,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (idea.isVoice && idea.voicePath != null)
                 VoicePlayButton(path: idea.voicePath!),
-              if (idea.tags.isEmpty)
-                const SkyIcon(SkyIcons.chevronRight)
-              else
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text(
-                      idea.tags.take(2).join(', '),
-                      style: Theme.of(context).textTheme.bodySmall,
-                    ),
-                    const SkyIcon(SkyIcons.chevronRight, size: 18),
-                  ],
-                ),
+              const SkyIcon(SkyIcons.chevronRight, size: 18),
             ],
           ),
         ),
@@ -355,13 +391,31 @@ class _NoteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final body = note.isVoice && note.content.isEmpty
+        ? 'Voice memo'
+        : note.content;
+    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          height: 1.15,
+          fontWeight: FontWeight.w500,
+        );
+    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        );
+
     return Card(
+      margin: const EdgeInsets.only(bottom: 4),
       child: PrivateContentGate(
         isPrivate: note.isPrivate,
         child: ListTile(
+          dense: true,
+          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+          minVerticalPadding: 4,
           onTap: onTap,
           leading: SkyIcon(
             note.isVoice ? SkyIcons.mic : SkyIcons.notes,
+            size: 22,
             color: AppColors.brandSecondary(context),
           ),
           title: Text(
@@ -370,20 +424,35 @@ class _NoteCard extends StatelessWidget {
               isVoice: note.isVoice,
               createdAt: note.createdAt,
             ),
-          ),
-          subtitle: Text(
-            note.isVoice && note.content.isEmpty
-                ? 'Voice memo'
-                : note.content,
-            maxLines: 3,
+            style: titleStyle,
+            maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CategoryLabel(note.category),
+                if (body.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    body,
+                    style: subtitleStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ],
+            ),
+          ),
+          isThreeLine: body.isNotEmpty,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (note.isVoice && note.voicePath != null)
                 VoicePlayButton(path: note.voicePath!),
-              const SkyIcon(SkyIcons.chevronRight),
+              const SkyIcon(SkyIcons.chevronRight, size: 18),
             ],
           ),
         ),
