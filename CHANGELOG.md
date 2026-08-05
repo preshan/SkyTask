@@ -2,6 +2,14 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.7.2] — 2026-08-05
+
+### Added
+- Compact AppBar "+" on Tasks, Calendar, and Ideas & Notes to create the matching item
+
+### Changed
+- Calendar source/view filters use smaller chip tabs instead of large segmented buttons
+
 ## [1.7.1] — 2026-08-05
 
 ### Fixed

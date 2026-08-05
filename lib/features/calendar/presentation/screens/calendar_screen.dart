@@ -5,8 +5,10 @@ import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/voice_memo_service.dart';
+import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/category_label.dart';
+import '../../../../shared/widgets/list_add_button.dart';
 import '../../../../shared/widgets/list_tile_trailing.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
@@ -176,10 +178,15 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
               icon: const SkyIcon(SkyIcons.chevronRight),
               onPressed: () => _shiftPeriod(1),
             ),
+          ListAddButton(
+            tooltip: 'Add reminder',
+            onPressed: () =>
+                openCreateSheet(context, ref, CreateKind.reminder),
+          ),
           ...skyTaskAppBarActions(context),
         ],
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(96 + bannerExtra),
+          preferredSize: Size.fromHeight(56 + bannerExtra),
           child: Column(
             children: [
               if (_dayFocus)
@@ -217,43 +224,41 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                child: SegmentedButton<CalendarSourceTab>(
-                  segments: const [
-                    ButtonSegment(
-                      value: CalendarSourceTab.skyTask,
-                      label: Text('SkyTask'),
-                    ),
-                    ButtonSegment(
-                      value: CalendarSourceTab.all,
-                      label: Text('All'),
-                    ),
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+                child: Row(
+                  children: [
+                    for (final tab in CalendarSourceTab.values)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: _CalendarFilterChip(
+                          label: tab == CalendarSourceTab.skyTask
+                              ? 'SkyTask'
+                              : 'All',
+                          selected: _sourceTab == tab,
+                          onSelected: () => _setSourceTab(tab),
+                        ),
+                      ),
                   ],
-                  selected: {_sourceTab},
-                  onSelectionChanged: (s) => _setSourceTab(s.first),
-                  style: _segmentStyle(context),
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: SegmentedButton<CalendarView>(
-                  segments: const [
-                    ButtonSegment(
-                      value: CalendarView.agenda,
-                      label: Text('Agenda'),
-                    ),
-                    ButtonSegment(
-                      value: CalendarView.week,
-                      label: Text('Week'),
-                    ),
-                    ButtonSegment(
-                      value: CalendarView.month,
-                      label: Text('Month'),
-                    ),
+                padding: const EdgeInsets.fromLTRB(12, 4, 12, 6),
+                child: Row(
+                  children: [
+                    for (final view in CalendarView.values)
+                      Padding(
+                        padding: const EdgeInsets.only(right: 6),
+                        child: _CalendarFilterChip(
+                          label: switch (view) {
+                            CalendarView.agenda => 'Agenda',
+                            CalendarView.week => 'Week',
+                            CalendarView.month => 'Month',
+                          },
+                          selected: _view == view,
+                          onSelected: () => _setView(view),
+                        ),
+                      ),
                   ],
-                  selected: {_view},
-                  onSelectionChanged: (s) => _setView(s.first),
-                  style: _segmentStyle(context),
                 ),
               ),
             ],
@@ -297,32 +302,6 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  ButtonStyle _segmentStyle(BuildContext context) {
-    return ButtonStyle(
-      foregroundColor: WidgetStateProperty.resolveWith((states) {
-        final scheme = Theme.of(context).colorScheme;
-        if (states.contains(WidgetState.selected)) {
-          return scheme.onPrimary;
-        }
-        return scheme.onSurface;
-      }),
-      backgroundColor: WidgetStateProperty.resolveWith((states) {
-        final scheme = Theme.of(context).colorScheme;
-        if (states.contains(WidgetState.selected)) {
-          return scheme.primary;
-        }
-        return scheme.surface;
-      }),
-      iconColor: WidgetStateProperty.resolveWith((states) {
-        final scheme = Theme.of(context).colorScheme;
-        if (states.contains(WidgetState.selected)) {
-          return scheme.onPrimary;
-        }
-        return scheme.onSurface;
-      }),
     );
   }
 
@@ -777,6 +756,42 @@ class _CalendarEntryTile extends StatelessWidget {
           ),
           onTap: onTap,
         ),
+      ),
+    );
+  }
+}
+
+class _CalendarFilterChip extends StatelessWidget {
+  const _CalendarFilterChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+          height: 1.1,
+        );
+
+    return ChoiceChip(
+      label: Text(label, style: labelStyle),
+      selected: selected,
+      showCheckmark: false,
+      onSelected: (_) => onSelected(),
+      visualDensity: VisualDensity.compact,
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
+      labelPadding: const EdgeInsets.symmetric(horizontal: 4),
+      selectedColor: brand.withValues(alpha: 0.22),
+      side: BorderSide(
+        color: selected ? brand : brand.withValues(alpha: 0.28),
       ),
     );
   }

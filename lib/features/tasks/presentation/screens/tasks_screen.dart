@@ -7,10 +7,12 @@ import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/utils/date_filters.dart';
+import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
+import '../../../../shared/widgets/list_add_button.dart';
 import '../../../../shared/widgets/list_tile_trailing.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
@@ -116,6 +118,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               PopupMenuItem(value: 'private', child: Text('Private')),
               PopupMenuItem(value: 'archived', child: Text('Archived')),
             ],
+          ),
+          ListAddButton(
+            tooltip: 'Add task',
+            onPressed: () => openCreateSheet(context, ref, CreateKind.task),
           ),
           ...skyTaskAppBarActions(context),
         ],

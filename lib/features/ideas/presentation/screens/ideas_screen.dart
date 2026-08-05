@@ -6,8 +6,10 @@ import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../core/utils/date_filters.dart';
+import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/category_label.dart';
+import '../../../../shared/widgets/list_add_button.dart';
 import '../../../../shared/widgets/list_tile_trailing.dart';
 import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
@@ -49,6 +51,9 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
       vsync: this,
       initialIndex: widget.initialTab.clamp(0, 1),
     );
+    _tabController.addListener(() {
+      if (mounted && !_tabController.indexIsChanging) setState(() {});
+    });
   }
 
   @override
@@ -94,6 +99,14 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
               onPressed: () => setState(() => _createdToday = true),
               icon: const SkyIcon(SkyIcons.today),
             ),
+          ListAddButton(
+            tooltip: _tabController.index == 0 ? 'Add idea' : 'Add note',
+            onPressed: () => openCreateSheet(
+              context,
+              ref,
+              _tabController.index == 0 ? CreateKind.idea : CreateKind.note,
+            ),
+          ),
           ...skyTaskAppBarActions(context),
         ],
         bottom: TabBar(
