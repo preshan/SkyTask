@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/list_add_button.dart';
 import '../../../../shared/widgets/list_tile_trailing.dart';
@@ -43,6 +44,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   late bool _privateOnly;
   CalendarSourceTab _sourceTab = CalendarSourceTab.skyTask;
   bool _allCalendarPermissionDenied = false;
+  String? _categoryFilter;
 
   @override
   void initState() {
@@ -293,50 +295,79 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(child: Text('Error: $e')),
-        data: (entries) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (_sourceTab == CalendarSourceTab.skyTask &&
-                !settings.syncEnabled)
-              _GoogleSyncBanner(
-                onEnable: () => _enableGoogleSync(context),
-              )
-            else if (_sourceTab == CalendarSourceTab.skyTask &&
-                settings.syncEnabled)
+        data: (entries) {
+          final usedCategories = entries
+              .where((e) => e.reminder != null)
+              .map((e) => e.reminder!.category);
+          var visible = _privateOnly
+              ? entries.where((e) => e.isPrivate).toList()
+              : entries;
+          if (_categoryFilter != null) {
+            final filter = _categoryFilter!.toLowerCase();
+            visible = visible
+                .where(
+                  (e) =>
+                      e.reminder != null &&
+                      e.reminder!.category.toLowerCase() == filter,
+                )
+                .toList();
+          }
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (_sourceTab == CalendarSourceTab.skyTask &&
+                  !settings.syncEnabled)
+                _GoogleSyncBanner(
+                  onEnable: () => _enableGoogleSync(context),
+                )
+              else if (_sourceTab == CalendarSourceTab.skyTask &&
+                  settings.syncEnabled)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                  child: Text(
+                    settings.isGoogleCalendar
+                        ? 'Syncing new reminders to Google Calendar (${settings.defaultCalendarName})'
+                        : 'Syncing new reminders to ${settings.defaultCalendarName}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
-                child: Text(
-                  settings.isGoogleCalendar
-                      ? 'Syncing new reminders to Google Calendar (${settings.defaultCalendarName})'
-                      : 'Syncing new reminders to ${settings.defaultCalendarName}',
-                  style: Theme.of(context).textTheme.bodySmall,
+                padding: const EdgeInsets.only(top: 8),
+                child: CategoryFilterBar(
+                  selected: _categoryFilter,
+                  usedLabels: usedCategories,
+                  onChanged: (v) => setState(() => _categoryFilter = v),
                 ),
               ),
-            Expanded(
-              child: _sourceTab == CalendarSourceTab.all &&
-                      _allCalendarPermissionDenied
-                  ? _AllCalendarPermissionEmpty(
-                      onAllow: () => _setSourceTab(CalendarSourceTab.all),
-                    )
-                  : _buildView(
-                      _privateOnly
-                          ? entries.where((e) => e.isPrivate).toList()
-                          : entries,
-                    ),
-            ),
-          ],
-        ),
+              const SizedBox(height: 4),
+              Expanded(
+                child: _sourceTab == CalendarSourceTab.all &&
+                        _allCalendarPermissionDenied
+                    ? _AllCalendarPermissionEmpty(
+                        onAllow: () => _setSourceTab(CalendarSourceTab.all),
+                      )
+                    : _buildView(visible),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 
   Widget _buildView(List<CalendarEntry> entries) {
     if (entries.isEmpty) {
-      final emptyMessage = switch ((_sourceTab, _privateOnly, _dayFocus)) {
-        (CalendarSourceTab.all, _, _) =>
+      final emptyMessage = switch (
+          (_sourceTab, _privateOnly, _dayFocus, _categoryFilter != null)) {
+        (CalendarSourceTab.all, _, _, true) =>
+          'No events in this category for this period.',
+        (_, _, _, true) =>
+          'No reminders in this category for this period.',
+        (CalendarSourceTab.all, _, _, _) =>
           'No calendar events in this period.',
-        (_, true, _) => 'No private reminders in this period.',
-        (_, _, true) => 'No reminders on this day.\nTap + to create one.',
+        (_, true, _, _) => 'No private reminders in this period.',
+        (_, _, true, _) => 'No reminders on this day.\nTap + to create one.',
         _ => 'No SkyTask reminders in this period.\nTap + to create a reminder.',
       };
       return Center(

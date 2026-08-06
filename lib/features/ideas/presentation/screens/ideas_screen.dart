@@ -8,6 +8,7 @@ import '../../../../core/services/voice_memo_service.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/list_add_button.dart';
 import '../../../../shared/widgets/list_tile_trailing.dart';
@@ -178,7 +179,7 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
   }
 }
 
-class _IdeasTab extends ConsumerWidget {
+class _IdeasTab extends ConsumerStatefulWidget {
   const _IdeasTab({
     required this.createdToday,
     required this.privateOnly,
@@ -188,7 +189,14 @@ class _IdeasTab extends ConsumerWidget {
   final bool privateOnly;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_IdeasTab> createState() => _IdeasTabState();
+}
+
+class _IdeasTabState extends ConsumerState<_IdeasTab> {
+  String? _categoryFilter;
+
+  @override
+  Widget build(BuildContext context) {
     final ideasAsync = ref.watch(_ideasProvider);
 
     return ideasAsync.when(
@@ -196,46 +204,67 @@ class _IdeasTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (ideas) {
         var filtered = ideas;
-        if (createdToday) {
+        if (widget.createdToday) {
           filtered = filtered
               .where((i) => DateFilters.isCreatedToday(i.createdAt))
               .toList();
         }
-        if (privateOnly) {
+        if (widget.privateOnly) {
           filtered = filtered.where((i) => i.isPrivate).toList();
         }
-        if (filtered.isEmpty) {
-          return Center(
-            child: Text(
-              privateOnly
-                  ? 'No private ideas yet.'
-                  : createdToday
-                      ? 'No ideas created today.'
-                      : 'Capture ideas instantly.\nTap + to start.',
-              textAlign: TextAlign.center,
-            ),
-          );
+        if (_categoryFilter != null) {
+          final filter = _categoryFilter!.toLowerCase();
+          filtered = filtered
+              .where((i) => i.category.toLowerCase() == filter)
+              .toList();
         }
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: filtered.length,
-          itemBuilder: (_, i) {
-            final idea = filtered[i];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _IdeaCard(
-                idea: idea,
-                onTap: () => showIdeaFormSheet(context, ref, idea: idea),
-              ),
-            );
-          },
+
+        return Column(
+          children: [
+            CategoryFilterBar(
+              selected: _categoryFilter,
+              usedLabels: ideas.map((i) => i.category),
+              onChanged: (v) => setState(() => _categoryFilter = v),
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        widget.privateOnly
+                            ? 'No private ideas yet.'
+                            : widget.createdToday
+                                ? 'No ideas created today.'
+                                : _categoryFilter != null
+                                    ? 'No ideas in this category.'
+                                    : 'Capture ideas instantly.\nTap + to start.',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final idea = filtered[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _IdeaCard(
+                            idea: idea,
+                            onTap: () =>
+                                showIdeaFormSheet(context, ref, idea: idea),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         );
       },
     );
   }
 }
 
-class _NotesTab extends ConsumerWidget {
+class _NotesTab extends ConsumerStatefulWidget {
   const _NotesTab({
     required this.createdToday,
     required this.privateOnly,
@@ -245,7 +274,14 @@ class _NotesTab extends ConsumerWidget {
   final bool privateOnly;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_NotesTab> createState() => _NotesTabState();
+}
+
+class _NotesTabState extends ConsumerState<_NotesTab> {
+  String? _categoryFilter;
+
+  @override
+  Widget build(BuildContext context) {
     final notesAsync = ref.watch(_notesProvider);
 
     return notesAsync.when(
@@ -253,39 +289,60 @@ class _NotesTab extends ConsumerWidget {
       error: (e, _) => Center(child: Text('Error: $e')),
       data: (notes) {
         var filtered = notes;
-        if (createdToday) {
+        if (widget.createdToday) {
           filtered = filtered
               .where((n) => DateFilters.isCreatedToday(n.createdAt))
               .toList();
         }
-        if (privateOnly) {
+        if (widget.privateOnly) {
           filtered = filtered.where((n) => n.isPrivate).toList();
         }
-        if (filtered.isEmpty) {
-          return Center(
-            child: Text(
-              privateOnly
-                  ? 'No private notes yet.'
-                  : createdToday
-                      ? 'No notes created today.'
-                      : 'Write long-form notes.\nTap + to start.',
-              textAlign: TextAlign.center,
-            ),
-          );
+        if (_categoryFilter != null) {
+          final filter = _categoryFilter!.toLowerCase();
+          filtered = filtered
+              .where((n) => n.category.toLowerCase() == filter)
+              .toList();
         }
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: filtered.length,
-          itemBuilder: (_, i) {
-            final note = filtered[i];
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 8),
-              child: _NoteCard(
-                note: note,
-                onTap: () => showNoteFormSheet(context, ref, note: note),
-              ),
-            );
-          },
+
+        return Column(
+          children: [
+            CategoryFilterBar(
+              selected: _categoryFilter,
+              usedLabels: notes.map((n) => n.category),
+              onChanged: (v) => setState(() => _categoryFilter = v),
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        widget.privateOnly
+                            ? 'No private notes yet.'
+                            : widget.createdToday
+                                ? 'No notes created today.'
+                                : _categoryFilter != null
+                                    ? 'No notes in this category.'
+                                    : 'Write long-form notes.\nTap + to start.',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final note = filtered[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _NoteCard(
+                            note: note,
+                            onTap: () =>
+                                showNoteFormSheet(context, ref, note: note),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
         );
       },
     );

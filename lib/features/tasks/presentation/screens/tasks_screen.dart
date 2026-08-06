@@ -3,13 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
-import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
-import '../../../../shared/widgets/category_chip_selector.dart';
+import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
 import '../../../../shared/widgets/list_add_button.dart';
@@ -75,15 +74,8 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
   @override
   Widget build(BuildContext context) {
     final tasksAsync = ref.watch(_tasksListProvider);
-    final custom = ref.watch(customTaskCategoriesProvider);
-    final overrides = ref.watch(defaultCategoryColorsProvider);
     final used = (tasksAsync.valueOrNull ?? const <Task>[])
         .map((t) => t.category);
-    final categories = TaskCategories.ordered(
-      custom: custom,
-      usedLabels: used,
-      defaultOverrides: overrides,
-    );
 
     return Scaffold(
       appBar: AppBar(
@@ -178,43 +170,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
               leading: const SkyIcon(SkyIcons.search),
             ),
           ),
-          SizedBox(
-            height: 44,
-            child: ListView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              children: [
-                _CategoryChip(
-                  label: 'All',
-                  selected: _categoryFilter == null,
-                  onTap: () => setState(() => _categoryFilter = null),
-                ),
-                ...categories.map(
-                  (category) => _CategoryChip(
-                    label: category.name,
-                    color: category.color,
-                    selected: _categoryFilter?.toLowerCase() ==
-                        category.name.toLowerCase(),
-                    onTap: () =>
-                        setState(() => _categoryFilter = category.name),
-                    onLongPress: () => showCategoryManageSheet(
-                      context: context,
-                      ref: ref,
-                      category: category,
-                      currentSelection: _categoryFilter ?? '',
-                      onDeletedOrRenamed: (next) {
-                        setState(() {
-                          if (_categoryFilter?.toLowerCase() ==
-                              category.name.toLowerCase()) {
-                            _categoryFilter = next;
-                          }
-                        });
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
+          CategoryFilterBar(
+            selected: _categoryFilter,
+            usedLabels: used,
+            onChanged: (v) => setState(() => _categoryFilter = v),
           ),
           const SizedBox(height: 4),
           Expanded(
@@ -302,62 +261,6 @@ final _tasksListProvider = FutureProvider<List<Task>>((ref) async {
   final repo = await ref.read(taskRepositoryProvider.future);
   return repo.getAll(includeArchived: true);
 });
-
-class _CategoryChip extends StatelessWidget {
-  const _CategoryChip({
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.color,
-    this.onLongPress,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-  final int? color;
-  final VoidCallback? onLongPress;
-
-  @override
-  Widget build(BuildContext context) {
-    final fill = color != null ? Color(color!) : null;
-    final onFill = fill != null && fill.computeLuminance() > 0.55
-        ? const Color(0xFF3D3D3D)
-        : (fill != null ? Colors.white : null);
-
-    return Padding(
-      padding: const EdgeInsets.only(right: 8),
-      child: GestureDetector(
-        onLongPress: onLongPress,
-        child: FilterChip(
-          label: Text(label),
-          selected: selected,
-          showCheckmark: false,
-          onSelected: (_) => onTap(),
-          selectedColor: fill ?? AppColors.brand(context).withValues(alpha: 0.25),
-          backgroundColor: fill?.withValues(alpha: 0.45) ??
-              Theme.of(context).colorScheme.surface,
-          side: BorderSide(
-            color: selected
-                ? (fill ?? AppColors.brand(context))
-                : (fill?.withValues(alpha: 0.7) ??
-                    AppColors.brand(context).withValues(alpha: 0.25)),
-          ),
-          labelStyle: TextStyle(
-            color: selected
-                ? (onFill ?? Theme.of(context).colorScheme.onSurface)
-                : (onFill?.withValues(alpha: 0.85) ??
-                    Theme.of(context).colorScheme.onSurface),
-            fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-            fontSize: 13,
-          ),
-          visualDensity: VisualDensity.compact,
-          materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-        ),
-      ),
-    );
-  }
-}
 
 class _TaskCard extends ConsumerWidget {
   const _TaskCard({

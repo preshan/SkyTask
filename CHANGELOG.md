@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.8.1] — 2026-08-06
+
+### Added
+- Category filter chips (All / Work / Personal / customs) on Ideas, Notes, and Calendar reminder lists
+
 ## [1.8.0] — 2026-08-05
 
 ### Changed
