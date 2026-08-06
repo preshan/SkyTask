@@ -4,6 +4,15 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.8.1 — 2026-08-06 · `1.8.1+17`
+
+[Download SkyTask-1.8.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.8.1/SkyTask-1.8.1.apk)
+
+### Changes
+- Category filter chips on Ideas, Notes, and Calendar (same style as Tasks)
+
+---
+
 ## 1.8.0 — 2026-08-05 · `1.8.0+16`
 
 [Download SkyTask-1.8.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.8.0/SkyTask-1.8.0.apk)
