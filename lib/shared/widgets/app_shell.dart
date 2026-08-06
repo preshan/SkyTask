@@ -113,81 +113,73 @@ class _AppShellState extends ConsumerState<AppShell> {
 
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'Create',
-                  style: Theme.of(ctx).textTheme.titleMedium,
+                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
                 ),
-                const SizedBox(height: 16),
-                DecoratedBox(
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: divider),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: SizedBox(
-                      height: 220,
-                      child: Stack(
+                const SizedBox(height: 12),
+                SizedBox(
+                  height: 236,
+                  child: Stack(
+                    children: [
+                      Column(
                         children: [
-                          Column(
-                            children: [
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: _CreateGridCell(
-                                        icon: options[0].icon,
-                                        label: options[0].label,
-                                        onTap: () => open(options[0].kind),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: _CreateGridCell(
-                                        icon: options[1].icon,
-                                        label: options[1].label,
-                                        onTap: () => open(options[1].kind),
-                                      ),
-                                    ),
-                                  ],
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _CreateGridCell(
+                                    icon: options[0].icon,
+                                    label: options[0].label,
+                                    onTap: () => open(options[0].kind),
+                                  ),
                                 ),
-                              ),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    Expanded(
-                                      child: _CreateGridCell(
-                                        icon: options[2].icon,
-                                        label: options[2].label,
-                                        onTap: () => open(options[2].kind),
-                                      ),
-                                    ),
-                                    Expanded(
-                                      child: _CreateGridCell(
-                                        icon: options[3].icon,
-                                        label: options[3].label,
-                                        onTap: () => open(options[3].kind),
-                                      ),
-                                    ),
-                                  ],
+                                Expanded(
+                                  child: _CreateGridCell(
+                                    icon: options[1].icon,
+                                    label: options[1].label,
+                                    onTap: () => open(options[1].kind),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
-                          // Crosshair "+" dividers
-                          Positioned.fill(
-                            child: IgnorePointer(
-                              child: CustomPaint(
-                                painter: _CreateGridCrossPainter(color: divider),
-                              ),
+                          Expanded(
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: _CreateGridCell(
+                                    icon: options[2].icon,
+                                    label: options[2].label,
+                                    onTap: () => open(options[2].kind),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: _CreateGridCell(
+                                    icon: options[3].icon,
+                                    label: options[3].label,
+                                    onTap: () => open(options[3].kind),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
                       ),
-                    ),
+                      Positioned.fill(
+                        child: IgnorePointer(
+                          child: CustomPaint(
+                            painter: _CreateGridCrossPainter(color: divider),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
@@ -381,18 +373,8 @@ class _CreateGridCell extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: brand.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: SkyIcon(icon, color: brand, size: 28),
-                ),
-              ),
-              const SizedBox(height: 10),
+              SkyIcon(icon, color: brand, size: 36),
+              const SizedBox(height: 12),
               Text(
                 label,
                 style: Theme.of(context).textTheme.titleSmall?.copyWith(

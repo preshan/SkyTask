@@ -92,7 +92,9 @@ final _thisWeekReminderDaysProvider =
   final all = await repo.getAll();
 
   final today = DateTime.now();
-  final start = DateTime(today.year, today.month, today.day);
+  // Yesterday + today + next 5 days = 7.
+  final start = DateTime(today.year, today.month, today.day)
+      .subtract(const Duration(days: 1));
 
   return List.generate(7, (i) {
     final day = start.add(Duration(days: i));

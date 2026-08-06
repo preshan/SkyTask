@@ -2,6 +2,17 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.9.0] — 2026-08-06
+
+### Fixed
+- Overdue reminders no longer reappear in the notification shade when opening the app
+- Reminder cancel paths clear both stable and legacy notification ids
+
+### Changed
+- Create menu: flat 2×2 grid with crosshair dividers, larger icons, no rounded outer border
+- Dark mode atmosphere uses soft night glow instead of busy white star dots
+- Home “Recent reminders” strip shows yesterday + today + next 5 days
+
 ## [1.8.1] — 2026-08-06
 
 ### Added

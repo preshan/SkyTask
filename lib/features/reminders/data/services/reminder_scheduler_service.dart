@@ -36,10 +36,10 @@ class ReminderSchedulerService {
 
     final notificationId =
         await NotificationService.instance.scheduleReminder(reminder);
-    await AlarmService.instance.scheduleReminder(reminder);
+    final withId = reminder.copyWith(notificationId: notificationId);
+    await AlarmService.instance.scheduleReminder(withId);
 
-    var updated = reminder.copyWith(
-      notificationId: notificationId,
+    var updated = withId.copyWith(
       updatedAt: DateTime.now(),
     );
 
@@ -58,11 +58,8 @@ class ReminderSchedulerService {
   }
 
   Future<void> cancel(Reminder reminder, {String? calendarId}) async {
-    if (reminder.notificationId != null) {
-      await NotificationService.instance
-          .cancelReminder(reminder.notificationId!);
-      await AlarmService.instance.cancelReminder(reminder.notificationId!);
-    }
+    await NotificationService.instance.cancelForReminder(reminder);
+    await AlarmService.instance.cancelForReminder(reminder);
 
     if (reminder.calendarEventId != null && calendarId != null) {
       await _calendarService.deleteEvent(
@@ -79,11 +76,8 @@ class ReminderSchedulerService {
     bool syncCalendar = false,
     String? calendarId,
   }) async {
-    if (reminder.notificationId != null) {
-      await NotificationService.instance
-          .cancelReminder(reminder.notificationId!);
-      await AlarmService.instance.cancelReminder(reminder.notificationId!);
-    }
+    await NotificationService.instance.cancelForReminder(reminder);
+    await AlarmService.instance.cancelForReminder(reminder);
 
     if (reminder.isCompleted) {
       if (!syncCalendar &&
@@ -106,10 +100,10 @@ class ReminderSchedulerService {
 
     final notificationId =
         await NotificationService.instance.scheduleReminder(reminder);
-    await AlarmService.instance.scheduleReminder(reminder);
+    final withId = reminder.copyWith(notificationId: notificationId);
+    await AlarmService.instance.scheduleReminder(withId);
 
-    var updated = reminder.copyWith(
-      notificationId: notificationId,
+    var updated = withId.copyWith(
       updatedAt: DateTime.now(),
     );
 
