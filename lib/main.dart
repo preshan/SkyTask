@@ -34,9 +34,10 @@ Future<void> main() async {
   await IsarService.instance.db;
   await NotificationService.instance.initialize();
   await AlarmService.instance.initialize();
-  await AlarmService.scheduleBootReschedule();
+  // Do not call scheduleBootReschedule() here — that re-posted overdue
+  // notifications on every app open. Reboot is covered by AlarmManager /
+  // FLN boot receivers; periodic WorkManager does future-only health checks.
   await BackgroundTaskService.instance.initialize();
-  await BackgroundTaskService.instance.registerTimezoneChangeHandler();
 
   runApp(
     ProviderScope(

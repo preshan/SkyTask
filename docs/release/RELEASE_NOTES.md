@@ -4,6 +4,17 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.9.0 — 2026-08-06 · `1.9.0+18`
+
+[Download SkyTask-1.9.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.9.0/SkyTask-1.9.0.apk)
+
+### Changes
+- Fix: overdue notifications no longer re-post when opening the app
+- Create menu: flat crosshair grid with larger icons
+- Softer dark-mode sky; home reminder strip includes yesterday
+
+---
+
 ## 1.8.1 — 2026-08-06 · `1.8.1+17`
 
 [Download SkyTask-1.8.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.8.1/SkyTask-1.8.1.apk)

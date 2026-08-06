@@ -13,17 +13,25 @@ class AlarmService {
   AlarmService._();
   static final AlarmService instance = AlarmService._();
 
-  static const int _bootRescheduleAlarmId = 9001;
+  /// Reserved; keep clear of reminder notification id space.
+  static const int _bootRescheduleAlarmId = 0x7f000001;
 
   Future<void> initialize() async {
     await AndroidAlarmManager.initialize();
   }
 
+  int _idFor(Reminder reminder) =>
+      reminder.notificationId ?? stableNotificationId(reminder.id);
+
   /// Schedules an exact alarm that re-fires the local notification pipeline.
   Future<void> scheduleReminder(Reminder reminder) async {
     final fireAt = reminder.fireDateTime;
-    final alarmId =
-        reminder.notificationId ?? stableNotificationId(reminder.id);
+    if (!fireAt.isAfter(DateTime.now())) {
+      // Overdue — no future alarm to arm.
+      return;
+    }
+
+    final alarmId = _idFor(reminder);
 
     await AndroidAlarmManager.oneShotAt(
       fireAt,
@@ -41,24 +49,51 @@ class AlarmService {
     await AndroidAlarmManager.cancel(alarmId);
   }
 
-  /// Re-registers all pending reminders after reboot or app update.
+  Future<void> cancelForReminder(Reminder reminder) async {
+    final id = _idFor(reminder);
+    await cancelReminder(id);
+    final legacy = reminder.id.hashCode & 0x7fffffff;
+    if (legacy != id) {
+      await cancelReminder(legacy);
+    }
+  }
+
+  /// Re-registers future pending reminders after reboot / timezone / health check.
+  ///
+  /// Does **not** re-post overdue notifications into the shade (avoids the
+  /// “old reminder pops again when I open the app” bug).
   Future<void> rescheduleAllReminders() async {
     await PrivateCryptoService.instance.init();
     final isar = await IsarService.instance.db;
     final repo = ReminderRepositoryImpl(isar);
     final reminders = await repo.getPending();
+    final now = DateTime.now();
 
     for (final reminder in reminders) {
-      final notificationId =
-          await NotificationService.instance.scheduleReminder(reminder);
-      await scheduleReminder(
+      final notificationId = _idFor(reminder);
+      await NotificationService.instance.cancelForReminder(reminder);
+      await cancelForReminder(reminder);
+
+      if (!reminder.fireDateTime.isAfter(now)) {
+        // Keep a stable id on disk; leave shade alone if user dismissed it.
+        if (reminder.notificationId != notificationId) {
+          await repo.save(reminder.copyWith(notificationId: notificationId));
+        }
+        continue;
+      }
+
+      final scheduledId = await NotificationService.instance.scheduleReminder(
         reminder.copyWith(notificationId: notificationId),
+        showIfPastDue: false,
       );
-      await repo.save(reminder.copyWith(notificationId: notificationId));
+      final withId = reminder.copyWith(notificationId: scheduledId);
+      await scheduleReminder(withId);
+      await repo.save(withId);
     }
   }
 
-  /// Boot-time reschedule entry point.
+  /// One-shot delayed reschedule — only for true device reboot paths.
+  /// Do **not** call from [main] on every cold start.
   static Future<void> scheduleBootReschedule() async {
     await AndroidAlarmManager.oneShot(
       const Duration(seconds: 5),
@@ -83,7 +118,11 @@ void _alarmCallback(int id, Map<String, dynamic>? params) async {
   final reminder = await repo.getById(reminderId);
   if (reminder == null || reminder.isCompleted) return;
 
-  await NotificationService.instance.scheduleReminder(reminder);
+  // Real fire path — post the notification if FLN did not already.
+  await NotificationService.instance.scheduleReminder(
+    reminder,
+    showIfPastDue: true,
+  );
 }
 
 @pragma('vm:entry-point')

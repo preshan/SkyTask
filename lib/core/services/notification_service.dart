@@ -74,14 +74,22 @@ class NotificationService {
     // Deep-link to reminder detail via payload in Phase 2.
   }
 
+  int _idFor(Reminder reminder) =>
+      reminder.notificationId ?? stableNotificationId(reminder.id);
+
   /// Schedules a zoned notification for [reminder] at the computed fire time.
-  Future<int> scheduleReminder(Reminder reminder) async {
+  ///
+  /// When [showIfPastDue] is false (health / reboot reschedule), overdue
+  /// reminders are left alone — they are not re-posted into the shade.
+  Future<int> scheduleReminder(
+    Reminder reminder, {
+    bool showIfPastDue = true,
+  }) async {
     // AlarmManager / WorkManager callbacks run in a separate isolate and must
     // initialize timezones before using tz.local.
     await initialize();
 
-    final notificationId =
-        reminder.notificationId ?? stableNotificationId(reminder.id);
+    final notificationId = _idFor(reminder);
     final fireAt = reminder.fireDateTime;
     final scheduled = tz.TZDateTime.from(fireAt, tz.local);
     final now = tz.TZDateTime.now(tz.local);
@@ -89,25 +97,28 @@ class NotificationService {
         reminder.isPrivate ? 'Private reminder' : reminder.title;
     final body = reminder.isPrivate ? null : reminder.description;
 
-    // Past-due reminders (e.g. alarm callback after fire time) show immediately.
+    // Past-due: only show when this is a real fire path (alarm callback),
+    // not when the app is merely re-registering schedules on open.
     if (!scheduled.isAfter(now)) {
-      await _plugin.show(
-        notificationId,
-        title,
-        body,
-        const NotificationDetails(
-          android: AndroidNotificationDetails(
-            AppConstants.reminderChannelId,
-            AppConstants.reminderChannelName,
-            channelDescription: AppConstants.reminderChannelDescription,
-            importance: Importance.max,
-            priority: Priority.high,
-            fullScreenIntent: true,
-            category: AndroidNotificationCategory.alarm,
+      if (showIfPastDue) {
+        await _plugin.show(
+          notificationId,
+          title,
+          body,
+          const NotificationDetails(
+            android: AndroidNotificationDetails(
+              AppConstants.reminderChannelId,
+              AppConstants.reminderChannelName,
+              channelDescription: AppConstants.reminderChannelDescription,
+              importance: Importance.max,
+              priority: Priority.high,
+              fullScreenIntent: true,
+              category: AndroidNotificationCategory.alarm,
+            ),
           ),
-        ),
-        payload: reminder.id,
-      );
+          payload: reminder.id,
+        );
+      }
       return notificationId;
     }
 
@@ -137,10 +148,22 @@ class NotificationService {
   }
 
   Future<void> cancelReminder(int notificationId) async {
+    await initialize();
     await _plugin.cancel(notificationId);
   }
 
+  /// Cancels both the stored / stable id and a legacy [String.hashCode] id.
+  Future<void> cancelForReminder(Reminder reminder) async {
+    final id = _idFor(reminder);
+    await cancelReminder(id);
+    final legacy = reminder.id.hashCode & 0x7fffffff;
+    if (legacy != id) {
+      await cancelReminder(legacy);
+    }
+  }
+
   Future<void> cancelAll() async {
+    await initialize();
     await _plugin.cancelAll();
   }
 }
