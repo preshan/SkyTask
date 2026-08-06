@@ -12,6 +12,7 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 - Fix: overdue notifications no longer re-post when opening the app
 - Create menu: flat crosshair grid with larger icons
 - Softer dark-mode sky; home reminder strip includes yesterday
+- Updated storefront screenshots (Home, Tasks, Calendar, New Task, Settings)
 
 ---
 
@@ -145,13 +146,13 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ### Screenshots
 
-| Home | Tasks | Create |
-|:----:|:-----:|:------:|
-| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Create](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_create_menu.png) |
+| Home | Tasks | Calendar |
+|:----:|:-----:|:--------:|
+| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Calendar](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_calendar.png) |
 
-| New Task | New Reminder | Settings |
-|:--------:|:------------:|:--------:|
-| ![New Task](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_new_task.png) | ![New Reminder](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/05_new_reminder.png) | ![Settings](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/06_settings.png) |
+| New Task | Settings |
+|:--------:|:--------:|
+| ![New Task](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_new_task.png) | ![Settings](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/06_settings.png) |
 
 ---
 

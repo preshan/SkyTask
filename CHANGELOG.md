@@ -12,6 +12,7 @@ Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://ke
 - Create menu: flat 2×2 grid with crosshair dividers, larger icons, no rounded outer border
 - Dark mode atmosphere uses soft night glow instead of busy white star dots
 - Home “Recent reminders” strip shows yesterday + today + next 5 days
+- README / release screenshots refreshed for 1.9.0
 
 ## [1.8.1] — 2026-08-06
 
