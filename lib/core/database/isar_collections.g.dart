@@ -53,44 +53,54 @@ const TaskCollectionSchema = CollectionSchema(
       name: r'dueDate',
       type: IsarType.dateTime,
     ),
-    r'isPrivate': PropertySchema(
+    r'dueTimeMinutes': PropertySchema(
       id: 7,
+      name: r'dueTimeMinutes',
+      type: IsarType.long,
+    ),
+    r'durationMinutes': PropertySchema(
+      id: 8,
+      name: r'durationMinutes',
+      type: IsarType.long,
+    ),
+    r'isPrivate': PropertySchema(
+      id: 9,
       name: r'isPrivate',
       type: IsarType.bool,
     ),
     r'pinned': PropertySchema(
-      id: 8,
+      id: 10,
       name: r'pinned',
       type: IsarType.bool,
     ),
     r'priority': PropertySchema(
-      id: 9,
+      id: 11,
       name: r'priority',
       type: IsarType.byte,
       enumMap: _TaskCollectionpriorityEnumValueMap,
     ),
     r'tags': PropertySchema(
-      id: 10,
+      id: 12,
       name: r'tags',
       type: IsarType.stringList,
     ),
     r'title': PropertySchema(
-      id: 11,
+      id: 13,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 12,
+      id: 14,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 13,
+      id: 15,
       name: r'uuid',
       type: IsarType.string,
     ),
     r'voicePath': PropertySchema(
-      id: 14,
+      id: 16,
       name: r'voicePath',
       type: IsarType.string,
     )
@@ -167,14 +177,16 @@ void _taskCollectionSerialize(
   writer.writeDateTime(offsets[4], object.createdAt);
   writer.writeString(offsets[5], object.description);
   writer.writeDateTime(offsets[6], object.dueDate);
-  writer.writeBool(offsets[7], object.isPrivate);
-  writer.writeBool(offsets[8], object.pinned);
-  writer.writeByte(offsets[9], object.priority.index);
-  writer.writeStringList(offsets[10], object.tags);
-  writer.writeString(offsets[11], object.title);
-  writer.writeDateTime(offsets[12], object.updatedAt);
-  writer.writeString(offsets[13], object.uuid);
-  writer.writeString(offsets[14], object.voicePath);
+  writer.writeLong(offsets[7], object.dueTimeMinutes);
+  writer.writeLong(offsets[8], object.durationMinutes);
+  writer.writeBool(offsets[9], object.isPrivate);
+  writer.writeBool(offsets[10], object.pinned);
+  writer.writeByte(offsets[11], object.priority.index);
+  writer.writeStringList(offsets[12], object.tags);
+  writer.writeString(offsets[13], object.title);
+  writer.writeDateTime(offsets[14], object.updatedAt);
+  writer.writeString(offsets[15], object.uuid);
+  writer.writeString(offsets[16], object.voicePath);
 }
 
 TaskCollection _taskCollectionDeserialize(
@@ -193,17 +205,19 @@ TaskCollection _taskCollectionDeserialize(
   object.createdAt = reader.readDateTime(offsets[4]);
   object.description = reader.readStringOrNull(offsets[5]);
   object.dueDate = reader.readDateTimeOrNull(offsets[6]);
+  object.dueTimeMinutes = reader.readLongOrNull(offsets[7]);
+  object.durationMinutes = reader.readLong(offsets[8]);
   object.id = id;
-  object.isPrivate = reader.readBool(offsets[7]);
-  object.pinned = reader.readBool(offsets[8]);
+  object.isPrivate = reader.readBool(offsets[9]);
+  object.pinned = reader.readBool(offsets[10]);
   object.priority =
-      _TaskCollectionpriorityValueEnumMap[reader.readByteOrNull(offsets[9])] ??
+      _TaskCollectionpriorityValueEnumMap[reader.readByteOrNull(offsets[11])] ??
           TaskPriority.low;
-  object.tags = reader.readStringList(offsets[10]) ?? [];
-  object.title = reader.readString(offsets[11]);
-  object.updatedAt = reader.readDateTime(offsets[12]);
-  object.uuid = reader.readString(offsets[13]);
-  object.voicePath = reader.readStringOrNull(offsets[14]);
+  object.tags = reader.readStringList(offsets[12]) ?? [];
+  object.title = reader.readString(offsets[13]);
+  object.updatedAt = reader.readDateTime(offsets[14]);
+  object.uuid = reader.readString(offsets[15]);
+  object.voicePath = reader.readStringOrNull(offsets[16]);
   return object;
 }
 
@@ -231,22 +245,26 @@ P _taskCollectionDeserializeProp<P>(
     case 6:
       return (reader.readDateTimeOrNull(offset)) as P;
     case 7:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLongOrNull(offset)) as P;
     case 8:
-      return (reader.readBool(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 9:
+      return (reader.readBool(offset)) as P;
+    case 10:
+      return (reader.readBool(offset)) as P;
+    case 11:
       return (_TaskCollectionpriorityValueEnumMap[
               reader.readByteOrNull(offset)] ??
           TaskPriority.low) as P;
-    case 10:
-      return (reader.readStringList(offset) ?? []) as P;
-    case 11:
-      return (reader.readString(offset)) as P;
     case 12:
-      return (reader.readDateTime(offset)) as P;
+      return (reader.readStringList(offset) ?? []) as P;
     case 13:
       return (reader.readString(offset)) as P;
     case 14:
+      return (reader.readDateTime(offset)) as P;
+    case 15:
+      return (reader.readString(offset)) as P;
+    case 16:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -966,6 +984,136 @@ extension TaskCollectionQueryFilter
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
         property: r'dueDate',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      dueTimeMinutesIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'dueTimeMinutes',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      dueTimeMinutesIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'dueTimeMinutes',
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      dueTimeMinutesEqualTo(int? value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'dueTimeMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      dueTimeMinutesGreaterThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'dueTimeMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      dueTimeMinutesLessThan(
+    int? value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'dueTimeMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      dueTimeMinutesBetween(
+    int? lower,
+    int? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'dueTimeMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      durationMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'durationMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      durationMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'durationMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      durationMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'durationMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterFilterCondition>
+      durationMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'durationMinutes',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
@@ -1914,6 +2062,34 @@ extension TaskCollectionQuerySortBy
     });
   }
 
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      sortByDueTimeMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueTimeMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      sortByDueTimeMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueTimeMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      sortByDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      sortByDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy> sortByIsPrivate() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'isPrivate', Sort.asc);
@@ -2099,6 +2275,34 @@ extension TaskCollectionQuerySortThenBy
     });
   }
 
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      thenByDueTimeMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueTimeMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      thenByDueTimeMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'dueTimeMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      thenByDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy>
+      thenByDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.desc);
+    });
+  }
+
   QueryBuilder<TaskCollection, TaskCollection, QAfterSortBy> thenById() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'id', Sort.asc);
@@ -2251,6 +2455,20 @@ extension TaskCollectionQueryWhereDistinct
   }
 
   QueryBuilder<TaskCollection, TaskCollection, QDistinct>
+      distinctByDueTimeMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'dueTimeMinutes');
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QDistinct>
+      distinctByDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'durationMinutes');
+    });
+  }
+
+  QueryBuilder<TaskCollection, TaskCollection, QDistinct>
       distinctByIsPrivate() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'isPrivate');
@@ -2357,6 +2575,20 @@ extension TaskCollectionQueryProperty
     });
   }
 
+  QueryBuilder<TaskCollection, int?, QQueryOperations>
+      dueTimeMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'dueTimeMinutes');
+    });
+  }
+
+  QueryBuilder<TaskCollection, int, QQueryOperations>
+      durationMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'durationMinutes');
+    });
+  }
+
   QueryBuilder<TaskCollection, bool, QQueryOperations> isPrivateProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'isPrivate');
@@ -2444,60 +2676,65 @@ const ReminderCollectionSchema = CollectionSchema(
       name: r'description',
       type: IsarType.string,
     ),
-    r'googleEventId': PropertySchema(
+    r'durationMinutes': PropertySchema(
       id: 5,
+      name: r'durationMinutes',
+      type: IsarType.long,
+    ),
+    r'googleEventId': PropertySchema(
+      id: 6,
       name: r'googleEventId',
       type: IsarType.string,
     ),
     r'isCompleted': PropertySchema(
-      id: 6,
+      id: 7,
       name: r'isCompleted',
       type: IsarType.bool,
     ),
     r'isPrivate': PropertySchema(
-      id: 7,
+      id: 8,
       name: r'isPrivate',
       type: IsarType.bool,
     ),
     r'notificationId': PropertySchema(
-      id: 8,
+      id: 9,
       name: r'notificationId',
       type: IsarType.long,
     ),
     r'notificationOffset': PropertySchema(
-      id: 9,
+      id: 10,
       name: r'notificationOffset',
       type: IsarType.byte,
       enumMap: _ReminderCollectionnotificationOffsetEnumValueMap,
     ),
     r'reminderDateTime': PropertySchema(
-      id: 10,
+      id: 11,
       name: r'reminderDateTime',
       type: IsarType.dateTime,
     ),
     r'repeatType': PropertySchema(
-      id: 11,
+      id: 12,
       name: r'repeatType',
       type: IsarType.byte,
       enumMap: _ReminderCollectionrepeatTypeEnumValueMap,
     ),
     r'title': PropertySchema(
-      id: 12,
+      id: 13,
       name: r'title',
       type: IsarType.string,
     ),
     r'updatedAt': PropertySchema(
-      id: 13,
+      id: 14,
       name: r'updatedAt',
       type: IsarType.dateTime,
     ),
     r'uuid': PropertySchema(
-      id: 14,
+      id: 15,
       name: r'uuid',
       type: IsarType.string,
     ),
     r'voicePath': PropertySchema(
-      id: 15,
+      id: 16,
       name: r'voicePath',
       type: IsarType.string,
     )
@@ -2577,17 +2814,18 @@ void _reminderCollectionSerialize(
   writer.writeDateTime(offsets[2], object.createdAt);
   writer.writeLong(offsets[3], object.customOffsetMinutes);
   writer.writeString(offsets[4], object.description);
-  writer.writeString(offsets[5], object.googleEventId);
-  writer.writeBool(offsets[6], object.isCompleted);
-  writer.writeBool(offsets[7], object.isPrivate);
-  writer.writeLong(offsets[8], object.notificationId);
-  writer.writeByte(offsets[9], object.notificationOffset.index);
-  writer.writeDateTime(offsets[10], object.reminderDateTime);
-  writer.writeByte(offsets[11], object.repeatType.index);
-  writer.writeString(offsets[12], object.title);
-  writer.writeDateTime(offsets[13], object.updatedAt);
-  writer.writeString(offsets[14], object.uuid);
-  writer.writeString(offsets[15], object.voicePath);
+  writer.writeLong(offsets[5], object.durationMinutes);
+  writer.writeString(offsets[6], object.googleEventId);
+  writer.writeBool(offsets[7], object.isCompleted);
+  writer.writeBool(offsets[8], object.isPrivate);
+  writer.writeLong(offsets[9], object.notificationId);
+  writer.writeByte(offsets[10], object.notificationOffset.index);
+  writer.writeDateTime(offsets[11], object.reminderDateTime);
+  writer.writeByte(offsets[12], object.repeatType.index);
+  writer.writeString(offsets[13], object.title);
+  writer.writeDateTime(offsets[14], object.updatedAt);
+  writer.writeString(offsets[15], object.uuid);
+  writer.writeString(offsets[16], object.voicePath);
 }
 
 ReminderCollection _reminderCollectionDeserialize(
@@ -2602,22 +2840,23 @@ ReminderCollection _reminderCollectionDeserialize(
   object.createdAt = reader.readDateTime(offsets[2]);
   object.customOffsetMinutes = reader.readLongOrNull(offsets[3]);
   object.description = reader.readStringOrNull(offsets[4]);
-  object.googleEventId = reader.readStringOrNull(offsets[5]);
+  object.durationMinutes = reader.readLong(offsets[5]);
+  object.googleEventId = reader.readStringOrNull(offsets[6]);
   object.id = id;
-  object.isCompleted = reader.readBool(offsets[6]);
-  object.isPrivate = reader.readBool(offsets[7]);
-  object.notificationId = reader.readLongOrNull(offsets[8]);
+  object.isCompleted = reader.readBool(offsets[7]);
+  object.isPrivate = reader.readBool(offsets[8]);
+  object.notificationId = reader.readLongOrNull(offsets[9]);
   object.notificationOffset = _ReminderCollectionnotificationOffsetValueEnumMap[
-          reader.readByteOrNull(offsets[9])] ??
+          reader.readByteOrNull(offsets[10])] ??
       NotificationOffset.atTime;
-  object.reminderDateTime = reader.readDateTime(offsets[10]);
+  object.reminderDateTime = reader.readDateTime(offsets[11]);
   object.repeatType = _ReminderCollectionrepeatTypeValueEnumMap[
-          reader.readByteOrNull(offsets[11])] ??
+          reader.readByteOrNull(offsets[12])] ??
       RepeatType.none;
-  object.title = reader.readString(offsets[12]);
-  object.updatedAt = reader.readDateTime(offsets[13]);
-  object.uuid = reader.readString(offsets[14]);
-  object.voicePath = reader.readStringOrNull(offsets[15]);
+  object.title = reader.readString(offsets[13]);
+  object.updatedAt = reader.readDateTime(offsets[14]);
+  object.uuid = reader.readString(offsets[15]);
+  object.voicePath = reader.readStringOrNull(offsets[16]);
   return object;
 }
 
@@ -2639,30 +2878,32 @@ P _reminderCollectionDeserializeProp<P>(
     case 4:
       return (reader.readStringOrNull(offset)) as P;
     case 5:
-      return (reader.readStringOrNull(offset)) as P;
+      return (reader.readLong(offset)) as P;
     case 6:
-      return (reader.readBool(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 7:
       return (reader.readBool(offset)) as P;
     case 8:
-      return (reader.readLongOrNull(offset)) as P;
+      return (reader.readBool(offset)) as P;
     case 9:
+      return (reader.readLongOrNull(offset)) as P;
+    case 10:
       return (_ReminderCollectionnotificationOffsetValueEnumMap[
               reader.readByteOrNull(offset)] ??
           NotificationOffset.atTime) as P;
-    case 10:
-      return (reader.readDateTime(offset)) as P;
     case 11:
+      return (reader.readDateTime(offset)) as P;
+    case 12:
       return (_ReminderCollectionrepeatTypeValueEnumMap[
               reader.readByteOrNull(offset)] ??
           RepeatType.none) as P;
-    case 12:
-      return (reader.readString(offset)) as P;
     case 13:
-      return (reader.readDateTime(offset)) as P;
-    case 14:
       return (reader.readString(offset)) as P;
+    case 14:
+      return (reader.readDateTime(offset)) as P;
     case 15:
+      return (reader.readString(offset)) as P;
+    case 16:
       return (reader.readStringOrNull(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -3466,6 +3707,62 @@ extension ReminderCollectionQueryFilter
       return query.addFilterCondition(FilterCondition.greaterThan(
         property: r'description',
         value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      durationMinutesEqualTo(int value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'durationMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      durationMinutesGreaterThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'durationMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      durationMinutesLessThan(
+    int value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'durationMinutes',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterFilterCondition>
+      durationMinutesBetween(
+    int lower,
+    int upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'durationMinutes',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
       ));
     });
   }
@@ -4504,6 +4801,20 @@ extension ReminderCollectionQuerySortBy
   }
 
   QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      sortByDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      sortByDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
       sortByGoogleEventId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'googleEventId', Sort.asc);
@@ -4731,6 +5042,20 @@ extension ReminderCollectionQuerySortThenBy
   }
 
   QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      thenByDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.asc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
+      thenByDurationMinutesDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'durationMinutes', Sort.desc);
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QAfterSortBy>
       thenByGoogleEventId() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'googleEventId', Sort.asc);
@@ -4939,6 +5264,13 @@ extension ReminderCollectionQueryWhereDistinct
   }
 
   QueryBuilder<ReminderCollection, ReminderCollection, QDistinct>
+      distinctByDurationMinutes() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'durationMinutes');
+    });
+  }
+
+  QueryBuilder<ReminderCollection, ReminderCollection, QDistinct>
       distinctByGoogleEventId({bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'googleEventId',
@@ -5057,6 +5389,13 @@ extension ReminderCollectionQueryProperty
       descriptionProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'description');
+    });
+  }
+
+  QueryBuilder<ReminderCollection, int, QQueryOperations>
+      durationMinutesProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'durationMinutes');
     });
   }
 

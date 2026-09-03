@@ -19,6 +19,8 @@ class TaskMapper {
       tags: _crypto.revealList(List.from(c.tags)),
       category: label,
       dueDate: c.dueDate,
+      dueTimeMinutes: c.dueTimeMinutes,
+      durationMinutes: c.durationMinutes <= 0 ? 30 : c.durationMinutes,
       completed: c.completed,
       pinned: c.pinned,
       archived: c.archived,
@@ -41,6 +43,8 @@ class TaskMapper {
       ..categoryLabel = label
       ..tags = _crypto.protectList(task.tags, isPrivate: private)
       ..dueDate = task.dueDate
+      ..dueTimeMinutes = task.dueTimeMinutes
+      ..durationMinutes = task.durationMinutes.clamp(5, 24 * 60)
       ..completed = task.completed
       ..pinned = task.pinned
       ..archived = task.archived

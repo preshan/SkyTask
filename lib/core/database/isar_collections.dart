@@ -25,6 +25,9 @@ class TaskCollection {
   List<String> tags = [];
 
   DateTime? dueDate;
+  /// Minutes from midnight for Day Plan; null = untimed.
+  int? dueTimeMinutes;
+  int durationMinutes = 30;
   late bool completed;
   late bool pinned;
   late bool archived;
@@ -56,6 +59,7 @@ class ReminderCollection {
   late NotificationOffset notificationOffset;
 
   int? customOffsetMinutes;
+  int durationMinutes = 30;
   int? notificationId;
   String? calendarEventId;
   String? googleEventId;

@@ -17,6 +17,8 @@ Future<void> showReminderFormSheet(
   BuildContext context,
   WidgetRef ref, {
   Reminder? reminder,
+  DateTime? initialDateTime,
+  int? planDurationMinutes,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -24,15 +26,25 @@ Future<void> showReminderFormSheet(
     useSafeArea: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-      child: _ReminderFormSheet(reminder: reminder),
+      child: _ReminderFormSheet(
+        reminder: reminder,
+        initialDateTime: initialDateTime,
+        planDurationMinutes: planDurationMinutes,
+      ),
     ),
   );
 }
 
 class _ReminderFormSheet extends ConsumerStatefulWidget {
-  const _ReminderFormSheet({this.reminder});
+  const _ReminderFormSheet({
+    this.reminder,
+    this.initialDateTime,
+    this.planDurationMinutes,
+  });
 
   final Reminder? reminder;
+  final DateTime? initialDateTime;
+  final int? planDurationMinutes;
 
   @override
   ConsumerState<_ReminderFormSheet> createState() => _ReminderFormSheetState();
@@ -46,6 +58,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
   late NotificationOffset _offset;
   late String _category;
   late bool _isPrivate;
+  late int _durationMinutes;
   String? _voicePath;
   final _voiceController = VoiceMemoController();
   bool _saving = false;
@@ -66,12 +79,15 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
         TextEditingController(text: existing?.description ?? '');
     _descriptionFocus = FocusNode();
     _dateTime = existing?.reminderDateTime ??
+        widget.initialDateTime ??
         DateTime.now().add(const Duration(hours: 1));
     _offset = existing?.notificationOffset ?? NotificationOffset.atTime;
     _category = TaskCategories.normalize(
       existing?.category ?? TaskCategories.personal,
     );
     _isPrivate = existing?.isPrivate ?? false;
+    _durationMinutes =
+        existing?.durationMinutes ?? widget.planDurationMinutes ?? 30;
     _voicePath = existing?.voicePath;
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -145,6 +161,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           reminderDateTime: _dateTime,
           category: _category,
           notificationOffset: _offset,
+          durationMinutes: _durationMinutes,
           isPrivate: _isPrivate,
           voicePath: voicePath,
           clearVoicePath: voicePath == null,
@@ -169,6 +186,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           reminderDateTime: _dateTime,
           category: _category,
           notificationOffset: _offset,
+          durationMinutes: _durationMinutes,
           isPrivate: _isPrivate,
           voicePath: voicePath,
           createdAt: now,
@@ -317,6 +335,29 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
             trailing: const SkyIcon(SkyIcons.chevronRight),
             onTap: _saving ? null : _pickDate,
           ),
+          Row(
+            children: [
+              Text('Duration', style: Theme.of(context).textTheme.labelLarge),
+              const Spacer(),
+              DropdownButton<int>(
+                value: _durationMinutes,
+                items: const [
+                  DropdownMenuItem(value: 15, child: Text('15 min')),
+                  DropdownMenuItem(value: 30, child: Text('30 min')),
+                  DropdownMenuItem(value: 45, child: Text('45 min')),
+                  DropdownMenuItem(value: 60, child: Text('1 hour')),
+                  DropdownMenuItem(value: 90, child: Text('1.5 hours')),
+                  DropdownMenuItem(value: 120, child: Text('2 hours')),
+                ],
+                onChanged: _saving
+                    ? null
+                    : (v) {
+                        if (v != null) setState(() => _durationMinutes = v);
+                      },
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
           DropdownButtonFormField<NotificationOffset>(
             value: _offset,
             decoration: const InputDecoration(

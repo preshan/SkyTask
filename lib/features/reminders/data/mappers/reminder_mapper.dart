@@ -20,6 +20,7 @@ class ReminderMapper {
       notificationOffset:
           NotificationOffset.values[c.notificationOffset.index],
       customOffsetMinutes: c.customOffsetMinutes,
+      durationMinutes: c.durationMinutes <= 0 ? 30 : c.durationMinutes,
       notificationId: c.notificationId,
       calendarEventId: c.calendarEventId,
       googleEventId: c.googleEventId,
@@ -45,6 +46,7 @@ class ReminderMapper {
       ..notificationOffset =
           isar.NotificationOffset.values[reminder.notificationOffset.index]
       ..customOffsetMinutes = reminder.customOffsetMinutes
+      ..durationMinutes = reminder.durationMinutes.clamp(5, 24 * 60)
       ..notificationId = reminder.notificationId
       ..calendarEventId = reminder.calendarEventId
       ..googleEventId = reminder.googleEventId

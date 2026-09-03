@@ -14,6 +14,8 @@ class Task extends Equatable {
     this.tags = const [],
     this.category = TaskCategories.personal,
     this.dueDate,
+    this.dueTimeMinutes,
+    this.durationMinutes = 30,
     this.completed = false,
     this.pinned = false,
     this.archived = false,
@@ -31,6 +33,9 @@ class Task extends Equatable {
   /// Display name (e.g. Work, Personal, or a user-added label).
   final String category;
   final DateTime? dueDate;
+  /// Minutes from midnight when this task is timed on the Day Plan; null = untimed.
+  final int? dueTimeMinutes;
+  final int durationMinutes;
   final bool completed;
   final bool pinned;
   final bool archived;
@@ -41,6 +46,22 @@ class Task extends Equatable {
 
   bool get isVoice => VoiceMemoService.hasVoice(voicePath);
 
+  bool get isTimed => dueDate != null && dueTimeMinutes != null;
+
+  /// Start datetime when [isTimed]; otherwise null.
+  DateTime? get plannedStart {
+    if (!isTimed) return null;
+    final d = dueDate!;
+    return DateTime(d.year, d.month, d.day)
+        .add(Duration(minutes: dueTimeMinutes!));
+  }
+
+  DateTime? get plannedEnd {
+    final start = plannedStart;
+    if (start == null) return null;
+    return start.add(Duration(minutes: durationMinutes.clamp(5, 24 * 60)));
+  }
+
   Task copyWith({
     String? id,
     String? title,
@@ -49,6 +70,10 @@ class Task extends Equatable {
     List<String>? tags,
     String? category,
     DateTime? dueDate,
+    bool clearDueDate = false,
+    int? dueTimeMinutes,
+    bool clearDueTimeMinutes = false,
+    int? durationMinutes,
     bool? completed,
     bool? pinned,
     bool? archived,
@@ -65,7 +90,11 @@ class Task extends Equatable {
       priority: priority ?? this.priority,
       tags: tags ?? this.tags,
       category: category ?? this.category,
-      dueDate: dueDate ?? this.dueDate,
+      dueDate: clearDueDate ? null : (dueDate ?? this.dueDate),
+      dueTimeMinutes: clearDueTimeMinutes
+          ? null
+          : (dueTimeMinutes ?? this.dueTimeMinutes),
+      durationMinutes: durationMinutes ?? this.durationMinutes,
       completed: completed ?? this.completed,
       pinned: pinned ?? this.pinned,
       archived: archived ?? this.archived,
@@ -85,6 +114,8 @@ class Task extends Equatable {
         tags,
         category,
         dueDate,
+        dueTimeMinutes,
+        durationMinutes,
         completed,
         pinned,
         archived,
