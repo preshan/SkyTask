@@ -4,6 +4,19 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.10.0 — 2026-09-03 · `1.10.0+19`
+
+[Download SkyTask-1.10.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.10.0/SkyTask-1.10.0.apk)
+
+### Changes
+- Calendar Day Plan: hour timeline with pastel blocks for timed tasks and reminders
+- Tap a slot to add Task or Reminder; tap a block to edit, complete, or reschedule
+- Tasks can have due time + duration; reminders have duration (default 30 min)
+- Home day strip opens Day Plan for the selected day
+- Fix: short Day Plan blocks no longer show bottom overflow
+
+---
+
 ## 1.9.0 — 2026-08-06 · `1.9.0+18`
 
 [Download SkyTask-1.9.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.9.0/SkyTask-1.9.0.apk)

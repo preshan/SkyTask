@@ -21,6 +21,8 @@ Future<void> showTaskFormSheet(
   BuildContext context,
   WidgetRef ref, {
   Task? task,
+  DateTime? initialDateTime,
+  int? planDurationMinutes,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -28,15 +30,25 @@ Future<void> showTaskFormSheet(
     useSafeArea: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
-      child: _TaskFormSheet(task: task),
+      child: _TaskFormSheet(
+        task: task,
+        initialDateTime: initialDateTime,
+        planDurationMinutes: planDurationMinutes,
+      ),
     ),
   );
 }
 
 class _TaskFormSheet extends ConsumerStatefulWidget {
-  const _TaskFormSheet({this.task});
+  const _TaskFormSheet({
+    this.task,
+    this.initialDateTime,
+    this.planDurationMinutes,
+  });
 
   final Task? task;
+  final DateTime? initialDateTime;
+  final int? planDurationMinutes;
 
   @override
   ConsumerState<_TaskFormSheet> createState() => _TaskFormSheetState();
@@ -51,6 +63,8 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
   late bool _pinned;
   late bool _isPrivate;
   DateTime? _dueDate;
+  int? _dueTimeMinutes;
+  late int _durationMinutes;
   String? _voicePath;
   final _voiceController = VoiceMemoController();
   bool _saving = false;
@@ -74,8 +88,18 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
     _category = TaskCategories.normalize(t?.category ?? TaskCategories.personal);
     _pinned = t?.pinned ?? false;
     _isPrivate = t?.isPrivate ?? false;
-    _dueDate = t?.dueDate;
+    _durationMinutes =
+        t?.durationMinutes ?? widget.planDurationMinutes ?? 30;
     _voicePath = t?.voicePath;
+
+    if (t != null) {
+      _dueDate = t.dueDate;
+      _dueTimeMinutes = t.dueTimeMinutes;
+    } else if (widget.initialDateTime != null) {
+      final dt = widget.initialDateTime!;
+      _dueDate = DateTime(dt.year, dt.month, dt.day);
+      _dueTimeMinutes = dt.hour * 60 + dt.minute;
+    }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -101,7 +125,33 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
       lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
     );
     if (date == null || !mounted) return;
-    setState(() => _dueDate = date);
+    setState(() => _dueDate = DateTime(date.year, date.month, date.day));
+  }
+
+  Future<void> _pickDueTime() async {
+    final initial = _dueTimeMinutes != null
+        ? TimeOfDay(hour: _dueTimeMinutes! ~/ 60, minute: _dueTimeMinutes! % 60)
+        : TimeOfDay.now();
+    final time = await showTimePicker(context: context, initialTime: initial);
+    if (time == null || !mounted) return;
+    setState(() {
+      _dueDate ??= DateTime(
+        DateTime.now().year,
+        DateTime.now().month,
+        DateTime.now().day,
+      );
+      _dueTimeMinutes = time.hour * 60 + time.minute;
+    });
+  }
+
+  String _formatDueLabel() {
+    if (_dueDate == null) return 'Due date';
+    final date = DateFormat.yMMMd().format(_dueDate!);
+    if (_dueTimeMinutes == null) return date;
+    final h = _dueTimeMinutes! ~/ 60;
+    final m = _dueTimeMinutes! % 60;
+    final time = DateFormat.jm().format(DateTime(2000, 1, 1, h, m));
+    return '$date · $time';
   }
 
   Future<void> _save() async {
@@ -123,6 +173,8 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
     try {
       final previousVoice =
           _isEditing ? widget.task!.voicePath : null;
+      final dueTime =
+          _dueDate == null ? null : _dueTimeMinutes;
 
       final task = _isEditing
           ? widget.task!.copyWith(
@@ -131,6 +183,10 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
               priority: _priority,
               category: _category,
               dueDate: _dueDate,
+              clearDueDate: _dueDate == null,
+              dueTimeMinutes: dueTime,
+              clearDueTimeMinutes: dueTime == null,
+              durationMinutes: _durationMinutes,
               pinned: _pinned,
               isPrivate: _isPrivate,
               voicePath: voicePath,
@@ -144,6 +200,8 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
               priority: _priority,
               category: _category,
               dueDate: _dueDate,
+              dueTimeMinutes: dueTime,
+              durationMinutes: _durationMinutes,
               pinned: _pinned,
               isPrivate: _isPrivate,
               voicePath: voicePath,
@@ -214,7 +272,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
   Widget build(BuildContext context) {
     final dueTooltip = _dueDate == null
         ? 'Set due date'
-        : 'Due ${DateFormat.yMMMd().format(_dueDate!)} · long-press to clear';
+        : '${_formatDueLabel()} · long-press to clear';
 
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -300,10 +358,31 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                 onTap: _saving ? null : _pickDueDate,
                 onLongPress: _saving || _dueDate == null
                     ? null
-                    : () => setState(() => _dueDate = null),
+                    : () => setState(() {
+                          _dueDate = null;
+                          _dueTimeMinutes = null;
+                        }),
                 child: SkyIcon(
                   SkyIcons.calendar,
                   color: _dueDate != null
+                      ? AppColors.brand(context)
+                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+                  size: 22,
+                ),
+              ),
+              const SizedBox(width: 8),
+              IconToggle(
+                active: _dueTimeMinutes != null,
+                tooltip: _dueTimeMinutes == null
+                    ? 'Set time (Day Plan)'
+                    : 'Change time · long-press to clear',
+                onTap: _saving ? null : _pickDueTime,
+                onLongPress: _saving || _dueTimeMinutes == null
+                    ? null
+                    : () => setState(() => _dueTimeMinutes = null),
+                child: SkyIcon(
+                  SkyIcons.pending,
+                  color: _dueTimeMinutes != null
                       ? AppColors.brand(context)
                       : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
                   size: 22,
@@ -334,7 +413,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    DateFormat.MMMd().format(_dueDate!),
+                    _formatDueLabel(),
                     style: Theme.of(context).textTheme.bodySmall,
                     overflow: TextOverflow.ellipsis,
                   ),
@@ -343,6 +422,31 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
                 const Spacer(),
             ],
           ),
+          if (_dueTimeMinutes != null) ...[
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                Text('Duration', style: Theme.of(context).textTheme.labelLarge),
+                const Spacer(),
+                DropdownButton<int>(
+                  value: _durationMinutes,
+                  items: const [
+                    DropdownMenuItem(value: 15, child: Text('15 min')),
+                    DropdownMenuItem(value: 30, child: Text('30 min')),
+                    DropdownMenuItem(value: 45, child: Text('45 min')),
+                    DropdownMenuItem(value: 60, child: Text('1 hour')),
+                    DropdownMenuItem(value: 90, child: Text('1.5 hours')),
+                    DropdownMenuItem(value: 120, child: Text('2 hours')),
+                  ],
+                  onChanged: _saving
+                      ? null
+                      : (v) {
+                          if (v != null) setState(() => _durationMinutes = v);
+                        },
+                ),
+              ],
+            ),
+          ],
           const SizedBox(height: 12),
           VoiceMemoRecorder(
             controller: _voiceController,

@@ -134,7 +134,9 @@ final calendarEntriesProvider =
             id: r.id,
             title: r.title,
             start: r.reminderDateTime,
-            end: r.reminderDateTime.add(const Duration(minutes: 30)),
+            end: r.reminderDateTime.add(
+              Duration(minutes: r.durationMinutes.clamp(5, 24 * 60)),
+            ),
             description: r.description,
             source: CalendarEntrySource.reminder,
             reminder: r,

@@ -38,7 +38,7 @@ abstract final class AppRoutes {
     final y = d.year.toString().padLeft(4, '0');
     final m = d.month.toString().padLeft(2, '0');
     final dd = d.day.toString().padLeft(2, '0');
-    return '$calendar?day=$y-$m-$dd';
+    return '$calendar?day=$y-$m-$dd&view=day';
   }
 }
 

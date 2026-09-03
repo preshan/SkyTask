@@ -18,8 +18,9 @@ import '../../../reminders/presentation/widgets/reminder_form_sheet.dart';
 import '../../data/device_calendar_service.dart';
 import '../../domain/calendar_entry.dart';
 import '../providers/calendar_providers.dart';
+import '../widgets/day_plan_view.dart';
 
-enum CalendarView { agenda, week, month }
+enum CalendarView { agenda, day, week, month }
 
 class CalendarScreen extends ConsumerStatefulWidget {
   const CalendarScreen({
@@ -28,7 +29,7 @@ class CalendarScreen extends ConsumerStatefulWidget {
     this.privateOnly = false,
   });
 
-  /// When set (e.g. from Home “This week”), open agenda for that day.
+  /// When set (e.g. from Home day strip), open Day Plan for that day.
   final DateTime? focusedDay;
   final bool privateOnly;
 
@@ -53,7 +54,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final focus = widget.focusedDay;
     if (focus != null) {
       _dayFocus = true;
-      _view = CalendarView.agenda;
+      _view = CalendarView.day;
       _anchor = DateTime(focus.year, focus.month, focus.day);
       _range = dayRange(_anchor);
     } else {
@@ -76,7 +77,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       if (focus != null) {
         setState(() {
           _dayFocus = true;
-          _view = CalendarView.agenda;
+          _view = CalendarView.day;
           _anchor = DateTime(focus.year, focus.month, focus.day);
           _range = dayRange(_anchor);
         });
@@ -94,15 +95,21 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   DateRange _computeRange(CalendarView view, DateTime anchor) => switch (view) {
         CalendarView.agenda =>
           _dayFocus ? dayRange(anchor) : agendaRange(),
+        CalendarView.day => dayRange(anchor),
         CalendarView.week => weekRange(anchor),
         CalendarView.month => monthRange(anchor),
       };
 
   void _setView(CalendarView view) {
     setState(() {
-      _dayFocus = false;
       _view = view;
-      _anchor = DateTime.now();
+      if (view == CalendarView.day) {
+        _dayFocus = true;
+        _anchor = DateTime(_anchor.year, _anchor.month, _anchor.day);
+      } else {
+        _dayFocus = false;
+        _anchor = DateTime.now();
+      }
       _range = _computeRange(_view, _anchor);
     });
   }
@@ -141,7 +148,8 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
 
   void _shiftPeriod(int delta) {
     setState(() {
-      if (_dayFocus && _view == CalendarView.agenda) {
+      if (_view == CalendarView.day ||
+          (_dayFocus && _view == CalendarView.agenda)) {
         _anchor = _anchor.add(Duration(days: delta));
         _range = dayRange(_anchor);
         return;
@@ -149,7 +157,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       _anchor = switch (_view) {
         CalendarView.week => _anchor.add(Duration(days: 7 * delta)),
         CalendarView.month => DateTime(_anchor.year, _anchor.month + delta, 1),
-        CalendarView.agenda => _anchor,
+        CalendarView.agenda || CalendarView.day => _anchor,
       };
       _range = _computeRange(_view, _anchor);
     });
@@ -160,11 +168,12 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     final query = CalendarQuery(range: _range, source: _sourceTab);
     final entriesAsync = ref.watch(calendarEntriesProvider(query));
     final settings = ref.watch(calendarSettingsProvider);
-    final title = _dayFocus
+    final title = _view == CalendarView.day || _dayFocus
         ? DateFormat.MMMd().format(_anchor)
         : 'Calendar';
     final bannerExtra =
-        (_dayFocus ? 48.0 : 0.0) + (_privateOnly ? 48.0 : 0.0);
+        (_dayFocus || _view == CalendarView.day ? 48.0 : 0.0) +
+            (_privateOnly ? 48.0 : 0.0);
 
     return Scaffold(
       appBar: AppBar(
@@ -192,7 +201,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_dayFocus)
+              if (_dayFocus || _view == CalendarView.day)
                 Material(
                   color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
                   child: ListTile(
@@ -202,7 +211,9 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                       color: AppColors.brandSecondary(context),
                     ),
                     title: Text(
-                      'Reminders on ${DateFormat.yMMMEd().format(_anchor)}',
+                      _view == CalendarView.day
+                          ? 'Day plan · ${DateFormat.yMMMEd().format(_anchor)}'
+                          : 'Reminders on ${DateFormat.yMMMEd().format(_anchor)}',
                     ),
                     trailing: TextButton(
                       onPressed: _clearDayFocus,
@@ -275,6 +286,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                             child: _CalendarFilterChip(
                               label: switch (view) {
                                 CalendarView.agenda => 'Agenda',
+                                CalendarView.day => 'Day',
                                 CalendarView.week => 'Week',
                                 CalendarView.month => 'Month',
                               },
@@ -357,6 +369,14 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
   }
 
   Widget _buildView(List<CalendarEntry> entries) {
+    if (_view == CalendarView.day) {
+      return DayPlanView(
+        day: _anchor,
+        privateOnly: _privateOnly,
+        categoryFilter: _categoryFilter,
+      );
+    }
+
     if (entries.isEmpty) {
       final emptyMessage = switch (
           (_sourceTab, _privateOnly, _dayFocus, _categoryFilter != null)) {
@@ -387,6 +407,11 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
           entries: entries,
           onTapReminder: (entry) => _openReminder(entry),
         ),
+      CalendarView.day => DayPlanView(
+          day: _anchor,
+          privateOnly: _privateOnly,
+          categoryFilter: _categoryFilter,
+        ),
       CalendarView.week => _WeekView(
           entries: entries,
           anchor: _anchor,
@@ -399,7 +424,7 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
             setState(() {
               _dayFocus = true;
               _anchor = day;
-              _view = CalendarView.agenda;
+              _view = CalendarView.day;
               _range = dayRange(_anchor);
             });
           },

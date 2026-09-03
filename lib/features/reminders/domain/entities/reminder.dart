@@ -24,6 +24,7 @@ class Reminder extends Equatable {
     this.repeatType = RepeatType.none,
     this.notificationOffset = NotificationOffset.atTime,
     this.customOffsetMinutes,
+    this.durationMinutes = 30,
     this.notificationId,
     this.calendarEventId,
     this.googleEventId,
@@ -42,6 +43,8 @@ class Reminder extends Equatable {
   final RepeatType repeatType;
   final NotificationOffset notificationOffset;
   final int? customOffsetMinutes;
+  /// How long the Day Plan / calendar block lasts.
+  final int durationMinutes;
   final int? notificationId;
   final String? calendarEventId;
   final String? googleEventId;
@@ -52,6 +55,9 @@ class Reminder extends Equatable {
   final DateTime updatedAt;
 
   bool get isVoice => VoiceMemoService.hasVoice(voicePath);
+
+  DateTime get plannedEnd =>
+      reminderDateTime.add(Duration(minutes: durationMinutes.clamp(5, 24 * 60)));
 
   /// Computed fire time based on notification offset.
   DateTime get fireDateTime {
@@ -76,6 +82,7 @@ class Reminder extends Equatable {
     RepeatType? repeatType,
     NotificationOffset? notificationOffset,
     int? customOffsetMinutes,
+    int? durationMinutes,
     int? notificationId,
     String? calendarEventId,
     String? googleEventId,
@@ -96,6 +103,7 @@ class Reminder extends Equatable {
       repeatType: repeatType ?? this.repeatType,
       notificationOffset: notificationOffset ?? this.notificationOffset,
       customOffsetMinutes: customOffsetMinutes ?? this.customOffsetMinutes,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
       notificationId: notificationId ?? this.notificationId,
       calendarEventId: clearCalendarEventId
           ? null
@@ -119,6 +127,7 @@ class Reminder extends Equatable {
         repeatType,
         notificationOffset,
         customOffsetMinutes,
+        durationMinutes,
         notificationId,
         calendarEventId,
         googleEventId,

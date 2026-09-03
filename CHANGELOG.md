@@ -2,6 +2,17 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.10.0] — 2026-09-03
+
+### Added
+- Calendar Day Plan timeline: timed tasks and reminders as pastel blocks (6 AM–10 PM)
+- Tap empty slot to create a Task or Reminder at that time; tap a block to edit, complete, or change time
+- Optional task due time and duration; reminder duration (default 30 minutes)
+- Home day strip / Today reminders open Day Plan for that day
+
+### Fixed
+- Day Plan short blocks no longer overflow their slot height
+
 ## [1.9.0] — 2026-08-06
 
 ### Fixed
