@@ -4,6 +4,15 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.11.1 — 2026-09-13 · `1.11.1+21`
+
+[Download SkyTask-1.11.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.11.1/SkyTask-1.11.1.apk)
+
+### Changes
+- Voice player panel uses the task / reminder / idea / note title; “Voice memo” only when there is no title
+
+---
+
 ## 1.11.0 — 2026-09-13 · `1.11.0+20`
 
 [Download SkyTask-1.11.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.11.0/SkyTask-1.11.0.apk)

@@ -160,9 +160,7 @@ class _VoicePlayerSheetState extends State<VoicePlayerSheet> {
 
   @override
   Widget build(BuildContext context) {
-    final title = (widget.title?.trim().isNotEmpty ?? false)
-        ? widget.title!.trim()
-        : 'Voice memo';
+    final title = voicePlayerPanelTitle(widget.title);
     final maxMs = _duration.inMilliseconds > 0
         ? _duration.inMilliseconds.toDouble()
         : 1.0;

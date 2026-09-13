@@ -35,12 +35,16 @@ class VoiceMemoRecorder extends StatefulWidget {
     required this.onChanged,
     this.controller,
     this.enabled = true,
+    this.titleBuilder,
   });
 
   final String? initialPath;
   final ValueChanged<String?> onChanged;
   final VoiceMemoController? controller;
   final bool enabled;
+
+  /// Current item title from the parent form (read when opening the player).
+  final String? Function()? titleBuilder;
 
   @override
   State<VoiceMemoRecorder> createState() => _VoiceMemoRecorderState();
@@ -193,7 +197,11 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
   Future<void> _openPlayer() async {
     final path = _path;
     if (path == null || !VoiceMemoService.hasVoice(path)) return;
-    await showVoicePlayerSheet(context, path: path, title: 'Voice memo');
+    await showVoicePlayerSheet(
+      context,
+      path: path,
+      title: widget.titleBuilder?.call(),
+    );
   }
 
   Future<void> _clear() async {

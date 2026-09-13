@@ -452,6 +452,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             controller: _voiceController,
             initialPath: widget.task?.voicePath,
             enabled: !_saving,
+            titleBuilder: () => _titleController.text,
             onChanged: (path) => setState(() => _voicePath = path),
           ),
           const SizedBox(height: 16),

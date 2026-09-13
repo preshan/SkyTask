@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.11.1] — 2026-09-13
+
+### Fixed
+- Voice player panel shows the item title (falls back to “Voice memo” when empty)
+
 ## [1.11.0] — 2026-09-13
 
 ### Added

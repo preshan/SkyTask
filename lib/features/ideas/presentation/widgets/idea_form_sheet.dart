@@ -239,6 +239,7 @@ class _IdeaFormSheetState extends ConsumerState<_IdeaFormSheet> {
             controller: _voiceController,
             initialPath: widget.idea?.voicePath,
             enabled: !_saving,
+            titleBuilder: () => _titleController.text,
             onChanged: (path) => setState(() => _voicePath = path),
           ),
           const SizedBox(height: 16),
