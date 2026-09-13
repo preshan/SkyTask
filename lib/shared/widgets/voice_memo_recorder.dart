@@ -7,6 +7,7 @@ import 'package:record/record.dart';
 
 import '../../core/constants/app_colors.dart';
 import '../../core/services/voice_memo_service.dart';
+import 'confirm_delete_dialog.dart';
 import 'sky_icon.dart';
 import 'voice_player_sheet.dart';
 
@@ -205,6 +206,13 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
   }
 
   Future<void> _clear() async {
+    final confirmed = await confirmDelete(
+      context,
+      title: 'Remove voice memo?',
+      message: 'The recording will be removed from this item.',
+    );
+    if (!confirmed || !mounted) return;
+
     final old = _path;
     setState(() {
       _path = null;
