@@ -456,33 +456,65 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             onChanged: (path) => setState(() => _voicePath = path),
           ),
           const SizedBox(height: 16),
-          FilledButton(
-            onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_isEditing ? 'Save changes' : 'Create task'),
-          ),
           if (_isEditing) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton(
+                    onPressed: _saving ? null : _save,
+                    child: _saving
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text('Save'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : _toggleComplete,
+                    child: Text(
+                      widget.task!.completed ? 'Incomplete' : 'Complete',
+                    ),
+                  ),
+                ),
+              ],
+            ),
             const SizedBox(height: 8),
-            OutlinedButton(
-              onPressed: _saving ? null : _toggleComplete,
-              child: Text(
-                widget.task!.completed ? 'Mark as active' : 'Mark completed',
-              ),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : _archive,
+                    child: const Text('Archive'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: _saving ? null : _delete,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      side: const BorderSide(color: AppColors.error),
+                    ),
+                    child: const Text('Delete'),
+                  ),
+                ),
+              ],
             ),
-            OutlinedButton(
-              onPressed: _saving ? null : _archive,
-              child: const Text('Archive task'),
+          ] else
+            FilledButton(
+              onPressed: _saving ? null : _save,
+              child: _saving
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Text('Create task'),
             ),
-            TextButton(
-              onPressed: _saving ? null : _delete,
-              child: const Text('Delete task'),
-            ),
-          ],
         ],
       ),
     );

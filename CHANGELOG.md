@@ -2,6 +2,14 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.11.2] — 2026-09-13
+
+### Changed
+- Task edit form: Save / Complete / Archive / Delete in a 2×2 button grid; Delete uses red outline and text
+
+### Added
+- Confirm dialog before removing a voice memo (X button on all forms)
+
 ## [1.11.1] — 2026-09-13
 
 ### Fixed
