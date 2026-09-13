@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
@@ -9,6 +8,7 @@ import 'package:record/record.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/services/voice_memo_service.dart';
 import 'sky_icon.dart';
+import 'voice_player_sheet.dart';
 
 /// Lets parent forms finalize an in-progress recording before save.
 class VoiceMemoController {
@@ -48,12 +48,10 @@ class VoiceMemoRecorder extends StatefulWidget {
 
 class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
   final _recorder = AudioRecorder();
-  final _player = AudioPlayer();
 
   String? _path;
   String? _activeRecordPath;
   bool _recording = false;
-  bool _playing = false;
   Duration _elapsed = Duration.zero;
   Timer? _ticker;
 
@@ -62,9 +60,6 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
     super.initState();
     _path = widget.initialPath;
     widget.controller?._bind(this);
-    _player.onPlayerComplete.listen((_) {
-      if (mounted) setState(() => _playing = false);
-    });
   }
 
   @override
@@ -97,11 +92,9 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
         } catch (_) {}
         await VoiceMemoService.deleteIfExists(orphan);
         await _recorder.dispose();
-        await _player.dispose();
       }());
     } else {
       unawaited(_recorder.dispose());
-      unawaited(_player.dispose());
     }
     super.dispose();
   }
@@ -197,41 +190,16 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
     widget.onChanged(path);
   }
 
-  Future<void> _togglePlay() async {
+  Future<void> _openPlayer() async {
     final path = _path;
-    if (path == null) return;
-    if (_playing) {
-      await _player.stop();
-      setState(() => _playing = false);
-      return;
-    }
-    final file = File(path);
-    if (!await file.exists()) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Voice file missing')),
-        );
-      }
-      return;
-    }
-    try {
-      await _player.play(DeviceFileSource(path));
-      setState(() => _playing = true);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not play voice memo: $e')),
-        );
-      }
-    }
+    if (path == null || !VoiceMemoService.hasVoice(path)) return;
+    await showVoicePlayerSheet(context, path: path, title: 'Voice memo');
   }
 
   Future<void> _clear() async {
-    await _player.stop();
     final old = _path;
     setState(() {
       _path = null;
-      _playing = false;
     });
     widget.onChanged(null);
     if (old != null && old != widget.initialPath) {
@@ -272,9 +240,9 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
           else ...[
             _RoundAction(
               color: AppColors.brand(context),
-              onTap: widget.enabled ? _togglePlay : null,
-              child: SkyIcon(
-                _playing ? SkyIcons.pause : SkyIcons.play,
+              onTap: widget.enabled ? _openPlayer : null,
+              child: const SkyIcon(
+                SkyIcons.play,
                 color: Colors.white,
                 size: 22,
               ),

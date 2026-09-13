@@ -342,7 +342,7 @@ class _TaskCard extends ConsumerWidget {
             trailing: ListTileTrailing(
               children: [
                 if (task.isVoice && task.voicePath != null)
-                  VoicePlayButton(path: task.voicePath!),
+                  VoicePlayButton(path: task.voicePath!, title: task.title),
                 if (task.pinned) const SkyIcon(SkyIcons.pin, size: 18),
                 if (task.archived)
                   const SkyIcon(SkyIcons.archive, size: 18),
