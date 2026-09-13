@@ -218,6 +218,7 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
             controller: _voiceController,
             initialPath: widget.note?.voicePath,
             enabled: !_saving,
+            titleBuilder: () => _titleController.text,
             onChanged: (path) => setState(() => _voicePath = path),
           ),
           const SizedBox(height: 16),

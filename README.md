@@ -14,7 +14,7 @@ Built with Flutter by **Preshan Pradeepa Kariyawasam**.
 |:--------:|:--------:|
 | ![New Task](docs/release/screenshots/04_new_task.png) | ![Settings](docs/release/screenshots/06_settings.png) |
 
-Latest release: [v1.11.0](https://github.com/preshan/SkyTask/releases/tag/v1.11.0)
+Latest release: [v1.11.1](https://github.com/preshan/SkyTask/releases/tag/v1.11.1)
 
 ## Features
 

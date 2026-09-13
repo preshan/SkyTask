@@ -391,6 +391,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
             controller: _voiceController,
             initialPath: widget.reminder?.voicePath,
             enabled: !_saving,
+            titleBuilder: () => _titleController.text,
             onChanged: (path) => setState(() => _voicePath = path),
           ),
           if (settings.canSyncToCalendar &&

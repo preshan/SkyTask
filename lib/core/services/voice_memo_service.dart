@@ -44,6 +44,16 @@ abstract final class VoiceMemoService {
   }
 }
 
+/// Title shown in the voice player panel.
+/// Uses the item title when present; otherwise "Voice memo".
+String voicePlayerPanelTitle(String? title) {
+  final t = title?.trim() ?? '';
+  if (t.isEmpty || VoiceMemoService.isPlaceholderTitle(t)) {
+    return 'Voice memo';
+  }
+  return t;
+}
+
 /// Title when the user only saved a recording (no typed title).
 String voiceAwareTitle({
   required String rawTitle,
