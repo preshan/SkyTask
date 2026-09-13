@@ -437,7 +437,7 @@ class _IdeaCard extends StatelessWidget {
           trailing: ListTileTrailing(
             children: [
               if (idea.isVoice && idea.voicePath != null)
-                VoicePlayButton(path: idea.voicePath!),
+                VoicePlayButton(path: idea.voicePath!, title: idea.title),
               const SkyIcon(SkyIcons.chevronRight, size: 18),
             ],
           ),
@@ -508,7 +508,7 @@ class _NoteCard extends StatelessWidget {
           trailing: ListTileTrailing(
             children: [
               if (note.isVoice && note.voicePath != null)
-                VoicePlayButton(path: note.voicePath!),
+                VoicePlayButton(path: note.voicePath!, title: note.title),
               const SkyIcon(SkyIcons.chevronRight, size: 18),
             ],
           ),

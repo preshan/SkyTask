@@ -2,6 +2,12 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.11.0] — 2026-09-13
+
+### Added
+- Voice memo player sheet with play / pause and a seekable progress bar
+- Shared player opens from list play buttons (Tasks, Ideas, Notes, Calendar) and form preview
+
 ## [1.10.0] — 2026-09-03
 
 ### Added

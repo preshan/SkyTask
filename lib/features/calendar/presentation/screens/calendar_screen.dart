@@ -830,7 +830,10 @@ class _CalendarEntryTile extends StatelessWidget {
             children: [
               if (entry.reminder?.isVoice == true &&
                   entry.reminder?.voicePath != null)
-                VoicePlayButton(path: entry.reminder!.voicePath!),
+                VoicePlayButton(
+                  path: entry.reminder!.voicePath!,
+                  title: entry.reminder!.title,
+                ),
               if (onTap != null)
                 const SkyIcon(SkyIcons.chevronRight, size: 18),
             ],

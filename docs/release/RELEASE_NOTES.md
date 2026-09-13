@@ -4,6 +4,16 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.11.0 — 2026-09-13 · `1.11.0+20`
+
+[Download SkyTask-1.11.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.11.0/SkyTask-1.11.0.apk)
+
+### Changes
+- Voice play opens a player with play / pause and scrubbing on the progress bar
+- Same player used from Tasks, Ideas, Notes, Calendar lists and create/edit voice preview
+
+---
+
 ## 1.10.0 — 2026-09-03 · `1.10.0+19`
 
 [Download SkyTask-1.10.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.10.0/SkyTask-1.10.0.apk)
