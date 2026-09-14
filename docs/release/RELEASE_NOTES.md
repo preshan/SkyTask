@@ -4,6 +4,15 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.12.1 — 2026-09-14 · `1.12.1+24`
+
+[Download SkyTask-1.12.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.12.1/SkyTask-1.12.1.apk)
+
+### Changes
+- App icon PNG with transparent corners (no black fill outside the squircle)
+
+---
+
 ## 1.12.0 — 2026-09-14 · `1.12.0+23`
 
 [Download SkyTask-1.12.0.apk](https://github.com/preshan/SkyTask/releases/download/v1.12.0/SkyTask-1.12.0.apk)
