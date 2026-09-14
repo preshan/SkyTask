@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.12.1] — 2026-09-14
+
+### Fixed
+- App icon uses a transparent PNG (no black corners outside the rounded square)
+
 ## [1.12.0] — 2026-09-14
 
 ### Added
