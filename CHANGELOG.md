@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.12.3] — 2026-09-14
+
+### Changed
+- Flat primary-blue app icon (transparent PNG corners)
+
 ## [1.12.2] — 2026-09-14
 
 ### Changed
