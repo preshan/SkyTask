@@ -4,6 +4,7 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>SkyTask Privacy Policy</title>
+  <meta name="description" content="How SkyTask handles data on your device." />
   <style>
     :root { color-scheme: light dark; }
     body {
@@ -12,10 +13,22 @@
       max-width: 720px;
       margin: 0 auto;
       padding: 24px 18px 48px;
+      color: #111;
+      background: #fff;
     }
-    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
-    h2 { font-size: 1.15rem; margin-top: 1.6rem; }
-    .meta { opacity: 0.7; margin-bottom: 1.5rem; }
+    @media (prefers-color-scheme: dark) {
+      body { color: #e8e8e8; background: #121212; }
+      a { color: #8ab4ff; }
+    }
+    h1 { font-size: 1.75rem; margin: 0 0 0.35rem; }
+    h2 { font-size: 1.15rem; margin: 1.75rem 0 0.55rem; }
+    .meta { opacity: 0.7; margin: 0 0 1.4rem; font-size: 0.95rem; }
+    p { margin: 0 0 0.85rem; }
+    ul {
+      margin: 0.35rem 0 0.95rem;
+      padding-left: 1.15rem;
+    }
+    li { margin: 0.4rem 0; }
     a { color: #2563eb; }
   </style>
 </head>
@@ -23,73 +36,76 @@
   <h1>SkyTask Privacy Policy</h1>
   <p class="meta">Last updated: 14 September 2026</p>
 
-  <p>SkyTask (“we”, “our”, or “the app”) is developed by Preshan Pradeepa Kariyawasam. This Privacy Policy explains what information SkyTask processes, why, and your choices. It is intended to meet Google Play disclosure expectations.</p>
+  <p>SkyTask is built by Preshan Pradeepa Kariyawasam. This page describes what the app stores, what permissions it uses, and how you stay in control.</p>
 
-  <h2>1. Summary</h2>
-  <p>SkyTask is local-first. Tasks, reminders, ideas, notes, and voice memos are stored on your device by default.</p>
-  <p>Optional features (calendar sync, Google Sign-In / Firebase, cloud messaging, backups you export) process additional data only when you use them.</p>
-  <p>We do not sell your personal information.</p>
+  <h2>1. The short version</h2>
+  <p>SkyTask keeps your tasks, reminders, ideas, notes, and voice memos on your phone by default.</p>
+  <p>Optional features such as calendar sync, Google Sign-In, Firebase, or a backup you export only process extra data when you use them.</p>
+  <p>We do not sell your personal information. SkyTask does not show ads.</p>
 
-  <h2>2. Information the app processes</h2>
+  <h2>2. What the app stores</h2>
   <ul>
-    <li><strong>App content you create:</strong> titles, descriptions, categories, due dates/times, completion status, and similar fields.</li>
-    <li><strong>Voice memos:</strong> audio files you record, stored in app private storage on your device.</li>
-    <li><strong>Reminders &amp; notifications:</strong> reminder times and notification settings so alerts can fire on time.</li>
-    <li><strong>Calendar data (optional):</strong> if you enable calendar sync, the app reads and writes calendar events on your device calendars (including Google Calendar when that account is available).</li>
-    <li><strong>Security:</strong> PIN / biometric unlock preferences for app lock and private items (credentials stay on device).</li>
-    <li><strong>Backups (optional):</strong> if you export a backup, a file you choose may include your app content.</li>
-    <li><strong>Account / Firebase (optional):</strong> if you sign in, identifiers such as account email and auth tokens may be processed by Firebase Auth / Google Sign-In / Firestore / FCM as needed for that feature.</li>
-    <li><strong>Diagnostics:</strong> standard Android / Play crash or performance signals may be processed by the platform; the app does not currently include a separate third-party analytics SDK.</li>
+    <li><strong>Content you create</strong> - titles, notes, categories, due dates and times, completion status, and similar fields</li>
+    <li><strong>Voice memos</strong> - recordings you make, kept in the app's private storage</li>
+    <li><strong>Reminders</strong> - times and notification settings so alerts can fire when you asked</li>
+    <li><strong>Calendar</strong> - only if you turn on calendar sync; the app can read and write events on calendars you choose</li>
+    <li><strong>App lock</strong> - PIN or biometric preferences stay on the device</li>
+    <li><strong>Backups</strong> - only if you export one; the file you save is under your control</li>
+    <li><strong>Account</strong> - only if you sign in; Google / Firebase may handle email and auth tokens for that feature</li>
+    <li><strong>Diagnostics</strong> - Android or Play may record crash or performance signals; SkyTask does not add a separate analytics SDK</li>
   </ul>
 
-  <h2>3. Permissions and why we ask</h2>
+  <h2>3. Permissions</h2>
   <ul>
-    <li><strong>Microphone:</strong> record voice memos attached to tasks, reminders, ideas, or notes.</li>
-    <li><strong>Notifications:</strong> show reminder alerts.</li>
-    <li><strong>Exact alarms:</strong> fire reminders at the time you chose, including after reboot where allowed.</li>
-    <li><strong>Calendar (read &amp; write):</strong> optional sync of reminders to a device / Google calendar you select.</li>
-    <li><strong>Biometric / fingerprint:</strong> optional app unlock.</li>
-    <li><strong>Storage (legacy Android versions only):</strong> limited access to pick/save backup files where needed.</li>
-    <li><strong>Internet:</strong> optional cloud / auth / messaging features and opening links.</li>
+    <li><strong>Microphone</strong> - voice memos on tasks, reminders, ideas, or notes</li>
+    <li><strong>Notifications</strong> - reminder alerts</li>
+    <li><strong>Exact alarms</strong> - reminders at the time you set, including after reboot when the system allows it</li>
+    <li><strong>Calendar</strong> - optional sync to a device or Google calendar you select</li>
+    <li><strong>Biometrics</strong> - optional unlock</li>
+    <li><strong>Storage</strong> - only on older Android versions when picking or saving backup files</li>
+    <li><strong>Internet</strong> - optional cloud or sign-in features, and opening links</li>
   </ul>
 
-  <h2>4. How we use information</h2>
-  <p>We use data only to provide SkyTask features you request: organizing content, reminding you on time, syncing to a calendar you enable, securing private content, and restoring backups you import.</p>
-  <p>We do not use your content for advertising profiling today.</p>
+  <h2>4. How data is used</h2>
+  <p>Data is used to run the features you ask for: organizing your content, sending reminders on time, syncing a calendar you enable, locking private items, and restoring backups you import.</p>
+  <p>Your content is not used for advertising.</p>
 
-  <h2>5. Advertising (current and future)</h2>
-  <p>SkyTask does not show ads in the current release.</p>
-  <p>Future versions may include ads (for example Google AdMob). If ads are added, we will update this Privacy Policy and the Google Play Data safety / App content answers before or when that version ships, and disclose any additional data those ad SDKs collect.</p>
+  <h2>5. Ads</h2>
+  <p>SkyTask does not contain ads.</p>
 
   <h2>6. Sharing</h2>
   <p>We do not sell your data.</p>
-  <p>Data may be processed by service providers only when you use related features, for example Google / Android calendar provider, Google Sign-In / Firebase, and Google Play services on the device.</p>
-  <p>You may also share backups or content yourself through the Android share sheet or files you export.</p>
+  <p>When you use related features, data may pass through providers such as the device calendar, Google Sign-In / Firebase, or Google Play services.</p>
+  <p>You can also share backups or content yourself with the Android share sheet or files you export.</p>
 
-  <h2>7. Retention and deletion</h2>
-  <p>Content remains on your device until you delete it, clear app data, or uninstall the app. Exported backup files you saved elsewhere are under your control.</p>
+  <h2>7. Keeping and deleting data</h2>
+  <p>Content stays on your device until you delete it, clear app data, or uninstall SkyTask.</p>
+  <p>Deleting an item removes it from local storage. Removing a voice memo deletes that recording.</p>
+  <p>Uninstalling removes app-private data on the phone. Backup files you saved elsewhere are not removed automatically.</p>
 
-  <h2>8. Children’s privacy</h2>
-  <p>SkyTask is not directed at children under 13 (or the minimum age required in your country). We do not knowingly collect personal information from children.</p>
+  <h2>8. Children</h2>
+  <p>SkyTask is not aimed at children under 13 (or the minimum age in your country). We do not knowingly collect personal information from children.</p>
 
   <h2>9. Security</h2>
-  <p>We use platform security features such as app-private storage, optional PIN / biometric lock, and optional encryption for private content. No method is 100% secure.</p>
+  <p>SkyTask uses app-private storage, optional PIN or biometric lock, and optional encryption for private items.</p>
 
   <h2>10. Your choices</h2>
   <ul>
-    <li>Deny microphone, calendar, or notification permission in system Settings.</li>
-    <li>Turn calendar sync off in SkyTask Settings.</li>
-    <li>Turn app lock off after verifying your identity.</li>
-    <li>Export or delete your data from within the app.</li>
-    <li>Contact us with privacy questions.</li>
+    <li>Turn off microphone, calendar, or notification access in system Settings</li>
+    <li>Turn calendar sync off in SkyTask Settings</li>
+    <li>Turn app lock off after verifying it's you</li>
+    <li>Export or delete your data in the app</li>
+    <li>Email us with questions</li>
   </ul>
 
   <h2>11. Contact</h2>
-  <p>Developer: Preshan Pradeepa Kariyawasam<br />
-  Email: <a href="mailto:preshanpradeepa@gmail.com">preshanpradeepa@gmail.com</a><br />
-  GitHub: <a href="https://github.com/preshan/SkyTask">https://github.com/preshan/SkyTask</a></p>
+  <p>
+    Preshan Pradeepa Kariyawasam<br />
+    Email: <a href="mailto:preshanpradeepa@gmail.com">preshanpradeepa@gmail.com</a><br />
+    GitHub: <a href="https://github.com/preshan/SkyTask">https://github.com/preshan/SkyTask</a>
+  </p>
 
-  <h2>12. Changes</h2>
-  <p>We may update this policy when features or legal requirements change. The “Last updated” date will change, and significant updates will be reflected in the app and Play listing where required.</p>
+  <h2>12. Updates</h2>
+  <p>This page may change when the app does. The date at the top shows the latest revision.</p>
 </body>
 </html>

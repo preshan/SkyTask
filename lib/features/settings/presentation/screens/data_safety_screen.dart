@@ -1,6 +1,6 @@
 import 'legal_doc_screen.dart';
 
-/// In-app Data safety + permissions notes (copy for Play Console too).
+/// Data safety and permission notes (for users and Play Console).
 class DataSafetyScreen extends LegalDocScreen {
   const DataSafetyScreen({super.key})
       : super(
@@ -8,99 +8,75 @@ class DataSafetyScreen extends LegalDocScreen {
           sections: const [
             LegalSection(
               body:
-                  'Use this page as a guide when filling Google Play Data safety '
-                  'and permission declarations. Answers below match the current '
-                  'SkyTask code.',
+                  'How SkyTask handles data and why it asks for certain '
+                  'permissions. Useful when filling Google Play forms too.',
             ),
             LegalSection(
-              heading: 'Data safety (Play Console) — overview',
-              body:
-                  '• Does the app collect personal data? Yes, limited and mostly '
-                  'on-device / optional.\n'
-                  '• Is data encrypted in transit? Yes for network features '
-                  '(HTTPS / Google & Firebase SDKs).\n'
-                  '• Can users request deletion? Yes: delete items in-app, clear '
-                  'app data, or uninstall. Exported backups you saved elsewhere '
-                  'must be deleted by you.\n'
-                  '• Data sold? No.\n'
-                  '• Data used for ads today? No.\n'
-                  '• Future ads possible? Yes; disclose before shipping ads.',
+              heading: 'Overview',
+              bullets: [
+                'Personal data: limited, mostly on-device; some optional cloud '
+                    'features',
+                'Encrypted in transit: yes for network features (HTTPS / Google '
+                    'and Firebase SDKs)',
+                'Delete your data: delete items in the app, clear app data, or '
+                    'uninstall. Delete exported backups yourself if you saved '
+                    'them elsewhere',
+                'Sold: no',
+                'Used for ads: no',
+              ],
             ),
             LegalSection(
-              heading: 'Data types to declare',
-              body:
-                  '• App activity / user-generated content: tasks, reminders, '
-                  'ideas, notes (on device).\n'
-                  '• Audio files: voice memos (on device; mic required to create).\n'
-                  '• Calendar events: only if calendar sync is enabled.\n'
-                  '• Personal info / account: only if the user signs in with '
-                  'Google / Firebase (optional).\n'
-                  '• App info & performance: standard platform crash signals '
-                  'possible; no separate analytics SDK today.\n'
-                  '• Device IDs: may be used by Firebase / Google Play services '
-                  'when those optional features run.',
+              heading: 'Data types',
+              bullets: [
+                'App content — tasks, reminders, ideas, notes (on device)',
+                'Audio — voice memos (on device; mic needed to record)',
+                'Calendar events — only with calendar sync on',
+                'Account info — only if you sign in with Google / Firebase',
+                'App performance — platform crash signals possible; no separate '
+                    'analytics SDK',
+                'Device IDs — may be used by Firebase or Play services when '
+                    'those features run',
+              ],
             ),
             LegalSection(
-              heading: 'Microphone (sensitive permission)',
+              heading: 'Microphone',
               body:
-                  'Purpose: record voice memos for tasks, reminders, ideas, and '
-                  'notes.\n\n'
-                  'User benefit: capture spoken notes without typing.\n\n'
-                  'Not used for: calls, always-on listening, or advertising.\n\n'
-                  'Console note example: “SkyTask requests the Microphone '
-                  'permission solely so users can attach voice memos to their '
-                  'own tasks, reminders, ideas, or notes. Audio is stored in '
-                  'app-private storage on the device unless the user exports a '
-                  'backup.”',
+                  'Used to attach voice memos to tasks, reminders, ideas, or '
+                  'notes. Audio stays in app-private storage unless you export '
+                  'a backup.\n\n'
+                  'Not used for calls, always-on listening, or ads.',
             ),
             LegalSection(
-              heading: 'Calendar (sensitive permission)',
+              heading: 'Calendar',
               body:
-                  'Purpose: optional sync of SkyTask reminders to a writable '
-                  'device calendar (including Google Calendar).\n\n'
-                  'User benefit: see reminders alongside other events.\n\n'
-                  'Not used for: reading unrelated calendars for ads or '
-                  'resale.\n\n'
-                  'Console note example: “Calendar permission is used only when '
-                  'the user enables Calendar sync in Settings, to create or '
-                  'update reminder events on a calendar they select.”',
+                  'Used only when Calendar sync is enabled, to create or update '
+                  'reminder events on a calendar you pick.\n\n'
+                  'Not used to sell data or show ads.',
             ),
             LegalSection(
-              heading: 'Exact alarm declaration / justification',
+              heading: 'Exact alarms',
               body:
-                  'Permission: SCHEDULE_EXACT_ALARM / USE_EXACT_ALARM.\n\n'
-                  'Core function: time-sensitive reminder notifications must fire '
-                  'at the user-chosen time.\n\n'
-                  'Why exact (not inexact): productivity reminders are '
-                  'time-critical; delayed delivery would break the feature.\n\n'
-                  'Console declaration example: “SkyTask is a reminder and task '
-                  'app. Exact alarms are required so reminder notifications are '
-                  'delivered at the precise time set by the user, including '
-                  'after device reboot when permitted by the system. Alarms are '
-                  'not used for ads or unrelated background work.”',
+                  'SkyTask needs exact alarms so reminder notifications arrive '
+                  'at the time you set, including after reboot when the system '
+                  'allows it.\n\n'
+                  'Alarms are not used for ads or unrelated background work.',
             ),
             LegalSection(
               heading: 'Notifications',
               body:
-                  'POST_NOTIFICATIONS is used to show reminder alerts the user '
-                  'scheduled. Users can disable notifications in system '
-                  'Settings.',
+                  'Used for reminder alerts you scheduled. You can turn '
+                  'notifications off in system Settings.',
             ),
             LegalSection(
               heading: 'Account / Firebase',
               body:
-                  'Optional. When used: Firebase Auth, Google Sign-In, Firestore, '
-                  'and Firebase Cloud Messaging may process account identifiers '
-                  'and tokens to provide signed-in / sync / messaging features. '
-                  'If you are not shipping those features yet, say account data '
-                  'is optional / not collected until the user signs in.',
+                  'Optional. When you sign in, Firebase Auth, Google Sign-In, '
+                  'Firestore, and Cloud Messaging may use account identifiers '
+                  'and tokens for signed-in, sync, or messaging features.',
             ),
             LegalSection(
-              heading: 'App content — Ads',
-              body:
-                  'Current answer: No, the app does not contain ads.\n\n'
-                  'If you add AdMob later: change to Yes, update Data safety, '
-                  'and update the Privacy Policy before releasing that build.',
+              heading: 'Ads',
+              body: 'SkyTask does not contain ads.',
             ),
           ],
         );

@@ -17,6 +17,10 @@ class LegalDocScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final bodyStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          height: 1.45,
+        );
+
     return Scaffold(
       appBar: AppBar(
         title: Text(title),
@@ -45,12 +49,23 @@ class LegalDocScreen extends StatelessWidget {
               ),
               const SizedBox(height: 8),
             ],
-            Text(
-              section.body,
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    height: 1.45,
+            if (section.body != null && section.body!.isNotEmpty)
+              Text(section.body!, style: bodyStyle),
+            if (section.bullets != null && section.bullets!.isNotEmpty) ...[
+              if (section.body != null && section.body!.isNotEmpty)
+                const SizedBox(height: 8),
+              for (final item in section.bullets!)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text('•  ', style: bodyStyle),
+                      Expanded(child: Text(item, style: bodyStyle)),
+                    ],
                   ),
-            ),
+                ),
+            ],
           ],
         ],
       ),
@@ -59,8 +74,13 @@ class LegalDocScreen extends StatelessWidget {
 }
 
 class LegalSection {
-  const LegalSection({this.heading, required this.body});
+  const LegalSection({
+    this.heading,
+    this.body,
+    this.bullets,
+  });
 
   final String? heading;
-  final String body;
+  final String? body;
+  final List<String>? bullets;
 }

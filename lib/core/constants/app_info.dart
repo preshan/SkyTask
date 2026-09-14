@@ -22,10 +22,7 @@ SkyTask helps you capture work and life in one place.
 • Light and dark themes
 
 Your content stays on your device by default. Optional features such as Google Sign-In, Firebase, and calendar sync only run when you choose to use them.
-
-Ads are not shown today. Future versions may include ads; if that happens, this privacy policy and Play listings will be updated first.
 ''';
-
   static String version = '1.1.0';
   static String buildNumber = '2';
   static String get versionLabel => '$version+$buildNumber';

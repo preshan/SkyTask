@@ -6,7 +6,7 @@ import '../../../../core/constants/app_info.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 
-/// Hub between notifications and settings: short description + legal links.
+/// Hub between notifications and settings: app info + legal links.
 class AboutHelpScreen extends StatelessWidget {
   const AboutHelpScreen({super.key});
 
@@ -63,24 +63,29 @@ class AboutHelpScreen extends StatelessWidget {
             textAlign: TextAlign.center,
             style: mist,
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Short description',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(AppInfo.shortDescription, style: mist),
           const SizedBox(height: 20),
           Text(
-            'About',
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            'Tasks, reminders, ideas, and notes in one place. Content stays on '
+            'your phone by default.',
+            style: mist,
           ),
-          const SizedBox(height: 6),
-          Text(AppInfo.fullDescription.trim(), style: mist),
+          const SizedBox(height: 12),
+          const _Bullet(
+            'Tasks with priorities, categories, due dates, and Day Plan',
+          ),
+          const _Bullet(
+            'Reminders with local notifications and optional calendar sync',
+          ),
+          const _Bullet(
+            'Ideas and notes, including private items behind app lock',
+          ),
+          const _Bullet(
+            'Voice memos you can record, play, pause, and seek',
+          ),
+          const _Bullet(
+            'Local storage with optional backup export and import',
+          ),
+          const _Bullet('Light and dark themes'),
           const SizedBox(height: 16),
           const Divider(),
           ListTile(
@@ -103,7 +108,7 @@ class AboutHelpScreen extends StatelessWidget {
             contentPadding: EdgeInsets.zero,
             leading: const SkyIcon(SkyIcons.lock),
             title: const Text('Data safety & permissions'),
-            subtitle: const Text('Mic, calendar, alarms, Firebase notes'),
+            subtitle: const Text('Mic, calendar, alarms, and account notes'),
             trailing: const SkyIcon(SkyIcons.chevronRight),
             onTap: () => context.push(AppRoutes.dataSafety),
           ),
@@ -122,6 +127,30 @@ class AboutHelpScreen extends StatelessWidget {
             title: const Text('Settings'),
             onTap: () => context.go(AppRoutes.settings),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Bullet extends StatelessWidget {
+  const _Bullet(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    final style = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+          height: 1.4,
+        );
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('•  ', style: style),
+          Expanded(child: Text(text, style: style)),
         ],
       ),
     );
