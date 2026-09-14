@@ -7,6 +7,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/list_add_button.dart';
@@ -306,7 +307,10 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
       ),
       body: entriesAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => AsyncErrorView(
+          error: e,
+          onRetry: () => ref.invalidate(calendarEntriesProvider),
+        ),
         data: (entries) {
           final usedCategories = entries
               .where((e) => e.reminder != null)

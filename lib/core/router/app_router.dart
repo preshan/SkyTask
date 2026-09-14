@@ -7,6 +7,10 @@ import '../../features/home/presentation/screens/home_screen.dart';
 import '../../features/ideas/presentation/screens/ideas_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/privacy/presentation/screens/privacy_setup_screen.dart';
+import '../../features/settings/presentation/screens/about_help_screen.dart';
+import '../../features/settings/presentation/screens/data_safety_screen.dart';
+import '../../features/settings/presentation/screens/faq_screen.dart';
+import '../../features/settings/presentation/screens/privacy_policy_screen.dart';
 import '../../features/settings/presentation/screens/settings_screen.dart';
 import '../../features/splash/presentation/screens/splash_screen.dart';
 import '../../features/tasks/presentation/screens/tasks_screen.dart';
@@ -21,6 +25,10 @@ abstract final class AppRoutes {
   static const calendar = '/calendar';
   static const ideas = '/ideas';
   static const settings = '/settings';
+  static const aboutHelp = '/about-help';
+  static const privacyPolicy = '/privacy-policy';
+  static const faq = '/faq';
+  static const dataSafety = '/data-safety';
   static const create = '/create';
 
   static String createKind(String kind) => '$create/$kind';
@@ -155,6 +163,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.settings,
             pageBuilder: (_, __) =>
                 const NoTransitionPage(child: SettingsScreen()),
+          ),
+          GoRoute(
+            path: AppRoutes.aboutHelp,
+            builder: (_, __) => const AboutHelpScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.privacyPolicy,
+            builder: (_, __) => const PrivacyPolicyScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.faq,
+            builder: (_, __) => const FaqScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.dataSafety,
+            builder: (_, __) => const DataSafetyScreen(),
           ),
         ],
       ),

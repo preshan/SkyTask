@@ -334,7 +334,8 @@ Future<void> _deleteCategory({
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: replacement,
+                    key: ValueKey(replacement),
+                    initialValue: replacement,
                     decoration: const InputDecoration(
                       border: OutlineInputBorder(),
                       labelText: 'Move to',

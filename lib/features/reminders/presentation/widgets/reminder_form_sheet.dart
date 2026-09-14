@@ -359,7 +359,8 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<NotificationOffset>(
-            value: _offset,
+            key: ValueKey(_offset),
+            initialValue: _offset,
             decoration: const InputDecoration(
               labelText: 'Notify me',
               border: OutlineInputBorder(),

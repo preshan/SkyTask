@@ -8,6 +8,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
@@ -179,7 +180,10 @@ class _TasksScreenState extends ConsumerState<TasksScreen> {
           Expanded(
             child: tasksAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('Error: $e')),
+              error: (e, _) => AsyncErrorView(
+                error: e,
+                onRetry: () => ref.invalidate(_tasksListProvider),
+              ),
               data: (tasks) {
                 var filtered = _applyFilters(tasks);
                 filtered = _applySort(filtered);
