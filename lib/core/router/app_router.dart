@@ -166,19 +166,23 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           GoRoute(
             path: AppRoutes.aboutHelp,
-            builder: (_, __) => const AboutHelpScreen(),
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: AboutHelpScreen()),
           ),
           GoRoute(
             path: AppRoutes.privacyPolicy,
-            builder: (_, __) => const PrivacyPolicyScreen(),
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: PrivacyPolicyScreen()),
           ),
           GoRoute(
             path: AppRoutes.faq,
-            builder: (_, __) => const FaqScreen(),
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: FaqScreen()),
           ),
           GoRoute(
             path: AppRoutes.dataSafety,
-            builder: (_, __) => const DataSafetyScreen(),
+            pageBuilder: (_, __) =>
+                const NoTransitionPage(child: DataSafetyScreen()),
           ),
         ],
       ),

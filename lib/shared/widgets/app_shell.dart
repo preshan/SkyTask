@@ -48,7 +48,13 @@ class _AppShellState extends ConsumerState<AppShell> {
   }
 
   int? _indexForLocation(String location) {
-    if (location.startsWith(AppRoutes.settings)) return null;
+    if (location.startsWith(AppRoutes.settings) ||
+        location.startsWith(AppRoutes.aboutHelp) ||
+        location.startsWith(AppRoutes.privacyPolicy) ||
+        location.startsWith(AppRoutes.faq) ||
+        location.startsWith(AppRoutes.dataSafety)) {
+      return null;
+    }
     for (var i = 0; i < _tabs.length; i++) {
       if (location.startsWith(_tabs[i].route)) return i;
     }
