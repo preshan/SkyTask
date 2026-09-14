@@ -4,20 +4,17 @@ import 'package:intl/intl.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/task_categories.dart';
-import '../../../../core/di/content_providers.dart';
-import '../../../../core/di/providers.dart';
 import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../reminders/presentation/widgets/reminder_form_sheet.dart';
 import '../../../tasks/presentation/widgets/task_form_sheet.dart';
 import '../../domain/day_plan_item.dart';
-import '../providers/calendar_providers.dart';
 import '../providers/day_plan_providers.dart';
 
 const _kDayStartHour = 6;
 const _kDayEndHour = 22;
 const _kSlotMinutes = 30;
-const _kHourHeight = 104.0;
+const _kHourHeight = 88.0;
 
 double get _pixelsPerMinute => _kHourHeight / 60.0;
 
@@ -114,7 +111,7 @@ class DayPlanView extends ConsumerWidget {
             start.difference(dayStart).inMinutes * _pixelsPerMinute;
         final blockHeight = (end.difference(start).inMinutes *
                 _pixelsPerMinute)
-            .clamp(36.0, double.infinity);
+            .clamp(28.0, double.infinity);
 
         const leftGutter = 72.0;
         final available = MediaQuery.sizeOf(context).width - leftGutter - 20;
@@ -204,135 +201,12 @@ class DayPlanView extends ConsumerWidget {
     WidgetRef ref,
     DayPlanItem item,
   ) async {
-    final action = await showModalBottomSheet<String>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        final completeLabel =
-            item.isCompleted ? 'Mark incomplete' : 'Mark complete';
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                title: Text(
-                  item.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                subtitle: Text(
-                  '${DateFormat.jm().format(item.start)} - ${DateFormat.jm().format(item.end)} · ${item.kind == DayPlanKind.task ? 'Task' : 'Reminder'}',
-                ),
-              ),
-              ListTile(
-                leading: const SkyIcon(SkyIcons.edit),
-                title: const Text('Edit'),
-                onTap: () => Navigator.pop(ctx, 'edit'),
-              ),
-              ListTile(
-                leading: SkyIcon(
-                  item.isCompleted ? SkyIcons.pending : SkyIcons.tasks,
-                ),
-                title: Text(completeLabel),
-                onTap: () => Navigator.pop(ctx, 'toggle'),
-              ),
-              ListTile(
-                leading: const SkyIcon(SkyIcons.event),
-                title: const Text('Change time'),
-                onTap: () => Navigator.pop(ctx, 'time'),
-              ),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
-    );
-    if (action == null || !context.mounted) return;
-
-    switch (action) {
-      case 'edit':
-        if (item.kind == DayPlanKind.task && item.task != null) {
-          await showTaskFormSheet(context, ref, task: item.task);
-        } else if (item.reminder != null) {
-          await showReminderFormSheet(context, ref, reminder: item.reminder);
-        }
-      case 'toggle':
-        await _toggleComplete(ref, item);
-      case 'time':
-        await _changeTime(context, ref, item);
-    }
-  }
-
-  Future<void> _toggleComplete(WidgetRef ref, DayPlanItem item) async {
     if (item.kind == DayPlanKind.task && item.task != null) {
-      final repo = await ref.read(taskRepositoryProvider.future);
-      await repo.toggleComplete(item.task!.id);
-      refreshTasks(ref);
+      await showTaskFormSheet(context, ref, task: item.task);
       return;
     }
     if (item.reminder != null) {
-      final settings = ref.read(calendarSettingsProvider);
-      final scheduler = await ref.read(reminderSchedulerProvider.future);
-      final updated = item.reminder!.copyWith(
-        isCompleted: !item.reminder!.isCompleted,
-        updatedAt: DateTime.now(),
-      );
-      await scheduler.update(
-        reminder: updated,
-        syncCalendar: false,
-        calendarId: settings.defaultCalendarId,
-      );
-      refreshReminders(ref);
-    }
-  }
-
-  Future<void> _changeTime(
-    BuildContext context,
-    WidgetRef ref,
-    DayPlanItem item,
-  ) async {
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: TimeOfDay.fromDateTime(item.start),
-    );
-    if (picked == null || !context.mounted) return;
-
-    final newStart = DateTime(
-      day.year,
-      day.month,
-      day.day,
-      picked.hour,
-      picked.minute,
-    );
-
-    if (item.kind == DayPlanKind.task && item.task != null) {
-      final mins = picked.hour * 60 + picked.minute;
-      final repo = await ref.read(taskRepositoryProvider.future);
-      await repo.save(
-        item.task!.copyWith(
-          dueDate: DateTime(day.year, day.month, day.day),
-          dueTimeMinutes: mins,
-          updatedAt: DateTime.now(),
-        ),
-      );
-      refreshTasks(ref);
-      return;
-    }
-
-    if (item.reminder != null) {
-      final settings = ref.read(calendarSettingsProvider);
-      final scheduler = await ref.read(reminderSchedulerProvider.future);
-      final updated = item.reminder!.copyWith(
-        reminderDateTime: newStart,
-        updatedAt: DateTime.now(),
-      );
-      await scheduler.update(
-        reminder: updated,
-        syncCalendar:
-            settings.canSyncToCalendar && !updated.isVoice && !updated.isPrivate,
-        calendarId: settings.defaultCalendarId,
-      );
-      refreshReminders(ref);
+      await showReminderFormSheet(context, ref, reminder: item.reminder);
     }
   }
 }
@@ -348,14 +222,16 @@ class _DayPlanGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    final line = scheme.outlineVariant.withValues(alpha: 0.45);
+    final brand = AppColors.brand(context);
+    final line = brand.withValues(alpha: 0.45);
+    final lineStrong = brand.withValues(alpha: 0.7);
     final slots = <Widget>[];
 
     for (var hour = _kDayStartHour; hour < _kDayEndHour; hour++) {
       for (var half = 0; half < 2; half++) {
         final slotStart = DateTime(day.year, day.month, day.day, hour, half * 30);
         final isHour = half == 0;
+        final topLine = isHour ? lineStrong : line;
         slots.add(
           SizedBox(
             height: _kSlotMinutes * _pixelsPerMinute,
@@ -374,7 +250,10 @@ class _DayPlanGrid extends StatelessWidget {
                               style: Theme.of(context)
                                   .textTheme
                                   .labelLarge
-                                  ?.copyWith(fontWeight: FontWeight.w700),
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: brand,
+                                  ),
                             ),
                           )
                         : const SizedBox.shrink(),
@@ -387,12 +266,12 @@ class _DayPlanGrid extends StatelessWidget {
                           width: 8,
                           height: 8,
                           decoration: BoxDecoration(
-                            color: line,
+                            color: lineStrong,
                             shape: BoxShape.circle,
                           ),
                         ),
                         Expanded(
-                          child: Container(width: 1.5, color: line),
+                          child: Container(width: 1.5, color: lineStrong),
                         ),
                       ],
                     ),
@@ -401,7 +280,7 @@ class _DayPlanGrid extends StatelessWidget {
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border(
-                          top: BorderSide(color: line, width: 1),
+                          top: BorderSide(color: topLine, width: isHour ? 1.25 : 1),
                         ),
                       ),
                       alignment: Alignment.topLeft,
@@ -409,7 +288,7 @@ class _DayPlanGrid extends StatelessWidget {
                       child: Text(
                         DateFormat.Hm().format(slotStart),
                         style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                              color: scheme.onSurface.withValues(alpha: 0.4),
+                              color: brand.withValues(alpha: 0.55),
                               fontSize: 10,
                             ),
                       ),
@@ -446,37 +325,41 @@ class _DayPlanBlock extends ConsumerWidget {
       defaultOverrides: overrides,
     );
     final fill = Color(colorValue);
-    final onFill = fill.computeLuminance() > 0.55
+    final muted = item.isCompleted;
+    final surface = Theme.of(context).colorScheme.surface;
+    final blockColor = muted
+        ? Color.lerp(fill, surface, 0.35)!
+        : fill;
+    final onFill = blockColor.computeLuminance() > 0.55
         ? const Color(0xFF3D3D3D)
         : Colors.white;
-    final muted = item.isCompleted;
 
     final timeLabel =
         '${DateFormat.jm().format(item.start)} - ${DateFormat.jm().format(item.end)}';
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(10),
       child: Material(
-        color: fill.withValues(alpha: muted ? 0.28 : 0.55),
+        color: blockColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
           side: BorderSide(
-            color: fill.withValues(alpha: muted ? 0.35 : 0.85),
+            color: fill.withValues(alpha: muted ? 0.55 : 1),
           ),
         ),
         child: InkWell(
           onTap: onTap,
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 4, 8, 4),
+            padding: const EdgeInsets.fromLTRB(8, 3, 8, 3),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Container(
-                  width: 7,
-                  height: 7,
+                  width: 6,
+                  height: 6,
                   margin: const EdgeInsets.only(right: 8),
                   decoration: BoxDecoration(
-                    color: fill,
+                    color: onFill.withValues(alpha: 0.9),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -493,13 +376,13 @@ class _DayPlanBlock extends ConsumerWidget {
                           style:
                               Theme.of(context).textTheme.labelLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    height: 1.1,
-                                    fontSize: 13,
+                                    height: 1.05,
+                                    fontSize: 12.5,
                                     decoration: muted
                                         ? TextDecoration.lineThrough
                                         : null,
                                     color: onFill.withValues(
-                                      alpha: muted ? 0.65 : 1,
+                                      alpha: muted ? 0.75 : 1,
                                     ),
                                   ),
                         ),
@@ -511,8 +394,9 @@ class _DayPlanBlock extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style:
                               Theme.of(context).textTheme.labelSmall?.copyWith(
-                                    height: 1.1,
-                                    color: onFill.withValues(alpha: 0.7),
+                                    height: 1.05,
+                                    fontSize: 10.5,
+                                    color: onFill.withValues(alpha: 0.8),
                                   ),
                         ),
                       ),
