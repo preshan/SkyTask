@@ -2,6 +2,14 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.12.2] — 2026-09-14
+
+### Changed
+- Public and in-app privacy / FAQ / data-safety copy cleaned up for GitHub Pages
+- About & help opens like Settings (no overlapping slide transition)
+- Day Plan: tap opens the task or reminder form; opaque shorter blocks; brand-blue grid lines
+- Updated app icon PNG across launcher and in-app surfaces
+
 ## [1.12.1] — 2026-09-14
 
 ### Fixed

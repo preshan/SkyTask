@@ -15,7 +15,7 @@ List<Widget> skyTaskAppBarActions(BuildContext context) {
     IconButton(
       icon: const SkyIcon(SkyIcons.info),
       tooltip: 'About & help',
-      onPressed: () => context.push(AppRoutes.aboutHelp),
+      onPressed: () => context.go(AppRoutes.aboutHelp),
     ),
     IconButton(
       icon: const SkyIcon(SkyIcons.settings),

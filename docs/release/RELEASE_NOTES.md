@@ -4,6 +4,18 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.12.2 — 2026-09-14 · `1.12.2+25`
+
+[Download SkyTask-1.12.2.apk](https://github.com/preshan/SkyTask/releases/download/v1.12.2/SkyTask-1.12.2.apk)
+
+### Changes
+- Privacy policy page and help copy ready for public hosting
+- About & help matches Settings navigation (no text overlap)
+- Day Plan opens items directly; clearer opaque blocks and blue timeline
+- New app icon PNG
+
+---
+
 ## 1.12.1 — 2026-09-14 · `1.12.1+24`
 
 [Download SkyTask-1.12.1.apk](https://github.com/preshan/SkyTask/releases/download/v1.12.1/SkyTask-1.12.1.apk)

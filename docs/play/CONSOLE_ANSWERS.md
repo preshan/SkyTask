@@ -1,7 +1,6 @@
 # Google Play Console answers for SkyTask
 
 Copy/paste helpers for App content, Data safety, and permission declarations.
-Update these if you add ads or change Firebase usage.
 
 ---
 
@@ -26,8 +25,6 @@ SkyTask helps you capture work and life in one place.
 • Light and dark themes
 
 Your content stays on your device by default. Optional features such as Google Sign-In, Firebase, and calendar sync only run when you choose to use them.
-
-Ads are not shown today. Future versions may include ads; if that happens, this privacy policy and Play listings will be updated first.
 ```
 
 **Privacy Policy URL (after GitHub Pages is enabled on /docs):**
@@ -43,7 +40,7 @@ https://preshan.github.io/SkyTask/privacy.html
 
 | Question | Answer now |
 |----------|------------|
-| Ads | **No** (ads may appear later; change to Yes before shipping ads) |
+| Ads | **No** |
 | In-app purchases | No (unless you add them) |
 | News app | No |
 | COVID-19 contact tracing / status | No |
@@ -57,21 +54,21 @@ https://preshan.github.io/SkyTask/privacy.html
 - **Encrypted in transit:** Yes (for network features)
 - **Users can request deletion:** Yes (in-app delete / clear data / uninstall)
 - **Data sold:** No
-- **Data used for ads now:** No
+- **Data used for ads:** No
 
 ### Data types
 - User-generated content (tasks, reminders, ideas, notes) — on device
 - Audio (voice memos) — on device; microphone to create
 - Calendar — only if sync enabled
 - Account / personal info — only if user signs in (Firebase / Google)
-- App info / diagnostics — platform level possible; no separate analytics SDK today
+- App info / diagnostics — platform level possible; no separate analytics SDK
 
 ---
 
 ## Microphone declaration
 
 ```
-SkyTask requests the Microphone permission solely so users can attach voice memos to their own tasks, reminders, ideas, or notes. Audio is stored in app-private storage on the device unless the user exports a backup. It is not used for advertising or always-on listening.
+SkyTask requests the Microphone permission so users can attach voice memos to their own tasks, reminders, ideas, or notes. Audio is stored in app-private storage on the device unless the user exports a backup. It is not used for advertising or always-on listening.
 ```
 
 ---
@@ -87,7 +84,7 @@ Calendar permission is used only when the user enables Calendar sync in Settings
 ## Exact alarm declaration
 
 ```
-SkyTask is a reminder and task app. Exact alarms are required so reminder notifications are delivered at the precise time set by the user, including after device reboot when permitted by the system. Alarms are not used for ads or unrelated background work.
+SkyTask is a reminder and task app. Exact alarms are required so reminder notifications are delivered at the time set by the user, including after device reboot when permitted by the system. Alarms are not used for ads or unrelated background work.
 ```
 
 ---
