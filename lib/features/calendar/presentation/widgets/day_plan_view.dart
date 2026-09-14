@@ -6,6 +6,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../reminders/presentation/widgets/reminder_form_sheet.dart';
 import '../../../tasks/presentation/widgets/task_form_sheet.dart';
@@ -39,7 +40,10 @@ class DayPlanView extends ConsumerWidget {
 
     return itemsAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => AsyncErrorView(
+        error: e,
+        onRetry: () => ref.invalidate(dayPlanItemsProvider(day)),
+      ),
       data: (all) {
         var items = all;
         if (privateOnly) {

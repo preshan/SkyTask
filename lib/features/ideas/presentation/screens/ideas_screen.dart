@@ -8,6 +8,7 @@ import '../../../../core/services/voice_memo_service.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/create/create_kind.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
 import '../../../../shared/widgets/list_add_button.dart';
@@ -201,7 +202,10 @@ class _IdeasTabState extends ConsumerState<_IdeasTab> {
 
     return ideasAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => AsyncErrorView(
+        error: e,
+        onRetry: () => ref.invalidate(_ideasProvider),
+      ),
       data: (ideas) {
         var filtered = ideas;
         if (widget.createdToday) {
@@ -286,7 +290,10 @@ class _NotesTabState extends ConsumerState<_NotesTab> {
 
     return notesAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => AsyncErrorView(
+        error: e,
+        onRetry: () => ref.invalidate(_notesProvider),
+      ),
       data: (notes) {
         var filtered = notes;
         if (widget.createdToday) {

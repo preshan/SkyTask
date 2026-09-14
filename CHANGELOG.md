@@ -2,6 +2,19 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.12.0] — 2026-09-14
+
+### Added
+- New app icon across launcher, splash, and Settings
+- About & help hub (app bar info icon) with short description
+- In-app Privacy Policy, FAQ, and Data safety & permissions pages
+- Public Privacy Policy HTML for Google Play (`docs/privacy.html`)
+- Play Console answer sheet (`docs/play/CONSOLE_ANSWERS.md`)
+- Shared async error view with Retry on Home, Tasks, Ideas, Notes, Calendar, Day Plan
+
+### Fixed
+- Deprecated `DropdownButtonFormField.value` usage
+
 ## [1.11.2] — 2026-09-13
 
 ### Changed

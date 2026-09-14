@@ -164,12 +164,50 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => showImportBackupFlow(context, ref),
           ),
           const Divider(),
+          _header(context, 'About & legal'),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.info),
+            title: const Text('About & help'),
+            subtitle: Text(AppInfo.shortDescription),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
+            onTap: () => context.push(AppRoutes.aboutHelp),
+          ),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.shield),
+            title: const Text('Privacy Policy'),
+            subtitle: const Text('In-app policy · also required for Play Console'),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
+            onTap: () => context.push(AppRoutes.privacyPolicy),
+          ),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.note),
+            title: const Text('FAQ'),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
+            onTap: () => context.push(AppRoutes.faq),
+          ),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.lock),
+            title: const Text('Data safety & permissions'),
+            subtitle: const Text(
+              'Mic, calendar, exact alarms, notifications, Firebase',
+            ),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
+            onTap: () => context.push(AppRoutes.dataSafety),
+          ),
+          ListTile(
+            leading: const SkyIcon(SkyIcons.event),
+            title: const Text('Privacy Policy (web)'),
+            subtitle: const Text('Open the public URL for Play Console'),
+            trailing: const SkyIcon(SkyIcons.chevronRight),
+            onTap: () => _openLink(AppInfo.privacyPolicyUrl),
+          ),
+          const Divider(),
           Padding(
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
             child: Column(
               children: [
                 InkWell(
-                  onTap: () => _showAbout(context),
+                  onTap: () => context.push(AppRoutes.aboutHelp),
                   borderRadius: BorderRadius.circular(16),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
@@ -194,6 +232,12 @@ class SettingsScreen extends ConsumerWidget {
                               .textTheme
                               .titleMedium
                               ?.copyWith(fontWeight: FontWeight.w700),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          AppInfo.shortDescription,
+                          style: mist,
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 4),
@@ -267,47 +311,6 @@ class SettingsScreen extends ConsumerWidget {
   Future<void> _openLink(String url) async {
     final uri = Uri.parse(url);
     await launchUrl(uri, mode: LaunchMode.externalApplication);
-  }
-
-  void _showAbout(BuildContext context) {
-    final linkStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          color: Theme.of(context).colorScheme.primary,
-          decoration: TextDecoration.underline,
-        );
-    showAboutDialog(
-      context: context,
-      applicationName: AppInfo.name,
-      applicationVersion: AppInfo.versionLabel,
-      applicationLegalese: null,
-      children: [
-        const SizedBox(height: 12),
-        Text(AppInfo.tagline),
-        const SizedBox(height: 8),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            Text('© ${AppInfo.copyrightYear} '),
-            GestureDetector(
-              onTap: () => _openLink(AppInfo.repoUrl),
-              child: Text(AppInfo.name, style: linkStyle),
-            ),
-            const Text('. All rights reserved.'),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Wrap(
-          crossAxisAlignment: WrapCrossAlignment.center,
-          children: [
-            const Text('Developed by '),
-            GestureDetector(
-              onTap: () => _openLink(AppInfo.developerGitHub),
-              child: Text(AppInfo.developerName, style: linkStyle),
-            ),
-          ],
-        ),
-        Text(AppInfo.developerEmail),
-      ],
-    );
   }
 
   Future<void> _onAppLockChanged(

@@ -9,6 +9,7 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
 import '../../../../core/utils/date_filters.dart';
 import '../../../../shared/widgets/app_bar_actions.dart';
+import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/frosted_surface.dart';
 import '../../../../shared/widgets/section_header.dart';
 import '../../../../shared/widgets/sky_icon.dart';
@@ -35,7 +36,11 @@ class HomeScreen extends ConsumerWidget {
           const SectionHeader(title: 'Today'),
           todayCountsAsync.when(
             loading: () => const _ShimmerCard(),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => AsyncErrorView(
+              error: e,
+              compact: true,
+              onRetry: () => ref.invalidate(_todayCreatedCountsProvider),
+            ),
             data: (counts) => _TodayCreateTiles(counts: counts),
           ),
           SectionHeader(
@@ -44,7 +49,11 @@ class HomeScreen extends ConsumerWidget {
           ),
           weekRemindersAsync.when(
             loading: () => const _ShimmerCard(),
-            error: (e, _) => Text('Error: $e'),
+            error: (e, _) => AsyncErrorView(
+              error: e,
+              compact: true,
+              onRetry: () => ref.invalidate(_thisWeekReminderDaysProvider),
+            ),
             data: (days) => _ThisWeekReminderStrip(days: days),
           ),
           const SectionHeader(title: 'Shortcuts'),
@@ -402,7 +411,11 @@ class _HomeShortcuts extends ConsumerWidget {
       padding: const EdgeInsets.only(top: 4, bottom: 24),
       child: countsAsync.when(
         loading: () => const _ShimmerCard(),
-        error: (e, _) => Text('Error: $e'),
+        error: (e, _) => AsyncErrorView(
+          error: e,
+          compact: true,
+          onRetry: () => ref.invalidate(_shortcutCountsProvider),
+        ),
         data: (counts) => Column(
           children: [
             Row(
