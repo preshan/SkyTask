@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.12.5] — 2026-09-14
+
+### Changed
+- Updated FAQ and Data safety & permissions copy
+
 ## [1.12.4] — 2026-09-14
 
 ### Changed
