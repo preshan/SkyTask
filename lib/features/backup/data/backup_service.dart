@@ -22,6 +22,8 @@ import '../../ideas/data/mappers/idea_mapper.dart';
 import '../../ideas/domain/entities/idea.dart';
 import '../../notes/data/mappers/note_mapper.dart';
 import '../../notes/domain/entities/note.dart';
+import '../../quick_links/data/mappers/quick_link_mapper.dart';
+import '../../quick_links/domain/entities/quick_link.dart';
 import '../../reminders/data/mappers/reminder_mapper.dart';
 import '../../reminders/domain/entities/reminder.dart';
 import '../../tasks/data/mappers/task_mapper.dart';
@@ -145,6 +147,7 @@ class BackupService {
     final reminders = await isar.reminderCollections.where().findAll();
     final ideas = await isar.ideaCollections.where().findAll();
     final notes = await isar.noteCollections.where().findAll();
+    final quickLinks = await isar.quickLinkCollections.where().findAll();
 
     final voices = <String, String>{};
     Future<String?> packVoice(String? absolute) async {
@@ -185,6 +188,12 @@ class BackupService {
       noteMaps.add(_noteToJson(n, voiceRel));
     }
 
+    final quickLinkMaps = <Map<String, dynamic>>[];
+    for (final c in quickLinks) {
+      final link = QuickLinkMapper.fromCollection(c);
+      quickLinkMaps.add(_quickLinkToJson(link));
+    }
+
     final prefs = await _preferences;
     return BackupPayload(
       version: 1,
@@ -194,6 +203,7 @@ class BackupService {
       reminders: reminderMaps,
       ideas: ideaMaps,
       notes: noteMaps,
+      quickLinks: quickLinkMaps,
       prefs: {
         AppConstants.themeModeKey: prefs.getString(AppConstants.themeModeKey),
         'custom_task_categories': TaskCategories.loadCustom(prefs)
@@ -233,6 +243,7 @@ class BackupService {
         await isar.reminderCollections.clear();
         await isar.ideaCollections.clear();
         await isar.noteCollections.clear();
+        await isar.quickLinkCollections.clear();
       });
       // Remove orphaned voice files not in backup.
       if (await voiceDir.exists()) {
@@ -261,6 +272,10 @@ class BackupService {
       for (final map in payload.notes) {
         final note = _noteFromJson(map, absoluteVoice);
         await _upsertNote(isar, note);
+      }
+      for (final map in payload.quickLinks) {
+        final link = _quickLinkFromJson(map);
+        await _upsertQuickLink(isar, link);
       }
     });
 
@@ -321,6 +336,16 @@ class BackupService {
     final collection = NoteMapper.toCollection(note);
     if (existing != null) collection.id = existing.id;
     await isar.noteCollections.put(collection);
+  }
+
+  Future<void> _upsertQuickLink(Isar isar, QuickLink link) async {
+    final existing = await isar.quickLinkCollections
+        .filter()
+        .uuidEqualTo(link.id)
+        .findFirst();
+    final collection = QuickLinkMapper.toCollection(link);
+    if (existing != null) collection.id = existing.id;
+    await isar.quickLinkCollections.put(collection);
   }
 
   Future<Directory> _backupDir() async {
@@ -474,6 +499,30 @@ class BackupService {
           (m['attachments'] as List?)?.map((e) => e.toString()).toList() ?? [],
       isPrivate: m['isPrivate'] as bool? ?? false,
       voicePath: absVoice(m['voicePath'] as String?),
+      createdAt: _parseDate(m['createdAt']) ?? DateTime.now(),
+      updatedAt: _parseDate(m['updatedAt']) ?? DateTime.now(),
+    );
+  }
+
+  Map<String, dynamic> _quickLinkToJson(QuickLink link) => {
+        'id': link.id,
+        'title': link.title,
+        'url': link.url,
+        'notes': link.notes,
+        'category': link.category,
+        'isPrivate': link.isPrivate,
+        'createdAt': link.createdAt.toIso8601String(),
+        'updatedAt': link.updatedAt.toIso8601String(),
+      };
+
+  QuickLink _quickLinkFromJson(Map<String, dynamic> m) {
+    return QuickLink(
+      id: m['id'] as String,
+      title: m['title'] as String? ?? '',
+      url: m['url'] as String? ?? '',
+      notes: m['notes'] as String? ?? '',
+      category: m['category'] as String? ?? TaskCategories.personal,
+      isPrivate: m['isPrivate'] as bool? ?? false,
       createdAt: _parseDate(m['createdAt']) ?? DateTime.now(),
       updatedAt: _parseDate(m['updatedAt']) ?? DateTime.now(),
     );

@@ -83,6 +83,9 @@ void main() {
         notes: [
           {'id': 'n1', 'title': 'Note'},
         ],
+        quickLinks: [
+          {'id': 'l1', 'title': 'Useful post', 'url': 'https://example.com'},
+        ],
         prefs: {
           'theme_mode': 'dark',
           'custom_task_categories': ['Health'],
@@ -97,6 +100,7 @@ void main() {
       expect(restored.reminders.single['isPrivate'], isTrue);
       expect(restored.ideas.single['id'], 'i1');
       expect(restored.notes.single['id'], 'n1');
+      expect(restored.quickLinks.single['url'], 'https://example.com');
       expect(restored.prefs['theme_mode'], 'dark');
       expect(restored.voices['voice_memos/a.m4a'], 'YmFzZTY0');
     });
@@ -104,6 +108,7 @@ void main() {
     test('fromJson tolerates missing lists', () {
       final restored = BackupPayload.fromJson({'version': 1});
       expect(restored.tasks, isEmpty);
+      expect(restored.quickLinks, isEmpty);
       expect(restored.voices, isEmpty);
       expect(restored.prefs, isEmpty);
     });
@@ -166,6 +171,7 @@ void main() {
         reminders: const [],
         ideas: const [],
         notes: const [],
+        quickLinks: const [],
         prefs: const {'theme_mode': 'system'},
         voices: const {},
       );

@@ -9,6 +9,7 @@ class BackupPayload {
     required this.reminders,
     required this.ideas,
     required this.notes,
+    required this.quickLinks,
     required this.prefs,
     required this.voices,
   });
@@ -20,6 +21,7 @@ class BackupPayload {
   final List<Map<String, dynamic>> reminders;
   final List<Map<String, dynamic>> ideas;
   final List<Map<String, dynamic>> notes;
+  final List<Map<String, dynamic>> quickLinks;
   final Map<String, dynamic> prefs;
 
   /// Map of relative path (e.g. voice_memos/uuid.m4a) → base64.
@@ -33,6 +35,7 @@ class BackupPayload {
         'reminders': reminders,
         'ideas': ideas,
         'notes': notes,
+        'quickLinks': quickLinks,
         'prefs': prefs,
         'voices': voices,
       };
@@ -46,6 +49,7 @@ class BackupPayload {
       reminders: _mapList(json['reminders']),
       ideas: _mapList(json['ideas']),
       notes: _mapList(json['notes']),
+      quickLinks: _mapList(json['quickLinks']),
       prefs: Map<String, dynamic>.from(json['prefs'] as Map? ?? {}),
       voices: Map<String, String>.from(
         (json['voices'] as Map? ?? {}).map(

@@ -49,6 +49,7 @@ abstract final class SkyIcons {
   static const task = HugeIcons.strokeRoundedTask01;
   static const note = HugeIcons.strokeRoundedNoteAdd;
   static const lightbulb = HugeIcons.strokeRoundedIdea;
+  static const link = HugeIcons.strokeRoundedLink01;
   static const pin = HugeIcons.strokeRoundedPin;
   static const lock = HugeIcons.strokeRoundedLock;
   /// Closed eye with slash — private / hidden.

@@ -2,6 +2,16 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.13.0] — 2026-10-07
+
+### Added
+- Quick Links: save titled URLs under Ideas → Links
+- Share links into SkyTask from other apps (Android share sheet)
+- Radial Create menu (Task, Reminder, Idea, Note, Link)
+
+### Changed
+- Updated app icon (calendar + checkmark)
+
 ## [1.12.5] — 2026-09-14
 
 ### Changed

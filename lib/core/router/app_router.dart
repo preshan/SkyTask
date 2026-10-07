@@ -38,6 +38,7 @@ abstract final class AppRoutes {
   static String tasksPending() => '$tasks?filter=pending';
   static String ideasCreatedToday() => '$ideas?tab=ideas&createdToday=1';
   static String notesCreatedToday() => '$ideas?tab=notes&createdToday=1';
+  static String linksCreatedToday() => '$ideas?tab=links&createdToday=1';
   static String ideasPrivate() => '$ideas?tab=ideas&filter=private';
   static String remindersPrivate() => '$calendar?filter=private';
 
@@ -147,7 +148,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.ideas,
             pageBuilder: (_, state) {
               final tab = state.uri.queryParameters['tab'];
-              final initialTab = tab == 'notes' ? 1 : 0;
+              final initialTab = switch (tab) {
+                'notes' => 1,
+                'links' => 2,
+                _ => 0,
+              };
               return NoTransitionPage(
                 child: IdeasScreen(
                   initialTab: initialTab,

@@ -25,6 +25,7 @@ class IsarService {
         ReminderCollectionSchema,
         IdeaCollectionSchema,
         NoteCollectionSchema,
+        QuickLinkCollectionSchema,
       ],
       directory: dir.path,
       name: AppConstants.isarName,

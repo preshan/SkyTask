@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final tasksRevisionProvider = StateProvider<int>((ref) => 0);
 final ideasRevisionProvider = StateProvider<int>((ref) => 0);
 final notesRevisionProvider = StateProvider<int>((ref) => 0);
+final quickLinksRevisionProvider = StateProvider<int>((ref) => 0);
 
 void refreshTasks(WidgetRef ref) {
   ref.read(tasksRevisionProvider.notifier).state++;
@@ -14,4 +15,8 @@ void refreshIdeas(WidgetRef ref) {
 
 void refreshNotes(WidgetRef ref) {
   ref.read(notesRevisionProvider.notifier).state++;
+}
+
+void refreshQuickLinks(WidgetRef ref) {
+  ref.read(quickLinksRevisionProvider.notifier).state++;
 }
