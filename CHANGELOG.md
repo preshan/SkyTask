@@ -2,6 +2,11 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.13.1] — 2026-10-07
+
+### Fixed
+- Create radial menu uses a dimmed blur scrim so options no longer overlap home content hard to read
+
 ## [1.13.0] — 2026-10-07
 
 ### Added
