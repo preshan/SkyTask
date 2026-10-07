@@ -3,8 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/constants/app_colors.dart';
+import '../../core/di/providers.dart';
 import '../../core/router/app_router.dart';
+import '../../core/services/share_intent_service.dart';
+import '../../features/quick_links/domain/shared_link_payload.dart';
 import '../create/create_kind.dart';
+import '../create/radial_create_menu.dart';
 import 'frosted_surface.dart';
 import 'sky_atmosphere_background.dart';
 import 'sky_icon.dart';
@@ -30,21 +34,36 @@ class _AppShellState extends ConsumerState<AppShell> {
   ];
 
   bool _openingCreate = false;
+  bool _shareListening = false;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _consumeCreateRequest());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _consumeCreateRequest();
+      _consumeSharedLink();
+      _startShareListening();
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    // Launcher deep link: /home?create=task|reminder|idea
+    // Launcher deep link: /home?create=task|reminder|idea|note|link
     if (GoRouterState.of(context).uri.queryParameters['create'] != null) {
       WidgetsBinding.instance
           .addPostFrameCallback((_) => _consumeCreateRequest());
     }
+  }
+
+  void _startShareListening() {
+    if (_shareListening) return;
+    _shareListening = true;
+    ShareIntentService.instance.startListening((payload) {
+      if (!mounted) return;
+      ref.read(pendingSharedLinkProvider.notifier).state = payload;
+      _consumeSharedLink();
+    });
   }
 
   int? _indexForLocation(String location) {
@@ -83,117 +102,34 @@ class _AppShellState extends ConsumerState<AppShell> {
     if (mounted) _openingCreate = false;
   }
 
-  Future<void> _showCreateMenu() async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (ctx) {
-        final divider = Theme.of(ctx).dividerColor.withValues(alpha: 0.55);
-        final options = [
-          (
-            icon: SkyIcons.task,
-            label: 'Task',
-            kind: CreateKind.task,
-          ),
-          (
-            icon: SkyIcons.alarm,
-            label: 'Reminder',
-            kind: CreateKind.reminder,
-          ),
-          (
-            icon: SkyIcons.lightbulb,
-            label: 'Idea',
-            kind: CreateKind.idea,
-          ),
-          (
-            icon: SkyIcons.note,
-            label: 'Note',
-            kind: CreateKind.note,
-          ),
-        ];
+  Future<void> _consumeSharedLink() async {
+    if (!mounted || _openingCreate) return;
+    // Wait until app lock is cleared so the form is usable.
+    if (ref.read(privacyLockProvider)) return;
 
-        Future<void> open(CreateKind kind) async {
-          Navigator.pop(ctx);
-          await openCreateSheet(context, ref, kind);
-        }
+    SharedLinkPayload? pending = ref.read(pendingSharedLinkProvider);
+    pending ??= await ShareIntentService.instance.takeInitialSharedLink();
+    if (pending == null || pending.rawText.isEmpty) return;
 
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'Create',
-                  style: Theme.of(ctx).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  height: 236,
-                  child: Stack(
-                    children: [
-                      Column(
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _CreateGridCell(
-                                    icon: options[0].icon,
-                                    label: options[0].label,
-                                    onTap: () => open(options[0].kind),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _CreateGridCell(
-                                    icon: options[1].icon,
-                                    label: options[1].label,
-                                    onTap: () => open(options[1].kind),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: _CreateGridCell(
-                                    icon: options[2].icon,
-                                    label: options[2].label,
-                                    onTap: () => open(options[2].kind),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: _CreateGridCell(
-                                    icon: options[3].icon,
-                                    label: options[3].label,
-                                    onTap: () => open(options[3].kind),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      Positioned.fill(
-                        child: IgnorePointer(
-                          child: CustomPaint(
-                            painter: _CreateGridCrossPainter(color: divider),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
+    _openingCreate = true;
+    ref.read(pendingSharedLinkProvider.notifier).state = null;
+    if (!mounted) {
+      _openingCreate = false;
+      return;
+    }
+    await openCreateSheet(
+      context,
+      ref,
+      CreateKind.link,
+      shared: pending,
     );
+    if (mounted) _openingCreate = false;
+  }
+
+  Future<void> _showCreateMenu() async {
+    final kind = await showRadialCreateMenu(context);
+    if (kind == null || !mounted) return;
+    await openCreateSheet(context, ref, kind);
   }
 
   @override
@@ -205,6 +141,18 @@ class _AppShellState extends ConsumerState<AppShell> {
       if (next != null) {
         WidgetsBinding.instance
             .addPostFrameCallback((_) => _consumeCreateRequest());
+      }
+    });
+    ref.listen<SharedLinkPayload?>(pendingSharedLinkProvider, (prev, next) {
+      if (next != null) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _consumeSharedLink());
+      }
+    });
+    ref.listen<bool>(privacyLockProvider, (prev, next) {
+      if (prev == true && next == false) {
+        WidgetsBinding.instance
+            .addPostFrameCallback((_) => _consumeSharedLink());
       }
     });
 
@@ -353,68 +301,6 @@ class _CreateNavItem extends StatelessWidget {
       ),
     );
   }
-}
-
-class _CreateGridCell extends StatelessWidget {
-  const _CreateGridCell({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
-
-  final List<List<dynamic>> icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final brand = AppColors.brand(context);
-    final onSurface = Theme.of(context).colorScheme.onSurface;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        child: Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SkyIcon(icon, color: brand, size: 36),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: onSurface,
-                    ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _CreateGridCrossPainter extends CustomPainter {
-  _CreateGridCrossPainter({required this.color});
-
-  final Color color;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = 1;
-    final midX = size.width / 2;
-    final midY = size.height / 2;
-    canvas.drawLine(Offset(midX, 0), Offset(midX, size.height), paint);
-    canvas.drawLine(Offset(0, midY), Offset(size.width, midY), paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _CreateGridCrossPainter oldDelegate) =>
-      oldDelegate.color != color;
 }
 
 class _Tab {

@@ -113,6 +113,26 @@ class NoteCollection {
   late DateTime updatedAt;
 }
 
+@collection
+class QuickLinkCollection {
+  Id id = Isar.autoIncrement;
+
+  @Index(unique: true)
+  late String uuid;
+
+  late String title;
+  late String url;
+  String notes = '';
+
+  /// Shared with tasks / reminders / ideas / notes (Work, Personal, or custom).
+  String categoryLabel = '';
+
+  late bool isPrivate;
+
+  late DateTime createdAt;
+  late DateTime updatedAt;
+}
+
 enum TaskPriority { low, medium, high }
 
 enum TaskCategory {

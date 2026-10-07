@@ -8,6 +8,7 @@ import '../services/isar_service.dart';
 import '../../features/ideas/data/repositories/idea_repository_impl.dart';
 import '../../features/notes/data/repositories/note_repository_impl.dart';
 import '../../features/privacy/data/pin_storage_service.dart';
+import '../../features/quick_links/data/repositories/quick_link_repository_impl.dart';
 import '../../features/privacy/data/privacy_auth_service.dart';
 import '../../features/reminders/data/repositories/reminder_repository_impl.dart';
 import '../../features/reminders/data/services/reminder_scheduler_service.dart';
@@ -57,6 +58,12 @@ final ideaRepositoryProvider = FutureProvider<IdeaRepositoryImpl>((ref) async {
 final noteRepositoryProvider = FutureProvider<NoteRepositoryImpl>((ref) async {
   final isar = await ref.watch(isarProvider.future);
   return NoteRepositoryImpl(isar);
+});
+
+final quickLinkRepositoryProvider =
+    FutureProvider<QuickLinkRepositoryImpl>((ref) async {
+  final isar = await ref.watch(isarProvider.future);
+  return QuickLinkRepositoryImpl(isar);
 });
 
 // ── App state ────────────────────────────────────────────────────────────────

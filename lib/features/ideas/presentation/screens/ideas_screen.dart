@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/di/content_providers.dart';
@@ -18,6 +19,8 @@ import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../domain/entities/idea.dart';
 import '../../../notes/domain/entities/note.dart';
+import '../../../quick_links/domain/entities/quick_link.dart';
+import '../../../quick_links/presentation/widgets/quick_link_form_sheet.dart';
 import '../widgets/idea_form_sheet.dart';
 import '../../../notes/presentation/widgets/note_form_sheet.dart';
 
@@ -49,9 +52,9 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
     _createdToday = widget.createdToday;
     _privateOnly = widget.privateOnly;
     _tabController = TabController(
-      length: 2,
+      length: 3,
       vsync: this,
-      initialIndex: widget.initialTab.clamp(0, 1),
+      initialIndex: widget.initialTab.clamp(0, 2),
     );
     _tabController.addListener(() {
       if (mounted && !_tabController.indexIsChanging) setState(() {});
@@ -69,10 +72,22 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
     }
     if (oldWidget.initialTab != widget.initialTab &&
         widget.initialTab >= 0 &&
-        widget.initialTab < 2) {
+        widget.initialTab < 3) {
       _tabController.index = widget.initialTab;
     }
   }
+
+  CreateKind get _addKind => switch (_tabController.index) {
+        0 => CreateKind.idea,
+        1 => CreateKind.note,
+        _ => CreateKind.link,
+      };
+
+  String get _addTooltip => switch (_tabController.index) {
+        0 => 'Add idea',
+        1 => 'Add note',
+        _ => 'Add link',
+      };
 
   @override
   void dispose() {
@@ -102,12 +117,8 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
               icon: const SkyIcon(SkyIcons.today),
             ),
           ListAddButton(
-            tooltip: _tabController.index == 0 ? 'Add idea' : 'Add note',
-            onPressed: () => openCreateSheet(
-              context,
-              ref,
-              _tabController.index == 0 ? CreateKind.idea : CreateKind.note,
-            ),
+            tooltip: _addTooltip,
+            onPressed: () => openCreateSheet(context, ref, _addKind),
           ),
           ...skyTaskAppBarActions(context),
         ],
@@ -121,6 +132,10 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
             Tab(
               text: 'Notes',
               icon: SkyIcon(SkyIcons.notes, size: 20),
+            ),
+            Tab(
+              text: 'Links',
+              icon: SkyIcon(SkyIcons.link, size: 20),
             ),
           ],
         ),
@@ -168,6 +183,10 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
                   privateOnly: _privateOnly,
                 ),
                 _NotesTab(
+                  createdToday: _createdToday,
+                  privateOnly: _privateOnly,
+                ),
+                _LinksTab(
                   createdToday: _createdToday,
                   privateOnly: _privateOnly,
                 ),
@@ -367,6 +386,181 @@ final _notesProvider = FutureProvider<List<Note>>((ref) async {
   final repo = await ref.read(noteRepositoryProvider.future);
   return repo.getAll();
 });
+
+final _quickLinksProvider = FutureProvider<List<QuickLink>>((ref) async {
+  ref.watch(quickLinksRevisionProvider);
+  final repo = await ref.read(quickLinkRepositoryProvider.future);
+  return repo.getAll();
+});
+
+class _LinksTab extends ConsumerStatefulWidget {
+  const _LinksTab({
+    required this.createdToday,
+    required this.privateOnly,
+  });
+
+  final bool createdToday;
+  final bool privateOnly;
+
+  @override
+  ConsumerState<_LinksTab> createState() => _LinksTabState();
+}
+
+class _LinksTabState extends ConsumerState<_LinksTab> {
+  String? _categoryFilter;
+
+  Future<void> _openUrl(String url) async {
+    final uri = Uri.tryParse(url);
+    if (uri == null) return;
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final linksAsync = ref.watch(_quickLinksProvider);
+
+    return linksAsync.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => AsyncErrorView(
+        error: e,
+        onRetry: () => ref.invalidate(_quickLinksProvider),
+      ),
+      data: (links) {
+        var filtered = links;
+        if (widget.createdToday) {
+          filtered = filtered
+              .where((l) => DateFilters.isCreatedToday(l.createdAt))
+              .toList();
+        }
+        if (widget.privateOnly) {
+          filtered = filtered.where((l) => l.isPrivate).toList();
+        }
+        if (_categoryFilter != null) {
+          final filter = _categoryFilter!.toLowerCase();
+          filtered = filtered
+              .where((l) => l.category.toLowerCase() == filter)
+              .toList();
+        }
+
+        return Column(
+          children: [
+            CategoryFilterBar(
+              selected: _categoryFilter,
+              usedLabels: links.map((l) => l.category),
+              onChanged: (v) => setState(() => _categoryFilter = v),
+            ),
+            const SizedBox(height: 4),
+            Expanded(
+              child: filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        widget.privateOnly
+                            ? 'No private links yet.'
+                            : widget.createdToday
+                                ? 'No links created today.'
+                                : _categoryFilter != null
+                                    ? 'No links in this category.'
+                                    : 'Save useful links with a title.\nShare from other apps or tap +.',
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : ListView.builder(
+                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                      itemCount: filtered.length,
+                      itemBuilder: (_, i) {
+                        final link = filtered[i];
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: _LinkCard(
+                            link: link,
+                            onOpen: () => _openUrl(link.url),
+                            onEdit: () => showQuickLinkFormSheet(
+                              context,
+                              ref,
+                              link: link,
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}
+
+class _LinkCard extends StatelessWidget {
+  const _LinkCard({
+    required this.link,
+    required this.onOpen,
+    required this.onEdit,
+  });
+
+  final QuickLink link;
+  final VoidCallback onOpen;
+  final VoidCallback onEdit;
+
+  @override
+  Widget build(BuildContext context) {
+    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          height: 1.15,
+          fontWeight: FontWeight.w500,
+        );
+    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+        );
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 4),
+      child: PrivateContentGate(
+        isPrivate: link.isPrivate,
+        child: ListTile(
+          dense: true,
+          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+          minVerticalPadding: 4,
+          onTap: onOpen,
+          onLongPress: onEdit,
+          leading: SkyIcon(
+            SkyIcons.link,
+            color: AppColors.brand(context),
+            size: 22,
+          ),
+          title: Text(
+            link.title,
+            style: titleStyle,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+          subtitle: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CategoryLabel(link.category),
+                const SizedBox(height: 2),
+                Text(
+                  link.url,
+                  style: subtitleStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          trailing: IconButton(
+            tooltip: 'Edit',
+            onPressed: onEdit,
+            icon: const SkyIcon(SkyIcons.edit, size: 18),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _IdeaCard extends StatelessWidget {
   const _IdeaCard({required this.idea, required this.onTap});
