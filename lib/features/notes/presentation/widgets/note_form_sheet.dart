@@ -7,9 +7,13 @@ import '../../../../core/constants/capture_preference.dart';
 import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
-import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/form_action_button.dart';
+import '../../../../shared/widgets/form_quick_action_tile.dart';
+import '../../../../shared/widgets/form_sheet_header.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_memo_recorder.dart';
 import '../../domain/entities/note.dart';
 
@@ -22,6 +26,7 @@ Future<void> showNoteFormSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: _NoteFormSheet(note: note),
@@ -164,19 +169,21 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final muted =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            _isEditing ? 'Edit Note' : 'New Note',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          FormSheetHeader(_isEditing ? 'Edit Note' : 'New Note'),
           const SizedBox(height: 16),
           TextField(
             controller: _titleController,
+            maxLength: 100,
             decoration: const InputDecoration(
               labelText: 'Title (optional)',
               border: OutlineInputBorder(),
@@ -185,7 +192,7 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _contentFocus.requestFocus(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           CategoryChipSelector(
             value: _category,
             enabled: !_saving,
@@ -196,6 +203,7 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
             controller: _contentController,
             focusNode: _contentFocus,
             autofocus: !ref.watch(preferVoiceCaptureProvider),
+            maxLength: 2000,
             decoration: const InputDecoration(
               labelText: 'Note body',
               border: OutlineInputBorder(),
@@ -207,10 +215,21 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
           const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerLeft,
-            child: PrivateIconToggle(
-              value: _isPrivate,
-              enabled: !_saving,
-              onChanged: (v) => setState(() => _isPrivate = v),
+            child: SizedBox(
+              width: 88,
+              child: FormQuickActionTile(
+                active: _isPrivate,
+                label: 'Hide',
+                tooltip: _isPrivate ? 'Make public' : 'Make private',
+                onTap: _saving
+                    ? null
+                    : () => setState(() => _isPrivate = !_isPrivate),
+                icon: SkyIcon(
+                  SkyIcons.private,
+                  color: _isPrivate ? brand : muted,
+                  size: 22,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -221,22 +240,20 @@ class _NoteFormSheetState extends ConsumerState<_NoteFormSheet> {
             titleBuilder: () => _titleController.text,
             onChanged: (path) => setState(() => _voicePath = path),
           ),
-          const SizedBox(height: 16),
-          FilledButton(
+          const SizedBox(height: 20),
+          FormActionButton(
+            label: _isEditing ? 'Save' : 'Create note',
+            busy: _saving,
             onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_isEditing ? 'Save changes' : 'Create note'),
           ),
-          if (_isEditing)
-            TextButton(
+          if (_isEditing) ...[
+            const SizedBox(height: 10),
+            FormActionButton(
+              label: 'Delete',
+              variant: FormActionVariant.danger,
               onPressed: _saving ? null : _delete,
-              child: const Text('Delete note'),
             ),
+          ],
         ],
       ),
     );

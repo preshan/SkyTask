@@ -14,7 +14,7 @@ class PrivateContentGate extends StatefulWidget {
     super.key,
     required this.isPrivate,
     required this.child,
-    this.hiddenLabel = '🔒 Hidden Content',
+    this.hiddenLabel = 'Hidden Content',
   });
 
   final bool isPrivate;
@@ -90,40 +90,43 @@ class _PrivateContentGateState extends State<PrivateContentGate> {
       );
     }
 
+    final muted = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
+          height: 1.15,
+          fontWeight: FontWeight.w600,
+        );
+
     return ListTile(
       dense: true,
-      visualDensity: const VisualDensity(horizontal: 0, vertical: -2),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      title: Row(
-        children: [
-          SkyIcon(
-            SkyIcons.lock,
-            size: 18,
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-          ),
-          const SizedBox(width: 8),
-          const Expanded(
-            child: Text(
-              'Private Item',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+      visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
+      minVerticalPadding: 4,
+      title: Text(
+        'Private Item',
+        style: titleStyle,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      subtitle: Padding(
+        padding: const EdgeInsets.only(top: 2),
+        child: Row(
+          children: [
+            SkyIcon(SkyIcons.lock, size: 14, color: muted),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                widget.hiddenLabel,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      color: muted,
+                    ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
-      subtitle: Text(widget.hiddenLabel),
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          IconButton(
-            icon: const SkyIcon(SkyIcons.unlock, size: 20),
-            onPressed: _unlock,
-            visualDensity: VisualDensity.compact,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-          ),
-        ],
-      ),
+      trailing: const SkyIcon(SkyIcons.chevronRight, size: 18),
       onTap: _unlock,
     );
   }

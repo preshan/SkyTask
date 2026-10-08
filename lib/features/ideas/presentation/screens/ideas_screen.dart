@@ -12,9 +12,8 @@ import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
+import '../../../../shared/widgets/content_list_card.dart';
 import '../../../../shared/widgets/list_add_button.dart';
-import '../../../../shared/widgets/list_tile_trailing.dart';
-import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../domain/entities/idea.dart';
@@ -125,18 +124,9 @@ class _IdeasScreenState extends ConsumerState<IdeasScreen>
         bottom: TabBar(
           controller: _tabController,
           tabs: const [
-            Tab(
-              text: 'Ideas',
-              icon: SkyIcon(SkyIcons.lightbulb, size: 20),
-            ),
-            Tab(
-              text: 'Notes',
-              icon: SkyIcon(SkyIcons.notes, size: 20),
-            ),
-            Tab(
-              text: 'Links',
-              icon: SkyIcon(SkyIcons.link, size: 20),
-            ),
+            Tab(text: 'Ideas'),
+            Tab(text: 'Notes'),
+            Tab(text: 'Links'),
           ],
         ),
       ),
@@ -269,13 +259,10 @@ class _IdeasTabState extends ConsumerState<_IdeasTab> {
                       itemCount: filtered.length,
                       itemBuilder: (_, i) {
                         final idea = filtered[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _IdeaCard(
-                            idea: idea,
-                            onTap: () =>
-                                showIdeaFormSheet(context, ref, idea: idea),
-                          ),
+                        return _IdeaCard(
+                          idea: idea,
+                          onTap: () =>
+                              showIdeaFormSheet(context, ref, idea: idea),
                         );
                       },
                     ),
@@ -357,13 +344,10 @@ class _NotesTabState extends ConsumerState<_NotesTab> {
                       itemCount: filtered.length,
                       itemBuilder: (_, i) {
                         final note = filtered[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _NoteCard(
-                            note: note,
-                            onTap: () =>
-                                showNoteFormSheet(context, ref, note: note),
-                          ),
+                        return _NoteCard(
+                          note: note,
+                          onTap: () =>
+                              showNoteFormSheet(context, ref, note: note),
                         );
                       },
                     ),
@@ -469,16 +453,13 @@ class _LinksTabState extends ConsumerState<_LinksTab> {
                       itemCount: filtered.length,
                       itemBuilder: (_, i) {
                         final link = filtered[i];
-                        return Padding(
-                          padding: const EdgeInsets.only(bottom: 8),
-                          child: _LinkCard(
+                        return _LinkCard(
+                          link: link,
+                          onOpen: () => _openUrl(link.url),
+                          onEdit: () => showQuickLinkFormSheet(
+                            context,
+                            ref,
                             link: link,
-                            onOpen: () => _openUrl(link.url),
-                            onEdit: () => showQuickLinkFormSheet(
-                              context,
-                              ref,
-                              link: link,
-                            ),
                           ),
                         );
                       },
@@ -504,60 +485,13 @@ class _LinkCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          height: 1.15,
-          fontWeight: FontWeight.w500,
-        );
-    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-        );
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 4),
-      child: PrivateContentGate(
-        isPrivate: link.isPrivate,
-        child: ListTile(
-          dense: true,
-          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          minVerticalPadding: 4,
-          onTap: onOpen,
-          onLongPress: onEdit,
-          leading: SkyIcon(
-            SkyIcons.link,
-            color: AppColors.brand(context),
-            size: 22,
-          ),
-          title: Text(
-            link.title,
-            style: titleStyle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CategoryLabel(link.category),
-                const SizedBox(height: 2),
-                Text(
-                  link.url,
-                  style: subtitleStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          ),
-          trailing: IconButton(
-            tooltip: 'Edit',
-            onPressed: onEdit,
-            icon: const SkyIcon(SkyIcons.edit, size: 18),
-          ),
-        ),
-      ),
+    return ContentListCard(
+      title: link.title,
+      isPrivate: link.isPrivate,
+      onTap: onOpen,
+      onLongPress: onEdit,
+      categorySlot: CategoryLabel(link.category),
+      body: link.url,
     );
   }
 }
@@ -573,77 +507,39 @@ class _IdeaCard extends StatelessWidget {
     final body = idea.isVoice && idea.content.isEmpty
         ? 'Voice memo'
         : idea.content;
-    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          height: 1.15,
-          fontWeight: FontWeight.w500,
-        );
     final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
           color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
         );
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 4),
-      child: PrivateContentGate(
-        isPrivate: idea.isPrivate,
-        child: ListTile(
-          dense: true,
-          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          minVerticalPadding: 4,
-          onTap: onTap,
-          title: Text(
-            displayItemTitle(
-              title: idea.title,
-              isVoice: idea.isVoice,
-              createdAt: idea.createdAt,
-            ),
-            style: titleStyle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    CategoryLabel(idea.category),
-                    if (idea.tags.isNotEmpty) ...[
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          idea.tags.take(2).join(', '),
-                          style: subtitleStyle,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                if (body.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    body,
-                    style: subtitleStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          trailing: ListTileTrailing(
-            children: [
-              if (idea.isVoice && idea.voicePath != null)
-                VoicePlayButton(path: idea.voicePath!, title: idea.title),
-              const SkyIcon(SkyIcons.chevronRight, size: 18),
-            ],
-          ),
-        ),
+    return ContentListCard(
+      title: displayItemTitle(
+        title: idea.title,
+        isVoice: idea.isVoice,
+        createdAt: idea.createdAt,
       ),
+      isPrivate: idea.isPrivate,
+      onTap: onTap,
+      categorySlot: Row(
+        children: [
+          CategoryLabel(idea.category),
+          if (idea.tags.isNotEmpty) ...[
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                idea.tags.take(2).join(', '),
+                style: subtitleStyle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ],
+      ),
+      body: body.isEmpty ? null : body,
+      trailing: [
+        if (idea.isVoice && idea.voicePath != null)
+          VoicePlayButton(path: idea.voicePath!, title: idea.title),
+      ],
     );
   }
 }
@@ -659,62 +555,21 @@ class _NoteCard extends StatelessWidget {
     final body = note.isVoice && note.content.isEmpty
         ? 'Voice memo'
         : note.content;
-    final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
-          height: 1.15,
-          fontWeight: FontWeight.w500,
-        );
-    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-        );
 
-    return Card(
-      margin: const EdgeInsets.only(bottom: 4),
-      child: PrivateContentGate(
-        isPrivate: note.isPrivate,
-        child: ListTile(
-          dense: true,
-          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          minVerticalPadding: 4,
-          onTap: onTap,
-          title: Text(
-            displayItemTitle(
-              title: note.title,
-              isVoice: note.isVoice,
-              createdAt: note.createdAt,
-            ),
-            style: titleStyle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CategoryLabel(note.category),
-                if (body.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    body,
-                    style: subtitleStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ],
-            ),
-          ),
-          trailing: ListTileTrailing(
-            children: [
-              if (note.isVoice && note.voicePath != null)
-                VoicePlayButton(path: note.voicePath!, title: note.title),
-              const SkyIcon(SkyIcons.chevronRight, size: 18),
-            ],
-          ),
-        ),
+    return ContentListCard(
+      title: displayItemTitle(
+        title: note.title,
+        isVoice: note.isVoice,
+        createdAt: note.createdAt,
       ),
+      isPrivate: note.isPrivate,
+      onTap: onTap,
+      categorySlot: CategoryLabel(note.category),
+      body: body.isEmpty ? null : body,
+      trailing: [
+        if (note.isVoice && note.voicePath != null)
+          VoicePlayButton(path: note.voicePath!, title: note.title),
+      ],
     );
   }
 }

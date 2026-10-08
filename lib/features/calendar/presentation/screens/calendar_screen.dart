@@ -10,9 +10,8 @@ import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
+import '../../../../shared/widgets/content_list_card.dart';
 import '../../../../shared/widgets/list_add_button.dart';
-import '../../../../shared/widgets/list_tile_trailing.dart';
-import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../../reminders/presentation/widgets/reminder_form_sheet.dart';
@@ -789,62 +788,29 @@ class _CalendarEntryTile extends StatelessWidget {
     final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
           decoration: entry.isCompleted ? TextDecoration.lineThrough : null,
           height: 1.15,
-          fontWeight: FontWeight.w500,
-        );
-    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+          fontWeight: FontWeight.w600,
         );
 
-    return Card(
-      margin: EdgeInsets.only(bottom: compact ? 3 : 4),
-      child: PrivateContentGate(
-        isPrivate: entry.isPrivate,
-        child: ListTile(
-          dense: true,
-          visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 0),
-          minVerticalPadding: 4,
-          title: Text(
-            displayTitle,
-            style: titleStyle,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+    return ContentListCard(
+      title: displayTitle,
+      isPrivate: entry.isPrivate,
+      onTap: onTap,
+      compact: compact,
+      dimmed: entry.isCompleted,
+      titleStyle: titleStyle,
+      showChevron: onTap != null,
+      categorySlot: entry.reminder != null
+          ? CategoryLabel(entry.reminder!.category)
+          : null,
+      body: meta.isEmpty ? null : meta,
+      trailing: [
+        if (entry.reminder?.isVoice == true &&
+            entry.reminder?.voicePath != null)
+          VoicePlayButton(
+            path: entry.reminder!.voicePath!,
+            title: entry.reminder!.title,
           ),
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Row(
-              children: [
-                if (entry.reminder != null) ...[
-                  CategoryLabel(entry.reminder!.category),
-                  const SizedBox(width: 6),
-                ],
-                Expanded(
-                  child: Text(
-                    meta,
-                    style: subtitleStyle,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          trailing: ListTileTrailing(
-            children: [
-              if (entry.reminder?.isVoice == true &&
-                  entry.reminder?.voicePath != null)
-                VoicePlayButton(
-                  path: entry.reminder!.voicePath!,
-                  title: entry.reminder!.title,
-                ),
-              if (onTap != null)
-                const SkyIcon(SkyIcons.chevronRight, size: 18),
-            ],
-          ),
-          onTap: onTap,
-        ),
-      ),
+      ],
     );
   }
 }

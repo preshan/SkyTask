@@ -11,10 +11,9 @@ import '../../../../shared/widgets/app_bar_actions.dart';
 import '../../../../shared/widgets/async_error_view.dart';
 import '../../../../shared/widgets/category_filter_bar.dart';
 import '../../../../shared/widgets/category_label.dart';
+import '../../../../shared/widgets/content_list_card.dart';
 import '../../../../shared/widgets/gold_checkbox.dart';
 import '../../../../shared/widgets/list_add_button.dart';
-import '../../../../shared/widgets/list_tile_trailing.dart';
-import '../../../../shared/widgets/private_content_gate.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_play_button.dart';
 import '../../../../core/services/voice_memo_service.dart';
@@ -286,76 +285,35 @@ class _TaskCard extends ConsumerWidget {
     final titleStyle = Theme.of(context).textTheme.bodyMedium?.copyWith(
           decoration: task.completed ? TextDecoration.lineThrough : null,
           height: 1.15,
-          fontWeight: FontWeight.w500,
-        );
-    final subtitleStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
+          fontWeight: FontWeight.w600,
         );
 
-    return AnimatedOpacity(
-      opacity: task.completed ? 0.6 : 1,
-      duration: const Duration(milliseconds: 300),
-      child: Card(
-        margin: const EdgeInsets.only(bottom: 4),
-        child: PrivateContentGate(
-          isPrivate: task.isPrivate,
-          child: ListTile(
-            dense: true,
-            visualDensity: const VisualDensity(horizontal: 0, vertical: -3),
-            contentPadding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
-            minVerticalPadding: 4,
-            onTap: onTap,
-            leading: GoldCheckbox(
-              value: task.completed,
-              onChanged: (_) async {
-                final repo = await ref.read(taskRepositoryProvider.future);
-                await repo.toggleComplete(task.id);
-                refreshTasks(ref);
-              },
-            ),
-            title: Text(
-              displayItemTitle(
-                title: task.title,
-                isVoice: task.isVoice,
-                createdAt: task.createdAt,
-              ),
-              style: titleStyle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
-            subtitle: Padding(
-              padding: const EdgeInsets.only(top: 2),
-              child: Row(
-                children: [
-                  CategoryLabel(task.category),
-                  if (meta.isNotEmpty) ...[
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        meta,
-                        style: subtitleStyle,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            trailing: ListTileTrailing(
-              children: [
-                if (task.isVoice && task.voicePath != null)
-                  VoicePlayButton(path: task.voicePath!, title: task.title),
-                if (task.pinned) const SkyIcon(SkyIcons.pin, size: 18),
-                if (task.archived)
-                  const SkyIcon(SkyIcons.archive, size: 18),
-                const SkyIcon(SkyIcons.chevronRight, size: 18),
-              ],
-            ),
-          ),
-        ),
+    return ContentListCard(
+      title: displayItemTitle(
+        title: task.title,
+        isVoice: task.isVoice,
+        createdAt: task.createdAt,
       ),
+      isPrivate: task.isPrivate,
+      onTap: onTap,
+      dimmed: task.completed,
+      titleStyle: titleStyle,
+      leading: GoldCheckbox(
+        value: task.completed,
+        onChanged: (_) async {
+          final repo = await ref.read(taskRepositoryProvider.future);
+          await repo.toggleComplete(task.id);
+          refreshTasks(ref);
+        },
+      ),
+      categorySlot: CategoryLabel(task.category),
+      body: meta.isEmpty ? null : meta,
+      trailing: [
+        if (task.isVoice && task.voicePath != null)
+          VoicePlayButton(path: task.voicePath!, title: task.title),
+        if (task.pinned) const SkyIcon(SkyIcons.pin, size: 18),
+        if (task.archived) const SkyIcon(SkyIcons.archive, size: 18),
+      ],
     );
   }
 }

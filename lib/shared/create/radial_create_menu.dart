@@ -79,11 +79,10 @@ class _RadialCreateMenuState extends State<_RadialCreateMenu>
     final chipFg = brand;
     final closeBg = isDark ? const Color(0xFF334155) : Colors.white;
 
-    // Anchor above the bottom Create nav item (center slot).
-    final navHeight = 64.0 + media.padding.bottom;
+    // Anchor on the bumped Create button (center of the circular + control).
     final center = Offset(
       media.size.width / 2,
-      media.size.height - navHeight + 8,
+      media.size.height - media.padding.bottom - 6 - 26,
     );
     const radius = 128.0;
 
@@ -122,7 +121,7 @@ class _RadialCreateMenuState extends State<_RadialCreateMenu>
 
             children.add(
               Positioned(
-                left: center.dx + dx - 30,
+                left: center.dx + dx - 36,
                 top: center.dy + dy - 40,
                 child: Opacity(
                   opacity: t,
@@ -223,7 +222,7 @@ class _RadialActionButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: SizedBox(
-        width: 60,
+        width: 72,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -245,25 +244,20 @@ class _RadialActionButton extends StatelessWidget {
                 child: SkyIcon(icon, color: color, size: 24),
               ),
             ),
-            const SizedBox(height: 6),
-            DecoratedBox(
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.55),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                child: Text(
-                  label,
-                  textAlign: TextAlign.center,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w700,
-                        fontSize: 11,
-                      ),
-                ),
-              ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              softWrap: false,
+              overflow: TextOverflow.visible,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w600,
+                    fontSize: 10,
+                    height: 1.1,
+                    shadows: const [],
+                  ),
             ),
           ],
         ),

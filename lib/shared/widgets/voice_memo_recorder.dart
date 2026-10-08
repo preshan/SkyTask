@@ -170,7 +170,7 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
       path = null;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Recording failed — try again')),
+          const SnackBar(content: Text('Recording failed - try again')),
         );
       }
     } else {
@@ -232,6 +232,29 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
   @override
   Widget build(BuildContext context) {
     final hasMemo = VoiceMemoService.hasVoice(_path);
+    final brand = AppColors.brand(context);
+    final scheme = Theme.of(context).colorScheme;
+    final title = _recording
+        ? 'Recording ${_format(_elapsed)}'
+        : hasMemo
+            ? 'Voice memo'
+            : 'Add voice memo';
+    final subtitle = _recording
+        ? 'Tap stop when finished'
+        : hasMemo
+            ? 'Tap to play · long-press to remove'
+            : 'Tap to record a voice memo';
+
+    VoidCallback? primaryTap;
+    if (!widget.enabled) {
+      primaryTap = null;
+    } else if (_recording) {
+      primaryTap = _stop;
+    } else if (hasMemo) {
+      primaryTap = _openPlayer;
+    } else {
+      primaryTap = _start;
+    }
 
     return PopScope(
       canPop: !_recording,
@@ -239,65 +262,96 @@ class _VoiceMemoRecorderState extends State<VoiceMemoRecorder> {
         if (didPop || !_recording) return;
         await _stop();
       },
-      child: Row(
-        children: [
-          if (_recording)
-            _RoundAction(
-              color: AppColors.error,
-              onTap: widget.enabled ? _stop : null,
-              child: const SkyIcon(SkyIcons.stop, color: Colors.white, size: 22),
-            )
-          else if (!hasMemo)
-            _RoundAction(
-              color: AppColors.brand(context),
-              onTap: widget.enabled ? _start : null,
-              child: const SkyIcon(SkyIcons.mic, color: Colors.white, size: 22),
-            )
-          else ...[
-            _RoundAction(
-              color: AppColors.brand(context),
-              onTap: widget.enabled ? _openPlayer : null,
-              child: const SkyIcon(
-                SkyIcons.play,
-                color: Colors.white,
-                size: 22,
-              ),
-            ),
-            const SizedBox(width: 8),
-            _RoundAction(
-              color: Theme.of(context).colorScheme.surfaceContainerHighest,
-              border: true,
-              onTap: widget.enabled ? _clear : null,
-              child: SkyIcon(
-                SkyIcons.close,
-                color: Theme.of(context).colorScheme.onSurface,
-                size: 18,
-              ),
-            ),
-          ],
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              _recording
-                  ? 'Recording ${_format(_elapsed)}'
-                  : hasMemo
-                      ? 'Voice memo'
-                      : 'Add voice memo',
-              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    fontWeight: hasMemo || _recording
-                        ? FontWeight.w600
-                        : FontWeight.w400,
+      child: Material(
+        color: brand.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: primaryTap,
+          onLongPress: widget.enabled && hasMemo && !_recording ? _clear : null,
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                if (_recording)
+                  _CircleAction(
+                    color: AppColors.error,
+                    onTap: widget.enabled ? _stop : null,
+                    child: const SkyIcon(
+                      SkyIcons.stop,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  )
+                else if (!hasMemo)
+                  _CircleAction(
+                    color: brand,
+                    onTap: widget.enabled ? _start : null,
+                    child: const SkyIcon(
+                      SkyIcons.mic,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                  )
+                else ...[
+                  _CircleAction(
+                    color: brand,
+                    onTap: widget.enabled ? _openPlayer : null,
+                    child: const SkyIcon(
+                      SkyIcons.play,
+                      color: Colors.white,
+                      size: 22,
+                    ),
                   ),
+                  const SizedBox(width: 8),
+                  _CircleAction(
+                    color: scheme.surfaceContainerHighest,
+                    border: true,
+                    onTap: widget.enabled ? _clear : null,
+                    child: SkyIcon(
+                      SkyIcons.close,
+                      color: scheme.onSurface,
+                      size: 18,
+                    ),
+                  ),
+                ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        subtitle,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                              color: scheme.onSurface.withValues(alpha: 0.65),
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                SkyIcon(
+                  SkyIcons.chevronRight,
+                  size: 18,
+                  color: scheme.onSurface.withValues(alpha: 0.45),
+                ),
+              ],
             ),
           ),
-        ],
+        ),
       ),
     );
   }
 }
 
-class _RoundAction extends StatelessWidget {
-  const _RoundAction({
+class _CircleAction extends StatelessWidget {
+  const _CircleAction({
     required this.color,
     required this.child,
     this.onTap,
@@ -313,15 +367,14 @@ class _RoundAction extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: color,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
+      shape: CircleBorder(
         side: border
             ? BorderSide(color: AppColors.brand(context).withValues(alpha: 0.25))
             : BorderSide.none,
       ),
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
+        customBorder: const CircleBorder(),
         child: SizedBox(width: 44, height: 44, child: Center(child: child)),
       ),
     );
