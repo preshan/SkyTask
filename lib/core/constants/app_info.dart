@@ -33,8 +33,7 @@ Your content stays on your device by default. Optional features such as Google S
   static const developerEmail = 'preshanpradeepa@gmail.com';
   static const repoUrl = 'https://github.com/preshan/SkyTask';
 
-  /// Public Privacy Policy URL for Google Play Console.
-  /// Hosted from this repo's /docs via GitHub Pages after you enable Pages.
+  /// Public Privacy Policy URL (GitHub Pages).
   static const privacyPolicyUrl =
       'https://preshan.github.io/SkyTask/privacy.html';
 
