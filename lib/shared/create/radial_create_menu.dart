@@ -79,11 +79,10 @@ class _RadialCreateMenuState extends State<_RadialCreateMenu>
     final chipFg = brand;
     final closeBg = isDark ? const Color(0xFF334155) : Colors.white;
 
-    // Anchor above the bottom Create nav item (center slot).
-    final navHeight = 64.0 + media.padding.bottom;
+    // Anchor on the bumped Create button (center of the circular + control).
     final center = Offset(
       media.size.width / 2,
-      media.size.height - navHeight + 8,
+      media.size.height - media.padding.bottom - 6 - 26,
     );
     const radius = 128.0;
 

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -9,15 +11,17 @@ import '../../core/services/share_intent_service.dart';
 import '../../features/quick_links/domain/shared_link_payload.dart';
 import '../create/create_kind.dart';
 import '../create/radial_create_menu.dart';
-import 'frosted_surface.dart';
 import 'sky_atmosphere_background.dart';
 import 'sky_icon.dart';
 
+/// Extra height of the Create bump above the bar top edge.
+const kNavBumpHeight = 20.0;
+const kNavBarBodyHeight = 64.0;
+
 /// Bottom nav: Home · Tasks · Create · Calendar · Ideas
-/// Create sits in-line with the other icons (not a floating FAB).
+/// Create sits in a small bump above the bar center.
 class AppShell extends ConsumerStatefulWidget {
   const AppShell({super.key, required this.child});
-
   final Widget child;
 
   @override
@@ -156,57 +160,98 @@ class _AppShellState extends ConsumerState<AppShell> {
       }
     });
 
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final navTotalHeight = kNavBumpHeight + kNavBarBodyHeight + bottomInset;
+    final brightness = Theme.of(context).brightness;
+    final fill = AppColors.glassFillElevatedFor(brightness);
+    final border = AppColors.glassBorderFor(brightness);
+
     return SkyAtmosphereBackground(
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: widget.child,
-        bottomNavigationBar: FrostedSurface(
-          borderRadius: 0,
-          elevated: true,
-          borderWidth: 0,
-          child: Material(
-            color: Colors.transparent,
-            child: SafeArea(
-              top: false,
-              child: SizedBox(
-                height: 64,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _NavItem(
-                        tab: _tabs[0],
-                        selected: selectedIndex == 0,
-                        onTap: () => context.go(_tabs[0].route),
+        bottomNavigationBar: SizedBox(
+          height: navTotalHeight,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: ClipPath(
+                  clipper: _NavBumpClipper(
+                    bumpHeight: kNavBumpHeight,
+                    cornerRadius: 18,
+                  ),
+                  child: BackdropFilter(
+                    filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                    child: CustomPaint(
+                      painter: _NavBumpBorderPainter(
+                        bumpHeight: kNavBumpHeight,
+                        cornerRadius: 18,
+                        fill: fill,
+                        border: border,
                       ),
+                      size: Size.infinite,
                     ),
-                    Expanded(
-                      child: _NavItem(
-                        tab: _tabs[1],
-                        selected: selectedIndex == 1,
-                        onTap: () => context.go(_tabs[1].route),
-                      ),
-                    ),
-                    Expanded(
-                      child: _CreateNavItem(onTap: _showCreateMenu),
-                    ),
-                    Expanded(
-                      child: _NavItem(
-                        tab: _tabs[2],
-                        selected: selectedIndex == 2,
-                        onTap: () => context.go(_tabs[2].route),
-                      ),
-                    ),
-                    Expanded(
-                      child: _NavItem(
-                        tab: _tabs[3],
-                        selected: selectedIndex == 3,
-                        onTap: () => context.go(_tabs[3].route),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
               ),
-            ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: kNavBarBodyHeight + bottomInset,
+                child: Material(
+                  color: Colors.transparent,
+                  child: SafeArea(
+                    top: false,
+                    child: SizedBox(
+                      height: kNavBarBodyHeight,
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: _NavItem(
+                              tab: _tabs[0],
+                              selected: selectedIndex == 0,
+                              onTap: () => context.go(_tabs[0].route),
+                            ),
+                          ),
+                          Expanded(
+                            child: _NavItem(
+                              tab: _tabs[1],
+                              selected: selectedIndex == 1,
+                              onTap: () => context.go(_tabs[1].route),
+                            ),
+                          ),
+                          const Expanded(child: SizedBox.shrink()),
+                          Expanded(
+                            child: _NavItem(
+                              tab: _tabs[2],
+                              selected: selectedIndex == 2,
+                              onTap: () => context.go(_tabs[2].route),
+                            ),
+                          ),
+                          Expanded(
+                            child: _NavItem(
+                              tab: _tabs[3],
+                              selected: selectedIndex == 3,
+                              onTap: () => context.go(_tabs[3].route),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: bottomInset + 6,
+                child: Center(
+                  child: _CreateNavItem(onTap: _showCreateMenu),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -268,23 +313,30 @@ class _CreateNavItem extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      customBorder: const CircleBorder(),
       child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 40,
-            height: 40,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
               color: brand,
-              borderRadius: BorderRadius.circular(14),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: brand.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
             child: Center(
               child: SkyIcon(
                 SkyIcons.add,
                 color: onBrand,
-                size: 22,
-                strokeWidth: 2,
+                size: 24,
+                strokeWidth: 2.2,
               ),
             ),
           ),
@@ -301,6 +353,99 @@ class _CreateNavItem extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Top edge rises in a soft bump around the Create button.
+class _NavBumpClipper extends CustomClipper<Path> {
+  const _NavBumpClipper({
+    required this.bumpHeight,
+    required this.cornerRadius,
+  });
+
+  final double bumpHeight;
+  final double cornerRadius;
+
+  @override
+  Path getClip(Size size) => _navBumpPath(size, bumpHeight, cornerRadius);
+
+  @override
+  bool shouldReclip(covariant _NavBumpClipper oldClipper) =>
+      oldClipper.bumpHeight != bumpHeight ||
+      oldClipper.cornerRadius != cornerRadius;
+}
+
+class _NavBumpBorderPainter extends CustomPainter {
+  const _NavBumpBorderPainter({
+    required this.bumpHeight,
+    required this.cornerRadius,
+    required this.fill,
+    required this.border,
+  });
+
+  final double bumpHeight;
+  final double cornerRadius;
+  final Color fill;
+  final Color border;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final path = _navBumpPath(size, bumpHeight, cornerRadius);
+    canvas.drawPath(path, Paint()..color = fill);
+    canvas.drawPath(
+      path,
+      Paint()
+        ..color = border
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _NavBumpBorderPainter oldDelegate) =>
+      oldDelegate.bumpHeight != bumpHeight ||
+      oldDelegate.cornerRadius != cornerRadius ||
+      oldDelegate.fill != fill ||
+      oldDelegate.border != border;
+}
+
+Path _navBumpPath(Size size, double bumpHeight, double cornerRadius) {
+  final w = size.width;
+  final h = size.height;
+  final top = bumpHeight;
+  final cx = w / 2;
+  // Width of the raised bump (wider than the Create circle).
+  const bumpHalf = 42.0;
+  final r = cornerRadius.clamp(0.0, 24.0);
+
+  final path = Path()
+    ..moveTo(r, top)
+    ..lineTo(cx - bumpHalf - 10, top)
+    // Smooth rise into the bump.
+    ..cubicTo(
+      cx - bumpHalf + 6,
+      top,
+      cx - bumpHalf + 10,
+      2,
+      cx - 22,
+      2,
+    )
+    ..cubicTo(cx - 10, 0, cx + 10, 0, cx + 22, 2)
+    ..cubicTo(
+      cx + bumpHalf - 10,
+      2,
+      cx + bumpHalf - 6,
+      top,
+      cx + bumpHalf + 10,
+      top,
+    )
+    ..lineTo(w - r, top)
+    ..quadraticBezierTo(w, top, w, top + r)
+    ..lineTo(w, h)
+    ..lineTo(0, h)
+    ..lineTo(0, top + r)
+    ..quadraticBezierTo(0, top, r, top)
+    ..close();
+  return path;
 }
 
 class _Tab {
