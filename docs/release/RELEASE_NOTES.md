@@ -4,6 +4,18 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.13.3 — 2026-10-08 · `1.13.3+32`
+
+[Download SkyTask-1.13.3.apk](https://github.com/preshan/SkyTask/releases/download/v1.13.3/SkyTask-1.13.3.apk)
+
+### Changes
+- Home: greeting, Tasks/Reminders cards, Today strip, shortcuts, recent reminders
+- Settings and About/FAQ/legal use matching card UI
+- Shared list cards and refreshed create/edit sheets
+- Create menu polish and bottom nav Create bump
+
+---
+
 ## 1.13.2 — 2026-10-08 · `1.13.2+31`
 
 [Download SkyTask-1.13.2.apk](https://github.com/preshan/SkyTask/releases/download/v1.13.2/SkyTask-1.13.2.apk)

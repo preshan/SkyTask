@@ -2,6 +2,14 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.13.3] — 2026-10-08
+
+### Changed
+- Home redesigned: action cards, Today strip, shortcuts, recent reminders
+- Settings / About / FAQ / legal screens use shared card chrome
+- Lists and create/edit sheets share the Ideas-style layout
+- Create menu labels simplified; bottom nav Create bump
+
 ## [1.13.2] — 2026-10-08
 
 ### Added

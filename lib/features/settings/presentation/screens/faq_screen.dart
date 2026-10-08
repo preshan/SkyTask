@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/content_list_card.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import 'legal_doc_screen.dart';
 
@@ -121,48 +122,53 @@ class FaqScreen extends StatelessWidget {
         ),
       ),
       body: ListView.builder(
-        padding: const EdgeInsets.fromLTRB(12, 8, 12, 32),
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         itemCount: _sections.length,
         itemBuilder: (context, index) {
           final section = _sections[index];
-          return Card(
-            margin: const EdgeInsets.only(bottom: 8),
-            clipBehavior: Clip.antiAlias,
-            child: Theme(
-              data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-              child: ExpansionTile(
-                initiallyExpanded: false,
-                tilePadding: const EdgeInsets.symmetric(horizontal: 16),
-                childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
-                title: Text(
-                  section.heading ?? '',
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w700,
-                      ),
-                ),
-                children: [
-                  if (section.body != null && section.body!.isNotEmpty)
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(section.body!, style: bodyStyle),
-                    ),
-                  if (section.bullets != null &&
-                      section.bullets!.isNotEmpty) ...[
-                    if (section.body != null && section.body!.isNotEmpty)
-                      const SizedBox(height: 8),
-                    for (final item in section.bullets!)
-                      Padding(
-                        padding: const EdgeInsets.only(bottom: 8),
-                        child: Row(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text('•  ', style: bodyStyle),
-                            Expanded(child: Text(item, style: bodyStyle)),
-                          ],
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 10),
+            child: Material(
+              color: ContentListCard.surfaceColor(context),
+              borderRadius: BorderRadius.circular(18),
+              clipBehavior: Clip.antiAlias,
+              child: Theme(
+                data: Theme.of(context)
+                    .copyWith(dividerColor: Colors.transparent),
+                child: ExpansionTile(
+                  initiallyExpanded: false,
+                  tilePadding: const EdgeInsets.symmetric(horizontal: 16),
+                  childrenPadding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+                  title: Text(
+                    section.heading ?? '',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
                         ),
+                  ),
+                  children: [
+                    if (section.body != null && section.body!.isNotEmpty)
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(section.body!, style: bodyStyle),
                       ),
+                    if (section.bullets != null &&
+                        section.bullets!.isNotEmpty) ...[
+                      if (section.body != null && section.body!.isNotEmpty)
+                        const SizedBox(height: 8),
+                      for (final item in section.bullets!)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 8),
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text('•  ', style: bodyStyle),
+                              Expanded(child: Text(item, style: bodyStyle)),
+                            ],
+                          ),
+                        ),
+                    ],
                   ],
-                ],
+                ),
               ),
             ),
           );
