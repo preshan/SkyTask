@@ -2,6 +2,12 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.13.4] — 2026-10-08
+
+### Fixed
+- App lock no longer sticks on an endless spinner when PIN/biometric keys are missing (e.g. after restore)
+- Disabled Android auto-backup so lock prefs cannot restore without secure keys
+
 ## [1.13.3] — 2026-10-08
 
 ### Changed

@@ -5,6 +5,7 @@ import 'core/di/providers.dart';
 import 'core/router/app_router.dart';
 import 'core/services/launcher_shortcuts_service.dart';
 import 'core/theme/app_theme.dart';
+import 'features/privacy/data/pin_storage_service.dart';
 import 'features/privacy/presentation/screens/lock_screen.dart';
 
 class SkyTaskApp extends ConsumerStatefulWidget {
@@ -23,7 +24,31 @@ class _SkyTaskAppState extends ConsumerState<SkyTaskApp>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
       LauncherShortcutsService.install(ProviderScope.containerOf(context));
+      _applyBootLockIfReady();
     });
+  }
+
+  /// Lock only when a real PIN / biometric method exists (avoids spinner trap).
+  Future<void> _applyBootLockIfReady() async {
+    final lock = ref.read(privacyLockProvider.notifier);
+    if (!lock.shouldLockAfterBoot || !lock.isAppLockEnabled) return;
+    try {
+      final method = await PinStorageService.instance
+          .getAuthMethod()
+          .timeout(const Duration(seconds: 6));
+      final hasPin = await PinStorageService.instance
+          .hasPin()
+          .timeout(const Duration(seconds: 6));
+      if (!mounted) return;
+      if (method == null && !hasPin) {
+        await ref.read(appLockEnabledProvider.notifier).setEnabled(false);
+        return;
+      }
+      lock.lock();
+    } catch (_) {
+      if (!mounted) return;
+      await ref.read(appLockEnabledProvider.notifier).setEnabled(false);
+    }
   }
 
   @override
