@@ -2,6 +2,15 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.13.2] — 2026-10-08
+
+### Added
+- FAQ questions collapse/expand (collapsed by default)
+
+### Changed
+- Privacy web link lives inside Privacy Policy; removed separate web/Play Console entries
+- Day Plan covers all 24 hours
+
 ## [1.13.1] — 2026-10-07
 
 ### Fixed

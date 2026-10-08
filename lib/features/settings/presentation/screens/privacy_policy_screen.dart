@@ -1,3 +1,4 @@
+import '../../../../core/constants/app_info.dart';
 import 'legal_doc_screen.dart';
 
 /// In-app Privacy Policy (mirrored at docs/privacy.html for the public URL).
@@ -5,6 +6,8 @@ class PrivacyPolicyScreen extends LegalDocScreen {
   const PrivacyPolicyScreen({super.key})
       : super(
           title: 'Privacy Policy',
+          webVersionUrl: AppInfo.privacyPolicyUrl,
+          webVersionLabel: 'Web version',
           sections: const [
             LegalSection(
               body:

@@ -175,7 +175,7 @@ class SettingsScreen extends ConsumerWidget {
           ListTile(
             leading: const SkyIcon(SkyIcons.shield),
             title: const Text('Privacy Policy'),
-            subtitle: const Text('In-app policy · also required for Play Console'),
+            subtitle: const Text('How SkyTask handles your data'),
             trailing: const SkyIcon(SkyIcons.chevronRight),
             onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
@@ -193,13 +193,6 @@ class SettingsScreen extends ConsumerWidget {
             ),
             trailing: const SkyIcon(SkyIcons.chevronRight),
             onTap: () => context.push(AppRoutes.dataSafety),
-          ),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.event),
-            title: const Text('Privacy Policy (web)'),
-            subtitle: const Text('Open the public URL for Play Console'),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
-            onTap: () => _openLink(AppInfo.privacyPolicyUrl),
           ),
           const Divider(),
           Padding(

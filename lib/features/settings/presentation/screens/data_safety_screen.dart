@@ -1,6 +1,6 @@
 import 'legal_doc_screen.dart';
 
-/// Data safety and permission notes (for users and Play Console).
+/// Data safety and permission notes for users.
 class DataSafetyScreen extends LegalDocScreen {
   const DataSafetyScreen({super.key})
       : super(
@@ -9,8 +9,7 @@ class DataSafetyScreen extends LegalDocScreen {
             LegalSection(
               body:
                   'This page explains how SkyTask handles your data and why the '
-                  'app requests certain permissions. It may also help you '
-                  'complete relevant Google Play Data safety disclosures.',
+                  'app requests certain permissions.',
             ),
             LegalSection(
               heading: 'Overview',

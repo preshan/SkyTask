@@ -11,8 +11,8 @@ import '../../../tasks/presentation/widgets/task_form_sheet.dart';
 import '../../domain/day_plan_item.dart';
 import '../providers/day_plan_providers.dart';
 
-const _kDayStartHour = 6;
-const _kDayEndHour = 22;
+const _kDayStartHour = 0;
+const _kDayEndHour = 24;
 const _kSlotMinutes = 30;
 const _kHourHeight = 88.0;
 

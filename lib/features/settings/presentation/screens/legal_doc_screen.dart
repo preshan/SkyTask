@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/router/app_router.dart';
 import '../../../../shared/widgets/sky_icon.dart';
@@ -10,10 +11,20 @@ class LegalDocScreen extends StatelessWidget {
     super.key,
     required this.title,
     required this.sections,
+    this.webVersionUrl,
+    this.webVersionLabel = 'Web version',
   });
 
   final String title;
   final List<LegalSection> sections;
+
+  /// Optional public URL shown at the bottom (e.g. Privacy Policy online).
+  final String? webVersionUrl;
+  final String webVersionLabel;
+
+  Future<void> _openWeb(String url) async {
+    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -66,6 +77,18 @@ class LegalDocScreen extends StatelessWidget {
                   ),
                 ),
             ],
+          ],
+          if (webVersionUrl != null) ...[
+            const SizedBox(height: 24),
+            const Divider(),
+            ListTile(
+              contentPadding: EdgeInsets.zero,
+              leading: const SkyIcon(SkyIcons.link),
+              title: Text(webVersionLabel),
+              subtitle: Text(webVersionUrl!),
+              trailing: const SkyIcon(SkyIcons.chevronRight),
+              onTap: () => _openWeb(webVersionUrl!),
+            ),
           ],
         ],
       ),

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_info.dart';
 import '../../../../core/router/app_router.dart';
@@ -9,10 +8,6 @@ import '../../../../shared/widgets/sky_icon.dart';
 /// Hub between notifications and settings: app info + legal links.
 class AboutHelpScreen extends StatelessWidget {
   const AboutHelpScreen({super.key});
-
-  Future<void> _open(String url) async {
-    await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -111,14 +106,6 @@ class AboutHelpScreen extends StatelessWidget {
             subtitle: const Text('Mic, calendar, alarms, and account notes'),
             trailing: const SkyIcon(SkyIcons.chevronRight),
             onTap: () => context.push(AppRoutes.dataSafety),
-          ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const SkyIcon(SkyIcons.event),
-            title: const Text('Open Privacy Policy online'),
-            subtitle: const Text(AppInfo.privacyPolicyUrl),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
-            onTap: () => _open(AppInfo.privacyPolicyUrl),
           ),
           const Divider(),
           ListTile(
