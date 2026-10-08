@@ -4,6 +4,16 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.13.4 — 2026-10-08 · `1.13.4+33`
+
+[Download SkyTask-1.13.4.apk](https://github.com/preshan/SkyTask/releases/download/v1.13.4/SkyTask-1.13.4.apk)
+
+### Changes
+- Fix endless loading spinner when app lock credentials are missing
+- Turn off Android auto-backup to avoid broken lock state after reinstall
+
+---
+
 ## 1.13.3 — 2026-10-08 · `1.13.3+32`
 
 [Download SkyTask-1.13.3.apk](https://github.com/preshan/SkyTask/releases/download/v1.13.3/SkyTask-1.13.3.apk)

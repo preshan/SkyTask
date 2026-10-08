@@ -169,19 +169,26 @@ final privacyLockProvider =
   final prefs = ref.watch(sharedPreferencesProvider);
   final privacySetupDone = ref.watch(privacySetupCompleteProvider);
   final enabled = prefs.getBool(AppConstants.appLockEnabledKey) ?? false;
+  // Start unlocked; [SkyTaskApp] / LockScreen verify credentials before locking
+  // so a restored "lock on" flag without a PIN cannot trap the UI on a spinner.
   return PrivacyLockNotifier(
     prefs,
-    lockOnStart: privacySetupDone && enabled,
+    lockOnStart: false,
+    shouldLockAfterBoot: privacySetupDone && enabled,
   );
 });
 
 class PrivacyLockNotifier extends StateNotifier<bool> {
-  PrivacyLockNotifier(this._prefs, {required bool lockOnStart})
-      : super(false) {
-    if (lockOnStart) state = true;
-  }
+  PrivacyLockNotifier(
+    this._prefs, {
+    required bool lockOnStart,
+    this.shouldLockAfterBoot = false,
+  }) : super(lockOnStart);
 
   final SharedPreferences _prefs;
+
+  /// True when prefs say app lock is on after privacy setup (boot check pending).
+  final bool shouldLockAfterBoot;
 
   DateTime? _backgroundedAt;
 

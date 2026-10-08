@@ -16,6 +16,7 @@ class LockScreen extends ConsumerStatefulWidget {
 }
 
 class _LockScreenState extends ConsumerState<LockScreen> {
+  bool _loading = true;
   AuthMethod? _authMethod;
   bool _hasPin = false;
   bool _usePinFallback = false;
@@ -29,19 +30,44 @@ class _LockScreenState extends ConsumerState<LockScreen> {
   }
 
   Future<void> _loadAuthMethod() async {
-    final method = await PinStorageService.instance.getAuthMethod();
-    final hasPin = await PinStorageService.instance.hasPin();
-    if (!mounted) return;
-    setState(() {
-      _authMethod = method;
-      _hasPin = hasPin;
-    });
-    if (method == AuthMethod.biometric) {
-      // Prompt fingerprint as soon as the lock screen appears.
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_usePinFallback) _unlockWithBiometrics();
+    try {
+      final method = await PinStorageService.instance
+          .getAuthMethod()
+          .timeout(const Duration(seconds: 6));
+      final hasPin = await PinStorageService.instance
+          .hasPin()
+          .timeout(const Duration(seconds: 6));
+      if (!mounted) return;
+
+      // Prefs can say "locked" after backup/restore while secure keys are gone.
+      if (method == null && !hasPin) {
+        await _clearBrokenLock();
+        return;
+      }
+
+      final resolved = method ?? AuthMethod.pin;
+      setState(() {
+        _authMethod = resolved;
+        _hasPin = hasPin;
+        _loading = false;
+        if (resolved == AuthMethod.pin) _usePinFallback = true;
       });
+
+      if (resolved == AuthMethod.biometric) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_usePinFallback) _unlockWithBiometrics();
+        });
+      }
+    } catch (_) {
+      if (!mounted) return;
+      await _clearBrokenLock();
     }
+  }
+
+  Future<void> _clearBrokenLock() async {
+    await ref.read(appLockEnabledProvider.notifier).setEnabled(false);
+    if (!mounted) return;
+    ref.read(privacyLockProvider.notifier).unlock();
   }
 
   Future<void> _unlockWithBiometrics() async {
@@ -92,7 +118,7 @@ class _LockScreenState extends ConsumerState<LockScreen> {
           child: Center(
             child: Padding(
               padding: const EdgeInsets.all(32),
-              child: _authMethod == null
+              child: _loading
                   ? const CircularProgressIndicator(color: Colors.white)
                   : showPin
                       ? _buildPinUnlock(context)
