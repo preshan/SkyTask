@@ -2,11 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:url_launcher/url_launcher.dart';
-
+import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_info.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/about_brand_card.dart';
+import '../../../../shared/widgets/settings_nav_card.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../backup/data/backup_folder_service.dart';
 import '../../../backup/presentation/backup_dialogs.dart';
@@ -23,9 +24,6 @@ class SettingsScreen extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     final appLock = ref.watch(appLockEnabledProvider);
     final calendarSettings = ref.watch(calendarSettingsProvider);
-    final mist = Theme.of(context).textTheme.bodySmall?.copyWith(
-          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
-        );
 
     return Scaffold(
       appBar: AppBar(
@@ -42,35 +40,40 @@ class SettingsScreen extends ConsumerWidget {
         ),
       ),
       body: ListView(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
         children: [
-          _header(context, 'Appearance'),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.palette),
-            title: const Text('Theme'),
-            subtitle: Text(_themeLabel(themeMode)),
+          const _SectionLabel('Appearance'),
+          SettingsNavCard(
+            icon: SkyIcons.palette,
+            iconColor: const Color(0xFF5C6BC0),
+            iconBackground: const Color(0xFFE8EAF6),
+            title: 'Theme',
+            subtitle: _themeLabel(themeMode),
             onTap: () => _pickTheme(context, ref, themeMode),
           ),
-          const Divider(),
-          _header(context, 'Notifications'),
-          const SwitchListTile(
-            secondary: SkyIcon(SkyIcons.notification),
-            title: Text('Reminder notifications'),
-            subtitle: Text('Local + exact alarms (offline)'),
+          const SizedBox(height: 16),
+          const _SectionLabel('Notifications'),
+          const SettingsSwitchCard(
+            icon: SkyIcons.notification,
+            iconColor: Color(0xFF1E88E5),
+            iconBackground: Color(0xFFE3F2FD),
+            title: 'Reminder notifications',
+            subtitle: 'Local + exact alarms (offline)',
             value: true,
             onChanged: null,
           ),
-          const Divider(),
-          _header(context, 'Calendar Sync'),
-          SwitchListTile(
-            secondary: const SkyIcon(SkyIcons.calendar),
-            title: const Text('Calendar sync'),
-            subtitle: Text(
-              calendarSettings.syncEnabled
-                  ? calendarSettings.isGoogleCalendar
-                      ? 'Reminders sync to Google: ${calendarSettings.defaultCalendarName}'
-                      : 'Reminders sync to ${calendarSettings.defaultCalendarName}'
-                  : 'Write reminders to a device calendar (Google if available)',
-            ),
+          const SizedBox(height: 16),
+          const _SectionLabel('Calendar Sync'),
+          SettingsSwitchCard(
+            icon: SkyIcons.calendar,
+            iconColor: const Color(0xFF00897B),
+            iconBackground: const Color(0xFFE0F2F1),
+            title: 'Calendar sync',
+            subtitle: calendarSettings.syncEnabled
+                ? calendarSettings.isGoogleCalendar
+                    ? 'Reminders sync to Google: ${calendarSettings.defaultCalendarName}'
+                    : 'Reminders sync to ${calendarSettings.defaultCalendarName}'
+                : 'Write reminders to a device calendar (Google if available)',
             value: calendarSettings.syncEnabled,
             onChanged: (enabled) async {
               final result = await ref
@@ -104,206 +107,119 @@ class SettingsScreen extends ConsumerWidget {
               }
             },
           ),
-          if (calendarSettings.syncEnabled)
-            ListTile(
-              leading: const SkyIcon(SkyIcons.edit),
-              title: const Text('Default calendar'),
-              subtitle: Text(calendarSettings.defaultCalendarName ?? 'Not set'),
-              trailing: const SkyIcon(SkyIcons.chevronRight),
+          if (calendarSettings.syncEnabled) ...[
+            const SizedBox(height: 10),
+            SettingsNavCard(
+              icon: SkyIcons.edit,
+              iconColor: const Color(0xFF00897B),
+              iconBackground: const Color(0xFFE0F2F1),
+              title: 'Default calendar',
+              subtitle: calendarSettings.defaultCalendarName ?? 'Not set',
               onTap: () => _pickCalendar(context, ref),
             ),
-          const Divider(),
-          _header(context, 'Privacy'),
-          SwitchListTile(
-            secondary: const SkyIcon(SkyIcons.lock),
-            title: const Text('App lock'),
-            subtitle: const Text(
-              'Fingerprint, face, or PIN · locks after 30s in background',
-            ),
+          ],
+          const SizedBox(height: 16),
+          const _SectionLabel('Privacy'),
+          SettingsSwitchCard(
+            icon: SkyIcons.lock,
+            iconColor: const Color(0xFF6A1B9A),
+            iconBackground: const Color(0xFFF3E5F5),
+            title: 'App lock',
+            subtitle:
+                'Fingerprint, face, or PIN · locks after 30s in background',
             value: appLock,
             onChanged: (v) => _onAppLockChanged(context, ref, v),
           ),
           if (appLock &&
-              (ref.watch(biometricsAvailableProvider).valueOrNull ?? false))
-            SwitchListTile(
-              secondary: const SkyIcon(SkyIcons.fingerprint),
-              title: const Text('Unlock with fingerprint'),
-              subtitle: Text(
-                ref.watch(unlockAuthMethodProvider).valueOrNull ==
-                        AuthMethod.biometric
-                    ? 'Fingerprint or face · PIN still works as backup'
-                    : 'Use fingerprint instead of typing your PIN each time',
-              ),
+              (ref.watch(biometricsAvailableProvider).valueOrNull ?? false)) ...[
+            const SizedBox(height: 10),
+            SettingsSwitchCard(
+              icon: SkyIcons.fingerprint,
+              iconColor: const Color(0xFF6A1B9A),
+              iconBackground: const Color(0xFFF3E5F5),
+              title: 'Unlock with fingerprint',
+              subtitle: ref.watch(unlockAuthMethodProvider).valueOrNull ==
+                      AuthMethod.biometric
+                  ? 'Fingerprint or face · PIN still works as backup'
+                  : 'Use fingerprint instead of typing your PIN each time',
               value: ref.watch(unlockAuthMethodProvider).valueOrNull ==
                   AuthMethod.biometric,
               onChanged: (v) => _onFingerprintUnlockChanged(context, ref, v),
             ),
-          const Divider(),
-          _header(context, 'Data'),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.folder),
-            title: const Text('Backup folder'),
-            subtitle: Text(
-              BackupFolderService.instance.displayLabel(
-                ref.watch(backupFolderPathProvider),
-              ),
+          ],
+          const SizedBox(height: 16),
+          const _SectionLabel('Data'),
+          SettingsNavCard(
+            icon: SkyIcons.folder,
+            iconColor: const Color(0xFFEF6C00),
+            iconBackground: const Color(0xFFFFF3E0),
+            title: 'Backup folder',
+            subtitle: BackupFolderService.instance.displayLabel(
+              ref.watch(backupFolderPathProvider),
             ),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
             onTap: () => showPickBackupFolderFlow(context, ref),
           ),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.archive),
-            title: const Text('Export backup'),
-            subtitle: const Text('Compressed file · optional password'),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.archive,
+            iconColor: const Color(0xFFEF6C00),
+            iconBackground: const Color(0xFFFFF3E0),
+            title: 'Export backup',
+            subtitle: 'Compressed file · optional password',
             onTap: () => showExportBackupFlow(context, ref),
           ),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.note),
-            title: const Text('Import backup'),
-            subtitle: const Text('From Files or shared storage'),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.note,
+            iconColor: const Color(0xFFEF6C00),
+            iconBackground: const Color(0xFFFFF3E0),
+            title: 'Import backup',
+            subtitle: 'From Files or shared storage',
             onTap: () => showImportBackupFlow(context, ref),
           ),
-          const Divider(),
-          _header(context, 'About & legal'),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.info),
-            title: const Text('About & help'),
-            subtitle: Text(AppInfo.shortDescription),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
+          const SizedBox(height: 16),
+          const _SectionLabel('About & legal'),
+          SettingsNavCard(
+            icon: SkyIcons.info,
+            iconColor: const Color(0xFF1E88E5),
+            iconBackground: const Color(0xFFE3F2FD),
+            title: 'About & help',
+            subtitle: AppInfo.shortDescription,
             onTap: () => context.push(AppRoutes.aboutHelp),
           ),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.shield),
-            title: const Text('Privacy Policy'),
-            subtitle: const Text('How SkyTask handles your data'),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.shield,
+            iconColor: const Color(0xFF43A047),
+            iconBackground: const Color(0xFFE8F5E9),
+            title: 'Privacy Policy',
+            subtitle: 'How SkyTask handles your data',
             onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.note),
-            title: const Text('FAQ'),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.note,
+            iconColor: const Color(0xFFFB8C00),
+            iconBackground: const Color(0xFFFFF3E0),
+            title: 'FAQ',
             onTap: () => context.push(AppRoutes.faq),
           ),
-          ListTile(
-            leading: const SkyIcon(SkyIcons.lock),
-            title: const Text('Data safety & permissions'),
-            subtitle: const Text(
-              'Mic, calendar, exact alarms, notifications, Firebase',
-            ),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.lightbulb,
+            iconColor: const Color(0xFF8E24AA),
+            iconBackground: const Color(0xFFF3E5F5),
+            title: 'Data safety & permissions',
+            subtitle: 'Mic, calendar, exact alarms, notifications, Firebase',
             onTap: () => context.push(AppRoutes.dataSafety),
           ),
-          const Divider(),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-            child: Column(
-              children: [
-                InkWell(
-                  onTap: () => context.push(AppRoutes.aboutHelp),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    child: Column(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(16),
-                          child: Image.asset(
-                            'assets/images/app_icon.png',
-                            width: 64,
-                            height: 64,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Text(
-                          AppInfo.name,
-                          style: Theme.of(context)
-                              .textTheme
-                              .titleMedium
-                              ?.copyWith(fontWeight: FontWeight.w700),
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          AppInfo.shortDescription,
-                          style: mist,
-                          textAlign: TextAlign.center,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          'Version ${AppInfo.versionLabel}',
-                          style: mist,
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text('© ${AppInfo.copyrightYear} ', style: mist),
-                    GestureDetector(
-                      onTap: () => _openLink(AppInfo.repoUrl),
-                      child: Text(
-                        AppInfo.name,
-                        style: mist?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                    Text('. All rights reserved.', style: mist),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                Wrap(
-                  alignment: WrapAlignment.center,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    Text('Developed by ', style: mist),
-                    GestureDetector(
-                      onTap: () => _openLink(AppInfo.developerGitHub),
-                      child: Text(
-                        AppInfo.developerName,
-                        style: mist?.copyWith(
-                          color: Theme.of(context).colorScheme.primary,
-                          decoration: TextDecoration.underline,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _ContactLink(
-                  icon: SkyIcons.linkedIn,
-                  label: 'LinkedIn',
-                  onTap: () => _openLink(AppInfo.developerLinkedIn),
-                ),
-                const SizedBox(height: 6),
-                _ContactLink(
-                  icon: SkyIcons.mail,
-                  label: AppInfo.developerEmail,
-                  onTap: () =>
-                      _openLink('mailto:${AppInfo.developerEmail}'),
-                ),
-              ],
-            ),
+          const SizedBox(height: 20),
+          AboutBrandCard(
+            onOpenAbout: () => context.push(AppRoutes.aboutHelp),
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _openLink(String url) async {
-    final uri = Uri.parse(url);
-    await launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
   Future<void> _onAppLockChanged(
@@ -314,7 +230,6 @@ class SettingsScreen extends ConsumerWidget {
     final messenger = ScaffoldMessenger.of(context);
     final lock = ref.read(privacyLockProvider.notifier);
     if (!enabled) {
-      // Turning lock off must prove identity — unlocked session alone is not enough.
       final method = await PinStorageService.instance.getAuthMethod();
       var ok = false;
       try {
@@ -331,7 +246,7 @@ class SettingsScreen extends ConsumerWidget {
       }
       if (!ok) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Could not verify — app lock stays on')),
+          const SnackBar(content: Text('Could not verify - app lock stays on')),
         );
         return;
       }
@@ -339,7 +254,6 @@ class SettingsScreen extends ConsumerWidget {
 
     await ref.read(appLockEnabledProvider.notifier).setEnabled(enabled);
     if (enabled) {
-      // Defer so SwitchListTile finishes its rebuild before lock overlays.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         lock.lock();
       });
@@ -393,7 +307,6 @@ class SettingsScreen extends ConsumerWidget {
       return;
     }
 
-    // Turn fingerprint preference off → unlock with PIN again.
     final ok = await PrivacyAuthService.instance.authenticateWithBiometrics(
       reason: 'Confirm to switch back to PIN unlock',
     );
@@ -402,7 +315,9 @@ class SettingsScreen extends ConsumerWidget {
       final pinOk = await _confirmPinDialog(context) ?? false;
       if (!pinOk) {
         messenger.showSnackBar(
-          const SnackBar(content: Text('Could not verify — staying on fingerprint')),
+          const SnackBar(
+            content: Text('Could not verify - staying on fingerprint'),
+          ),
         );
         return;
       }
@@ -446,6 +361,7 @@ class SettingsScreen extends ConsumerWidget {
 
     await showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -489,19 +405,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  Widget _header(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-      child: Text(
-        title,
-        style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              color: Theme.of(context).colorScheme.primary,
-              fontWeight: FontWeight.w600,
-            ),
-      ),
-    );
-  }
-
   String _themeLabel(ThemeMode mode) => switch (mode) {
         ThemeMode.light => 'Light',
         ThemeMode.dark => 'Dark',
@@ -511,6 +414,7 @@ class SettingsScreen extends ConsumerWidget {
   void _pickTheme(BuildContext context, WidgetRef ref, ThemeMode current) {
     showModalBottomSheet<void>(
       context: context,
+      showDragHandle: true,
       builder: (ctx) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -533,39 +437,21 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-class _ContactLink extends StatelessWidget {
-  const _ContactLink({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.title);
 
-  final List<List<dynamic>> icon;
-  final String label;
-  final VoidCallback onTap;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    final color = Theme.of(context).colorScheme.primary;
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            SkyIcon(icon, size: 18, color: color),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: color,
-                    fontWeight: FontWeight.w600,
-                  ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 10),
+      child: Text(
+        title,
+        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+              color: AppColors.brand(context),
+              fontWeight: FontWeight.w700,
             ),
-          ],
-        ),
       ),
     );
   }

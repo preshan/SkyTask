@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../core/constants/app_info.dart';
 import '../../../../core/router/app_router.dart';
+import '../../../../shared/widgets/about_brand_card.dart';
+import '../../../../shared/widgets/content_list_card.dart';
+import '../../../../shared/widgets/settings_nav_card.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 
 /// Hub between notifications and settings: app info + legal links.
@@ -31,87 +33,85 @@ class AboutHelpScreen extends StatelessWidget {
         ),
       ),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
         children: [
-          Center(
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: Image.asset(
-                'assets/images/app_icon.png',
-                width: 88,
-                height: 88,
-                fit: BoxFit.cover,
+          const AboutBrandCard(showDescription: true),
+          const SizedBox(height: 20),
+          Material(
+            color: ContentListCard.surfaceColor(context),
+            borderRadius: BorderRadius.circular(18),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'What you can do',
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    'Tasks, reminders, ideas, and notes in one place. Content '
+                    'stays on your phone by default.',
+                    style: mist,
+                  ),
+                  const SizedBox(height: 12),
+                  const _Bullet(
+                    'Tasks with priorities, categories, due dates, and Day Plan',
+                  ),
+                  const _Bullet(
+                    'Reminders with local notifications and optional calendar sync',
+                  ),
+                  const _Bullet(
+                    'Ideas and notes, including private items behind app lock',
+                  ),
+                  const _Bullet(
+                    'Voice memos you can record, play, pause, and seek',
+                  ),
+                  const _Bullet(
+                    'Local storage with optional backup export and import',
+                  ),
+                  const _Bullet('Light and dark themes'),
+                ],
               ),
             ),
           ),
           const SizedBox(height: 16),
-          Text(
-            AppInfo.name,
-            textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Version ${AppInfo.versionLabel}',
-            textAlign: TextAlign.center,
-            style: mist,
-          ),
-          const SizedBox(height: 20),
-          Text(
-            'Tasks, reminders, ideas, and notes in one place. Content stays on '
-            'your phone by default.',
-            style: mist,
-          ),
-          const SizedBox(height: 12),
-          const _Bullet(
-            'Tasks with priorities, categories, due dates, and Day Plan',
-          ),
-          const _Bullet(
-            'Reminders with local notifications and optional calendar sync',
-          ),
-          const _Bullet(
-            'Ideas and notes, including private items behind app lock',
-          ),
-          const _Bullet(
-            'Voice memos you can record, play, pause, and seek',
-          ),
-          const _Bullet(
-            'Local storage with optional backup export and import',
-          ),
-          const _Bullet('Light and dark themes'),
-          const SizedBox(height: 16),
-          const Divider(),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const SkyIcon(SkyIcons.shield),
-            title: const Text('Privacy Policy'),
-            subtitle: const Text('How SkyTask handles your data'),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
+          SettingsNavCard(
+            icon: SkyIcons.shield,
+            iconColor: const Color(0xFF43A047),
+            iconBackground: const Color(0xFFE8F5E9),
+            title: 'Privacy Policy',
+            subtitle: 'How SkyTask handles your data',
             onTap: () => context.push(AppRoutes.privacyPolicy),
           ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const SkyIcon(SkyIcons.info),
-            title: const Text('FAQ'),
-            subtitle: const Text('Common questions'),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.note,
+            iconColor: const Color(0xFFFB8C00),
+            iconBackground: const Color(0xFFFFF3E0),
+            title: 'FAQ',
+            subtitle: 'Common questions',
             onTap: () => context.push(AppRoutes.faq),
           ),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const SkyIcon(SkyIcons.lock),
-            title: const Text('Data safety & permissions'),
-            subtitle: const Text('Mic, calendar, alarms, and account notes'),
-            trailing: const SkyIcon(SkyIcons.chevronRight),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.lightbulb,
+            iconColor: const Color(0xFF8E24AA),
+            iconBackground: const Color(0xFFF3E5F5),
+            title: 'Data safety & permissions',
+            subtitle: 'Mic, calendar, alarms, and account notes',
             onTap: () => context.push(AppRoutes.dataSafety),
           ),
-          const Divider(),
-          ListTile(
-            contentPadding: EdgeInsets.zero,
-            leading: const SkyIcon(SkyIcons.settings),
-            title: const Text('Settings'),
+          const SizedBox(height: 10),
+          SettingsNavCard(
+            icon: SkyIcons.settings,
+            iconColor: const Color(0xFF5C6BC0),
+            iconBackground: const Color(0xFFE8EAF6),
+            title: 'Settings',
+            subtitle: 'Theme, sync, privacy, and backups',
             onTap: () => context.go(AppRoutes.settings),
           ),
         ],
