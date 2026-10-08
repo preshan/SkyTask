@@ -11,8 +11,9 @@ import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
 import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
-import '../../../../shared/widgets/icon_toggle.dart';
-import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/form_action_button.dart';
+import '../../../../shared/widgets/form_quick_action_tile.dart';
+import '../../../../shared/widgets/form_sheet_header.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_memo_recorder.dart';
 import '../../domain/entities/task.dart';
@@ -28,6 +29,7 @@ Future<void> showTaskFormSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: _TaskFormSheet(
@@ -270,23 +272,23 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final muted = Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+    final brand = AppColors.brand(context);
     final dueTooltip = _dueDate == null
         ? 'Set due date'
         : '${_formatDueLabel()} · long-press to clear';
 
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            _isEditing ? 'Edit Task' : 'New Task',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          FormSheetHeader(_isEditing ? 'Edit Task' : 'New Task'),
           const SizedBox(height: 16),
           TextField(
             controller: _titleController,
+            maxLength: 100,
             decoration: const InputDecoration(
               labelText: 'Title (optional)',
               border: OutlineInputBorder(),
@@ -295,19 +297,21 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _descriptionFocus.requestFocus(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           TextField(
             controller: _descriptionController,
             focusNode: _descriptionFocus,
             autofocus: !ref.watch(preferVoiceCaptureProvider),
+            maxLength: 500,
             decoration: const InputDecoration(
               labelText: 'Description (optional)',
               border: OutlineInputBorder(),
+              alignLabelWithHint: true,
             ),
             maxLines: 3,
             textCapitalization: TextCapitalization.sentences,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           CategoryChipSelector(
             value: _category,
             enabled: !_saving,
@@ -316,112 +320,106 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
           const SizedBox(height: 16),
           Text('Priority', style: Theme.of(context).textTheme.labelLarge),
           const SizedBox(height: 8),
-          SizedBox(
-            height: 40,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: TaskPriority.values.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 8),
-              itemBuilder: (context, index) {
-                final priority = TaskPriority.values[index];
-                final selected = _priority == priority;
-                final color = _priorityColor(priority);
-                return FilterChip(
-                  label: Text(_label(priority.name)),
-                  selected: selected,
-                  showCheckmark: false,
-                  onSelected: _saving
-                      ? null
-                      : (_) => setState(() => _priority = priority),
-                  selectedColor: color.withValues(alpha: 0.25),
-                  side: BorderSide(
-                    color: selected
-                        ? color
-                        : AppColors.brand(context).withValues(alpha: 0.25),
-                  ),
-                  labelStyle: TextStyle(
-                    fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                    fontSize: 13,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                );
-              },
-            ),
-          ),
-          const SizedBox(height: 12),
           Row(
             children: [
-              IconToggle(
-                active: _dueDate != null,
-                tooltip: dueTooltip,
-                onTap: _saving ? null : _pickDueDate,
-                onLongPress: _saving || _dueDate == null
-                    ? null
-                    : () => setState(() {
-                          _dueDate = null;
-                          _dueTimeMinutes = null;
-                        }),
-                child: SkyIcon(
-                  SkyIcons.calendar,
-                  color: _dueDate != null
-                      ? AppColors.brand(context)
-                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconToggle(
-                active: _dueTimeMinutes != null,
-                tooltip: _dueTimeMinutes == null
-                    ? 'Set time (Day Plan)'
-                    : 'Change time · long-press to clear',
-                onTap: _saving ? null : _pickDueTime,
-                onLongPress: _saving || _dueTimeMinutes == null
-                    ? null
-                    : () => setState(() => _dueTimeMinutes = null),
-                child: SkyIcon(
-                  SkyIcons.pending,
-                  color: _dueTimeMinutes != null
-                      ? AppColors.brand(context)
-                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 8),
-              IconToggle(
-                active: _pinned,
-                tooltip: _pinned ? 'Unpin' : 'Pin',
-                onTap: _saving
-                    ? null
-                    : () => setState(() => _pinned = !_pinned),
-                child: SkyIcon(
-                  SkyIcons.pin,
-                  color: _pinned
-                      ? AppColors.brand(context)
-                      : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-                  size: 22,
-                ),
-              ),
-              const SizedBox(width: 8),
-              PrivateIconToggle(
-                value: _isPrivate,
-                enabled: !_saving,
-                onChanged: (v) => setState(() => _isPrivate = v),
-              ),
-              if (_dueDate != null) ...[
-                const SizedBox(width: 12),
+              for (final priority in TaskPriority.values) ...[
+                if (priority != TaskPriority.values.first)
+                  const SizedBox(width: 8),
                 Expanded(
-                  child: Text(
-                    _formatDueLabel(),
-                    style: Theme.of(context).textTheme.bodySmall,
-                    overflow: TextOverflow.ellipsis,
+                  child: _PriorityPill(
+                    label: _label(priority.name),
+                    selected: _priority == priority,
+                    enabled: !_saving,
+                    onTap: () => setState(() => _priority = priority),
                   ),
                 ),
-              ] else
-                const Spacer(),
+              ],
             ],
           ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: FormQuickActionTile(
+                  active: _dueDate != null,
+                  label: 'Due date',
+                  tooltip: dueTooltip,
+                  onTap: _saving ? null : _pickDueDate,
+                  onLongPress: _saving || _dueDate == null
+                      ? null
+                      : () => setState(() {
+                            _dueDate = null;
+                            _dueTimeMinutes = null;
+                          }),
+                  icon: SkyIcon(
+                    SkyIcons.calendar,
+                    color: _dueDate != null ? brand : muted,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FormQuickActionTile(
+                  active: _dueTimeMinutes != null,
+                  label: 'Time',
+                  tooltip: _dueTimeMinutes == null
+                      ? 'Set time (Day Plan)'
+                      : 'Change time · long-press to clear',
+                  onTap: _saving ? null : _pickDueTime,
+                  onLongPress: _saving || _dueTimeMinutes == null
+                      ? null
+                      : () => setState(() => _dueTimeMinutes = null),
+                  icon: SkyIcon(
+                    SkyIcons.pending,
+                    color: _dueTimeMinutes != null ? brand : muted,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FormQuickActionTile(
+                  active: _pinned,
+                  label: 'Pin',
+                  tooltip: _pinned ? 'Unpin' : 'Pin',
+                  onTap: _saving
+                      ? null
+                      : () => setState(() => _pinned = !_pinned),
+                  icon: SkyIcon(
+                    SkyIcons.pin,
+                    color: _pinned ? brand : muted,
+                    size: 22,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FormQuickActionTile(
+                  active: _isPrivate,
+                  label: 'Hide',
+                  tooltip: _isPrivate ? 'Make public' : 'Make private',
+                  onTap: _saving
+                      ? null
+                      : () => setState(() => _isPrivate = !_isPrivate),
+                  icon: SkyIcon(
+                    SkyIcons.private,
+                    color: _isPrivate ? brand : muted,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (_dueDate != null) ...[
+            const SizedBox(height: 8),
+            Text(
+              _formatDueLabel(),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: muted,
+                  ),
+            ),
+          ],
           if (_dueTimeMinutes != null) ...[
             const SizedBox(height: 12),
             Row(
@@ -447,7 +445,7 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
               ],
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
           VoiceMemoRecorder(
             controller: _voiceController,
             initialPath: widget.task?.voicePath,
@@ -455,65 +453,52 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
             titleBuilder: () => _titleController.text,
             onChanged: (path) => setState(() => _voicePath = path),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           if (_isEditing) ...[
             Row(
               children: [
                 Expanded(
-                  child: FilledButton(
+                  child: FormActionButton(
+                    label: 'Save',
+                    busy: _saving,
                     onPressed: _saving ? null : _save,
-                    child: _saving
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Text('Save'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: OutlinedButton(
+                  child: FormActionButton(
+                    label: widget.task!.completed ? 'Incomplete' : 'Complete',
+                    variant: FormActionVariant.outlined,
                     onPressed: _saving ? null : _toggleComplete,
-                    child: Text(
-                      widget.task!.completed ? 'Incomplete' : 'Complete',
-                    ),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 10),
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton(
+                  child: FormActionButton(
+                    label: 'Archive',
+                    variant: FormActionVariant.neutral,
                     onPressed: _saving ? null : _archive,
-                    child: const Text('Archive'),
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: OutlinedButton(
+                  child: FormActionButton(
+                    label: 'Delete',
+                    variant: FormActionVariant.danger,
                     onPressed: _saving ? null : _delete,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.error,
-                      side: const BorderSide(color: AppColors.error),
-                    ),
-                    child: const Text('Delete'),
                   ),
                 ),
               ],
             ),
           ] else
-            FilledButton(
+            FormActionButton(
+              label: 'Create task',
+              busy: _saving,
               onPressed: _saving ? null : _save,
-              child: _saving
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    )
-                  : const Text('Create task'),
             ),
         ],
       ),
@@ -521,10 +506,55 @@ class _TaskFormSheetState extends ConsumerState<_TaskFormSheet> {
   }
 
   String _label(String raw) => raw[0].toUpperCase() + raw.substring(1);
+}
 
-  Color _priorityColor(TaskPriority priority) => switch (priority) {
-        TaskPriority.low => AppColors.success,
-        TaskPriority.medium => AppColors.warning,
-        TaskPriority.high => AppColors.error,
-      };
+class _PriorityPill extends StatelessWidget {
+  const _PriorityPill({
+    required this.label,
+    required this.selected,
+    required this.enabled,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = AppColors.warning;
+    final scheme = Theme.of(context).colorScheme;
+    return Material(
+      color: selected ? accent.withValues(alpha: 0.18) : scheme.surface,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(22),
+        side: BorderSide(
+          color: selected
+              ? accent
+              : scheme.onSurface.withValues(alpha: 0.18),
+          width: selected ? 1.5 : 1,
+        ),
+      ),
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(22),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Center(
+            child: Text(
+              label,
+              style: TextStyle(
+                fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
+                fontSize: 13,
+                color: selected
+                    ? const Color(0xFF9A6700)
+                    : scheme.onSurface.withValues(alpha: 0.8),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }

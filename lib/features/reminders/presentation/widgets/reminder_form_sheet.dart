@@ -7,8 +7,11 @@ import '../../../../core/constants/capture_preference.dart';
 import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/providers.dart';
 import '../../../../core/services/voice_memo_service.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/category_chip_selector.dart';
-import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/form_action_button.dart';
+import '../../../../shared/widgets/form_quick_action_tile.dart';
+import '../../../../shared/widgets/form_sheet_header.dart';
 import '../../../../shared/widgets/sky_icon.dart';
 import '../../../../shared/widgets/voice_memo_recorder.dart';
 import '../../domain/entities/reminder.dart';
@@ -24,6 +27,7 @@ Future<void> showReminderFormSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: _ReminderFormSheet(
@@ -287,19 +291,21 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
       TimeOfDay.fromDateTime(_dateTime),
     );
 
+    final brand = AppColors.brand(context);
+    final muted =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            _isEditing ? 'Edit Reminder' : 'New Reminder',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          FormSheetHeader(_isEditing ? 'Edit Reminder' : 'New Reminder'),
           const SizedBox(height: 16),
           TextField(
             controller: _titleController,
+            maxLength: 100,
             decoration: const InputDecoration(
               labelText: 'Title (optional)',
               border: OutlineInputBorder(),
@@ -308,11 +314,12 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _descriptionFocus.requestFocus(),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           TextField(
             controller: _descriptionController,
             focusNode: _descriptionFocus,
             autofocus: !ref.watch(preferVoiceCaptureProvider),
+            maxLength: 500,
             decoration: const InputDecoration(
               labelText: 'Description (optional)',
               border: OutlineInputBorder(),
@@ -320,7 +327,7 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
             maxLines: 2,
             textCapitalization: TextCapitalization.sentences,
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           CategoryChipSelector(
             value: _category,
             enabled: !_saving,
@@ -378,13 +385,24 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
                 ? null
                 : (v) => setState(() => _offset = v ?? _offset),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerLeft,
-            child: PrivateIconToggle(
-              value: _isPrivate,
-              enabled: !_saving,
-              onChanged: (v) => setState(() => _isPrivate = v),
+            child: SizedBox(
+              width: 88,
+              child: FormQuickActionTile(
+                active: _isPrivate,
+                label: 'Hide',
+                tooltip: _isPrivate ? 'Make public' : 'Make private',
+                onTap: _saving
+                    ? null
+                    : () => setState(() => _isPrivate = !_isPrivate),
+                icon: SkyIcon(
+                  SkyIcons.private,
+                  color: _isPrivate ? brand : muted,
+                  size: 22,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 12),
@@ -418,30 +436,26 @@ class _ReminderFormSheetState extends ConsumerState<_ReminderFormSheet> {
                 style: Theme.of(context).textTheme.bodySmall,
               ),
             ),
-          const SizedBox(height: 16),
-          FilledButton(
+          const SizedBox(height: 20),
+          FormActionButton(
+            label: _isEditing ? 'Save' : 'Create reminder',
+            busy: _saving,
             onPressed: _saving ? null : _save,
-            child: _saving
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  )
-                : Text(_isEditing ? 'Save changes' : 'Create reminder'),
           ),
           if (_isEditing) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(
+            const SizedBox(height: 10),
+            FormActionButton(
+              label: widget.reminder!.isCompleted
+                  ? 'Mark as active'
+                  : 'Complete',
+              variant: FormActionVariant.outlined,
               onPressed: _saving ? null : _toggleComplete,
-              child: Text(
-                widget.reminder!.isCompleted
-                    ? 'Mark as active'
-                    : 'Mark as completed',
-              ),
             ),
-            TextButton(
+            const SizedBox(height: 10),
+            FormActionButton(
+              label: 'Delete',
+              variant: FormActionVariant.danger,
               onPressed: _saving ? null : _delete,
-              child: const Text('Delete reminder'),
             ),
           ],
         ],

@@ -82,25 +82,9 @@ class CategoryChipSelector extends ConsumerWidget {
             separatorBuilder: (_, __) => const SizedBox(width: 8),
             itemBuilder: (context, index) {
               if (index == categories.length) {
-                return FilterChip(
-                  avatar: SkyIcon(
-                    SkyIcons.add,
-                    size: 16,
-                    color: AppColors.brand(context),
-                  ),
-                  label: const Text('Add'),
-                  selected: false,
-                  showCheckmark: false,
-                  onSelected: enabled ? (_) => _addCategory(context, ref) : null,
-                  side: BorderSide(
-                    color: AppColors.brand(context).withValues(alpha: 0.35),
-                  ),
-                  labelStyle: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
-                  visualDensity: VisualDensity.compact,
-                  materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                return _AddCategoryChip(
+                  enabled: enabled,
+                  onTap: () => _addCategory(context, ref),
                 );
               }
               final category = categories[index];
@@ -142,6 +126,87 @@ Color _contrastOnPastel(Color fill) {
   return fill.computeLuminance() > 0.55
       ? const Color(0xFF3D3D3D)
       : Colors.white;
+}
+
+class _AddCategoryChip extends StatelessWidget {
+  const _AddCategoryChip({required this.enabled, required this.onTap});
+
+  final bool enabled;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: enabled ? onTap : null,
+        borderRadius: BorderRadius.circular(20),
+        child: CustomPaint(
+          painter: _DashedRRectPainter(
+            color: brand.withValues(alpha: enabled ? 0.85 : 0.35),
+            radius: 20,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                SkyIcon(
+                  SkyIcons.add,
+                  size: 16,
+                  color: brand.withValues(alpha: enabled ? 1 : 0.4),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'Add category',
+                  style: TextStyle(
+                    color: brand.withValues(alpha: enabled ? 1 : 0.4),
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedRRectPainter extends CustomPainter {
+  _DashedRRectPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Rect.fromLTWH(0.5, 0.5, size.width - 1, size.height - 1),
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rrect);
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    const dash = 4.0;
+    const gap = 3.0;
+    for (final metric in path.computeMetrics()) {
+      var distance = 0.0;
+      while (distance < metric.length) {
+        final next = (distance + dash).clamp(0.0, metric.length);
+        canvas.drawPath(metric.extractPath(distance, next), paint);
+        distance = next + gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _DashedRRectPainter oldDelegate) =>
+      oldDelegate.color != color || oldDelegate.radius != radius;
 }
 
 class _CategoryEditResult {

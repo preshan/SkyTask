@@ -5,9 +5,13 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/constants/task_categories.dart';
 import '../../../../core/di/content_providers.dart';
 import '../../../../core/di/providers.dart';
+import '../../../../core/constants/app_colors.dart';
 import '../../../../shared/widgets/category_chip_selector.dart';
 import '../../../../shared/widgets/confirm_delete_dialog.dart';
-import '../../../../shared/widgets/private_icon_toggle.dart';
+import '../../../../shared/widgets/form_action_button.dart';
+import '../../../../shared/widgets/form_quick_action_tile.dart';
+import '../../../../shared/widgets/form_sheet_header.dart';
+import '../../../../shared/widgets/sky_icon.dart';
 import '../../domain/entities/quick_link.dart';
 import '../../domain/shared_link_payload.dart';
 
@@ -21,6 +25,7 @@ Future<void> showQuickLinkFormSheet(
     context: context,
     isScrollControlled: true,
     useSafeArea: true,
+    showDragHandle: true,
     builder: (ctx) => Padding(
       padding: EdgeInsets.only(bottom: MediaQuery.viewInsetsOf(ctx).bottom),
       child: _QuickLinkFormSheet(link: link, shared: shared),
@@ -181,20 +186,22 @@ class _QuickLinkFormSheetState extends ConsumerState<_QuickLinkFormSheet> {
 
   @override
   Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final muted =
+        Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7);
+
     return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
+      padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            _isEditing ? 'Edit Link' : 'New Link',
-            style: Theme.of(context).textTheme.titleLarge,
-          ),
+          FormSheetHeader(_isEditing ? 'Edit Link' : 'New Link'),
           const SizedBox(height: 16),
           TextField(
             controller: _titleController,
             focusNode: _titleFocus,
+            maxLength: 100,
             decoration: const InputDecoration(
               labelText: 'Title',
               border: OutlineInputBorder(),
@@ -203,7 +210,7 @@ class _QuickLinkFormSheetState extends ConsumerState<_QuickLinkFormSheet> {
             textInputAction: TextInputAction.next,
             onSubmitted: (_) => _urlFocus.requestFocus(),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
           TextField(
             controller: _urlController,
             focusNode: _urlFocus,
@@ -225,6 +232,7 @@ class _QuickLinkFormSheetState extends ConsumerState<_QuickLinkFormSheet> {
           const SizedBox(height: 12),
           TextField(
             controller: _notesController,
+            maxLength: 500,
             decoration: const InputDecoration(
               labelText: 'Notes (optional)',
               border: OutlineInputBorder(),
@@ -233,28 +241,38 @@ class _QuickLinkFormSheetState extends ConsumerState<_QuickLinkFormSheet> {
             maxLines: 4,
             textCapitalization: TextCapitalization.sentences,
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: 8),
           Align(
             alignment: Alignment.centerLeft,
-            child: PrivateIconToggle(
-              value: _isPrivate,
-              enabled: !_saving,
-              onChanged: (v) => setState(() => _isPrivate = v),
+            child: SizedBox(
+              width: 88,
+              child: FormQuickActionTile(
+                active: _isPrivate,
+                label: 'Hide',
+                tooltip: _isPrivate ? 'Make public' : 'Make private',
+                onTap: _saving
+                    ? null
+                    : () => setState(() => _isPrivate = !_isPrivate),
+                icon: SkyIcon(
+                  SkyIcons.private,
+                  color: _isPrivate ? brand : muted,
+                  size: 22,
+                ),
+              ),
             ),
           ),
           const SizedBox(height: 20),
-          FilledButton(
+          FormActionButton(
+            label: 'Save',
+            busy: _saving,
             onPressed: _saving ? null : _save,
-            child: Text(_saving ? 'Saving…' : 'Save'),
           ),
           if (_isEditing) ...[
-            const SizedBox(height: 8),
-            OutlinedButton(
+            const SizedBox(height: 10),
+            FormActionButton(
+              label: 'Delete',
+              variant: FormActionVariant.danger,
               onPressed: _saving ? null : _delete,
-              style: OutlinedButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.error,
-              ),
-              child: const Text('Delete'),
             ),
           ],
         ],
