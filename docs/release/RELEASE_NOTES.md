@@ -4,6 +4,16 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ---
 
+## 1.13.5 — 2026-10-12 · `1.13.5+34`
+
+[Download SkyTask-1.13.5.apk](https://github.com/preshan/SkyTask/releases/download/v1.13.5/SkyTask-1.13.5.apk)
+
+### Changes
+- Calendar: month picker header, Day Plan context card, solid source chips, icon view segments
+- Home: remove sparkle from greeting subtitle; simplify shortcut tiles
+
+---
+
 ## 1.13.4 — 2026-10-08 · `1.13.4+33`
 
 [Download SkyTask-1.13.4.apk](https://github.com/preshan/SkyTask/releases/download/v1.13.4/SkyTask-1.13.4.apk)

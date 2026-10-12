@@ -163,103 +163,129 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
     });
   }
 
+  DateTime get _headerMonthDate {
+    if (_view == CalendarView.agenda && !_dayFocus) {
+      return DateTime.now();
+    }
+    return _anchor;
+  }
+
+  bool get _showPeriodNav =>
+      _view != CalendarView.agenda || _dayFocus;
+
+  bool get _showDayPlanCard =>
+      _dayFocus || _view == CalendarView.day;
+
+  Future<void> _pickMonthYear() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _headerMonthDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(2035, 12, 31),
+    );
+    if (picked == null || !mounted) return;
+    setState(() {
+      if (_view == CalendarView.month) {
+        _anchor = DateTime(picked.year, picked.month, 1);
+      } else if (_view == CalendarView.day ||
+          (_dayFocus && _view == CalendarView.agenda)) {
+        final day = picked.day.clamp(
+          1,
+          DateTime(picked.year, picked.month + 1, 0).day,
+        );
+        _anchor = DateTime(picked.year, picked.month, day);
+      } else if (_view == CalendarView.week) {
+        _anchor = picked;
+      } else {
+        _anchor = DateTime(picked.year, picked.month, picked.day);
+      }
+      _range = _computeRange(_view, _anchor);
+    });
+  }
+
+  double get _appBarBottomHeight {
+    var h = 8.0 + 48.0 + 10.0 + 52.0 + 8.0;
+    if (_showDayPlanCard) h += 92.0;
+    if (_privateOnly) h += 56.0;
+    return h;
+  }
+
   @override
   Widget build(BuildContext context) {
     final query = CalendarQuery(range: _range, source: _sourceTab);
     final entriesAsync = ref.watch(calendarEntriesProvider(query));
     final settings = ref.watch(calendarSettingsProvider);
-    final title = _view == CalendarView.day || _dayFocus
-        ? DateFormat.MMMd().format(_anchor)
-        : 'Calendar';
-    final bannerExtra =
-        (_dayFocus || _view == CalendarView.day ? 48.0 : 0.0) +
-            (_privateOnly ? 48.0 : 0.0);
+    final monthLabel = DateFormat.yMMMM().format(_headerMonthDate);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(title),
-        actions: [
-          if (_dayFocus || _view != CalendarView.agenda)
-            IconButton(
-              icon: const SkyIcon(SkyIcons.chevronLeft),
-              onPressed: () => _shiftPeriod(-1),
-            ),
-          if (_dayFocus || _view != CalendarView.agenda)
-            IconButton(
-              icon: const SkyIcon(SkyIcons.chevronRight),
-              onPressed: () => _shiftPeriod(1),
-            ),
-          ListAddButton(
-            tooltip: 'Add reminder',
-            onPressed: () =>
-                openCreateSheet(context, ref, CreateKind.reminder),
-          ),
-          ...skyTaskAppBarActions(context),
-        ],
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: _CalendarTopBar(
+          monthLabel: monthLabel,
+          showPeriodNav: _showPeriodNav,
+          onMonthTap: _pickMonthYear,
+          onPrevious: () => _shiftPeriod(-1),
+          onNext: () => _shiftPeriod(1),
+          onAdd: () => openCreateSheet(context, ref, CreateKind.reminder),
+          trailingActions: skyTaskAppBarActions(context),
+        ),
         bottom: PreferredSize(
-          preferredSize: Size.fromHeight(78 + bannerExtra),
+          preferredSize: Size.fromHeight(_appBarBottomHeight),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              if (_dayFocus || _view == CalendarView.day)
-                Material(
-                  color: AppColors.brandSecondary(context).withValues(alpha: 0.15),
-                  child: ListTile(
-                    dense: true,
-                    leading: SkyIcon(
-                      SkyIcons.event,
-                      color: AppColors.brandSecondary(context),
-                    ),
-                    title: Text(
-                      _view == CalendarView.day
-                          ? 'Day plan · ${DateFormat.yMMMEd().format(_anchor)}'
-                          : 'Reminders on ${DateFormat.yMMMEd().format(_anchor)}',
-                    ),
-                    trailing: TextButton(
-                      onPressed: _clearDayFocus,
-                      child: const Text('All'),
-                    ),
-                  ),
+              if (_showDayPlanCard)
+                _DayPlanContextCard(
+                  eyebrow: _view == CalendarView.day
+                      ? 'DAY PLAN'
+                      : 'REMINDERS',
+                  dateLabel: DateFormat.yMMMEd().format(_anchor),
+                  onShowAll: _clearDayFocus,
                 ),
               if (_privateOnly)
-                Material(
-                  color: AppColors.brand(context).withValues(alpha: 0.08),
-                  child: ListTile(
-                    dense: true,
-                    leading: SkyIcon(
-                      SkyIcons.private,
-                      color: AppColors.brand(context),
-                    ),
-                    title: const Text('Showing private reminders'),
-                    trailing: TextButton(
-                      onPressed: () => setState(() => _privateOnly = false),
-                      child: const Text('Clear'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 6, 16, 0),
+                  child: Material(
+                    color: AppColors.brand(context).withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(14),
+                    child: ListTile(
+                      dense: true,
+                      leading: SkyIcon(
+                        SkyIcons.private,
+                        color: AppColors.brand(context),
+                        size: 20,
+                      ),
+                      title: const Text('Showing private reminders'),
+                      trailing: TextButton(
+                        onPressed: () => setState(() => _privateOnly = false),
+                        child: const Text('Clear'),
+                      ),
                     ),
                   ),
                 ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(12, 2, 12, 0),
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Reminder types',
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      style: Theme.of(context).textTheme.labelMedium?.copyWith(
                             color: Theme.of(context)
                                 .colorScheme
                                 .onSurface
-                                .withValues(alpha: 0.55),
+                                .withValues(alpha: 0.5),
                             fontWeight: FontWeight.w500,
-                            letterSpacing: 0.2,
                           ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 8),
                     Row(
                       children: [
                         for (final tab in CalendarSourceTab.values)
                           Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: _CalendarFilterChip(
+                            padding: const EdgeInsets.only(right: 8),
+                            child: _CalendarSourceChip(
                               label: tab == CalendarSourceTab.skyTask
                                   ? 'SkyTask'
                                   : 'All',
@@ -267,36 +293,34 @@ class _CalendarScreenState extends ConsumerState<CalendarScreen> {
                               onSelected: () => _setSourceTab(tab),
                             ),
                           ),
+                        const Spacer(),
+                        _CalendarFilterChip(
+                          label: 'All',
+                          selected: _categoryFilter == null,
+                          onSelected: () =>
+                              setState(() => _categoryFilter = null),
+                        ),
                       ],
                     ),
-                    const SizedBox(height: 6),
-                    Divider(
-                      height: 1,
-                      thickness: 1,
-                      color: Theme.of(context)
-                          .dividerColor
-                          .withValues(alpha: 0.45),
-                    ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 10),
                     Row(
                       children: [
                         for (final view in CalendarView.values)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 6),
-                            child: _CalendarFilterChip(
-                              label: switch (view) {
-                                CalendarView.agenda => 'Agenda',
-                                CalendarView.day => 'Day',
-                                CalendarView.week => 'Week',
-                                CalendarView.month => 'Month',
-                              },
-                              selected: _view == view,
-                              onSelected: () => _setView(view),
+                          Expanded(
+                            child: Padding(
+                              padding: EdgeInsets.only(
+                                right: view != CalendarView.month ? 6 : 0,
+                              ),
+                              child: _CalendarViewSegment(
+                                view: view,
+                                selected: _view == view,
+                                onSelected: () => _setView(view),
+                              ),
                             ),
                           ),
                       ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -815,6 +839,360 @@ class _CalendarEntryTile extends StatelessWidget {
   }
 }
 
+class _CalendarTopBar extends StatelessWidget {
+  const _CalendarTopBar({
+    required this.monthLabel,
+    required this.showPeriodNav,
+    required this.onMonthTap,
+    required this.onPrevious,
+    required this.onNext,
+    required this.onAdd,
+    required this.trailingActions,
+  });
+
+  final String monthLabel;
+  final bool showPeriodNav;
+  final VoidCallback onMonthTap;
+  final VoidCallback onPrevious;
+  final VoidCallback onNext;
+  final VoidCallback onAdd;
+  final List<Widget> trailingActions;
+
+  @override
+  Widget build(BuildContext context) {
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return Padding(
+      padding: const EdgeInsets.only(left: 4, right: 4),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: onMonthTap,
+            borderRadius: BorderRadius.circular(12),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    monthLabel,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: onSurface.withValues(alpha: 0.92),
+                        ),
+                  ),
+                  const SizedBox(width: 2),
+                  Transform.rotate(
+                    angle: 1.5708,
+                    child: SkyIcon(
+                      SkyIcons.chevronLeft,
+                      size: 18,
+                      color: onSurface.withValues(alpha: 0.45),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (showPeriodNav) ...[
+            _CalendarNavCircleButton(
+              icon: SkyIcons.chevronLeft,
+              onPressed: onPrevious,
+            ),
+            const SizedBox(width: 4),
+            _CalendarNavCircleButton(
+              icon: SkyIcons.chevronRight,
+              onPressed: onNext,
+            ),
+          ],
+          const Spacer(),
+          ListAddButton(
+            tooltip: 'Add reminder',
+            onPressed: onAdd,
+          ),
+          ...trailingActions,
+        ],
+      ),
+    );
+  }
+}
+
+class _CalendarNavCircleButton extends StatelessWidget {
+  const _CalendarNavCircleButton({
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final List<List<dynamic>> icon;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    final surface = Theme.of(context).colorScheme.surfaceContainerHighest;
+
+    return Material(
+      color: surface.withValues(alpha: 0.65),
+      shape: const CircleBorder(),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onPressed,
+        customBorder: const CircleBorder(),
+        child: SizedBox(
+          width: 34,
+          height: 34,
+          child: Center(
+            child: SkyIcon(
+              icon,
+              size: 18,
+              color: Theme.of(context).colorScheme.onSurface.withValues(
+                    alpha: 0.75,
+                  ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DayPlanContextCard extends StatelessWidget {
+  const _DayPlanContextCard({
+    required this.eyebrow,
+    required this.dateLabel,
+    required this.onShowAll,
+  });
+
+  final String eyebrow;
+  final String dateLabel;
+  final VoidCallback onShowAll;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final surface = Theme.of(context).colorScheme.surface;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: surface,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: brand.withValues(alpha: 0.12),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.06),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 46,
+                height: 46,
+                decoration: BoxDecoration(
+                  color: brand.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Center(
+                  child: SkyIcon(
+                    SkyIcons.calendarFilled,
+                    color: brand,
+                    size: 24,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      eyebrow,
+                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: onSurface.withValues(alpha: 0.45),
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.6,
+                          ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      dateLabel,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            height: 1.15,
+                          ),
+                    ),
+                  ],
+                ),
+              ),
+              OutlinedButton(
+                onPressed: onShowAll,
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: brand,
+                  side: BorderSide(color: brand.withValues(alpha: 0.35)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 8,
+                  ),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('All'),
+                    const SizedBox(width: 2),
+                    SkyIcon(
+                      SkyIcons.chevronRight,
+                      size: 16,
+                      color: brand,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CalendarSourceChip extends StatelessWidget {
+  const _CalendarSourceChip({
+    required this.label,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final onPrimary = Theme.of(context).colorScheme.onPrimary;
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onSelected,
+        borderRadius: BorderRadius.circular(20),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? brand : Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: selected
+                  ? brand
+                  : onSurface.withValues(alpha: 0.18),
+            ),
+          ),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                  height: 1,
+                  color: selected
+                      ? onPrimary
+                      : onSurface.withValues(alpha: 0.72),
+                ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _CalendarViewSegment extends StatelessWidget {
+  const _CalendarViewSegment({
+    required this.view,
+    required this.selected,
+    required this.onSelected,
+  });
+
+  final CalendarView view;
+  final bool selected;
+  final VoidCallback onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    final brand = AppColors.brand(context);
+    final onSurface = Theme.of(context).colorScheme.onSurface;
+    final icon = switch (view) {
+      CalendarView.agenda => SkyIcons.tasks,
+      CalendarView.day => SkyIcons.calendarFilled,
+      CalendarView.week => SkyIcons.calendar,
+      CalendarView.month => SkyIcons.today,
+    };
+    final label = switch (view) {
+      CalendarView.agenda => 'Agenda',
+      CalendarView.day => 'Day',
+      CalendarView.week => 'Week',
+      CalendarView.month => 'Month',
+    };
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onSelected,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 120),
+          padding: const EdgeInsets.symmetric(vertical: 8),
+          decoration: BoxDecoration(
+            color: selected ? brand.withValues(alpha: 0.1) : Colors.transparent,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? brand.withValues(alpha: 0.55)
+                  : onSurface.withValues(alpha: 0.16),
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SkyIcon(
+                icon,
+                size: 18,
+                color: selected
+                    ? brand
+                    : onSurface.withValues(alpha: 0.55),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+                      fontSize: 11,
+                      color: selected
+                          ? brand
+                          : onSurface.withValues(alpha: 0.55),
+                    ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _CalendarFilterChip extends StatelessWidget {
   const _CalendarFilterChip({
     required this.label,
@@ -830,27 +1208,30 @@ class _CalendarFilterChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final brand = AppColors.brand(context);
     final onSurface = Theme.of(context).colorScheme.onSurface;
-    final labelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          fontWeight: selected ? FontWeight.w600 : FontWeight.w500,
-          fontSize: 12,
+    final labelStyle = Theme.of(context).textTheme.labelLarge?.copyWith(
+          fontWeight: FontWeight.w600,
+          fontSize: 13,
           height: 1,
-          color: onSurface.withValues(alpha: selected ? 0.9 : 0.7),
+          color: selected
+              ? brand
+              : onSurface.withValues(alpha: 0.72),
         );
 
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onSelected,
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 120),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: selected ? brand.withValues(alpha: 0.18) : Colors.transparent,
-            borderRadius: BorderRadius.circular(14),
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: selected ? brand : brand.withValues(alpha: 0.22),
-              width: 1,
+              color: selected
+                  ? brand.withValues(alpha: 0.45)
+                  : onSurface.withValues(alpha: 0.18),
             ),
           ),
           child: Text(label, style: labelStyle),
