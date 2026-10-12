@@ -178,7 +178,7 @@ class _GreetingHeader extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Stay organized and make progress ✨',
+          'Stay organized and make progress',
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
                 color: muted,
               ),
@@ -475,7 +475,6 @@ class _HomeShortcuts extends ConsumerWidget {
               Expanded(
                 child: _ShortcutTile(
                   title: 'Pinned tasks',
-                  subtitle: 'Keep important work close',
                   icon: SkyIcons.pin,
                   iconColor: const Color(0xFF7E57C2),
                   iconBackground: const Color(0xFFEDE7F6),
@@ -487,7 +486,6 @@ class _HomeShortcuts extends ConsumerWidget {
               Expanded(
                 child: _ShortcutTile(
                   title: 'Pending tasks',
-                  subtitle: 'Still waiting on you',
                   icon: SkyIcons.pending,
                   iconColor: const Color(0xFF1E88E5),
                   iconBackground: const Color(0xFFE3F2FD),
@@ -503,7 +501,6 @@ class _HomeShortcuts extends ConsumerWidget {
               Expanded(
                 child: _ShortcutTile(
                   title: 'Private ideas',
-                  subtitle: 'Your locked ideas',
                   icon: SkyIcons.private,
                   iconColor: const Color(0xFF43A047),
                   iconBackground: const Color(0xFFE8F5E9),
@@ -515,7 +512,6 @@ class _HomeShortcuts extends ConsumerWidget {
               Expanded(
                 child: _ShortcutTile(
                   title: 'Private reminders',
-                  subtitle: 'Your locked alerts',
                   icon: SkyIcons.alarm,
                   iconColor: const Color(0xFFD81B60),
                   iconBackground: const Color(0xFFFCE4EC),
@@ -534,7 +530,6 @@ class _HomeShortcuts extends ConsumerWidget {
 class _ShortcutTile extends StatelessWidget {
   const _ShortcutTile({
     required this.title,
-    required this.subtitle,
     required this.icon,
     required this.iconColor,
     required this.iconBackground,
@@ -543,7 +538,6 @@ class _ShortcutTile extends StatelessWidget {
   });
 
   final String title;
-  final String subtitle;
   final List<List<dynamic>> icon;
   final Color iconColor;
   final Color iconBackground;
@@ -581,56 +575,46 @@ class _ShortcutTile extends StatelessWidget {
               ),
               const SizedBox(width: 10),
               Expanded(
-                child: Column(
+                child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: Theme.of(context)
-                                .textTheme
-                                .labelLarge
-                                ?.copyWith(fontWeight: FontWeight.w700),
+                    Expanded(
+                      child: Text(
+                        title,
+                        maxLines: 2,
+                        overflow: TextOverflow.clip,
+                        style: Theme.of(context)
+                            .textTheme
+                            .labelLarge
+                            ?.copyWith(
+                              fontWeight: FontWeight.w700,
+                              height: 1.2,
+                            ),
+                      ),
+                    ),
+                    if (count > 0) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        constraints: const BoxConstraints(
+                          minWidth: 20,
+                          minHeight: 20,
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 5),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: amber,
+                          shape: BoxShape.circle,
+                        ),
+                        child: Text(
+                          count > 99 ? '99+' : '$count',
+                          style: TextStyle(
+                            color: scheme.onSecondary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
                           ),
                         ),
-                        if (count > 0) ...[
-                          const SizedBox(width: 6),
-                          Container(
-                            constraints: const BoxConstraints(
-                              minWidth: 20,
-                              minHeight: 20,
-                            ),
-                            padding: const EdgeInsets.symmetric(horizontal: 5),
-                            alignment: Alignment.center,
-                            decoration: BoxDecoration(
-                              color: amber,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Text(
-                              count > 99 ? '99+' : '$count',
-                              style: TextStyle(
-                                color: scheme.onSecondary,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: muted,
-                          ),
-                    ),
+                      ),
+                    ],
                   ],
                 ),
               ),

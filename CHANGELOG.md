@@ -2,6 +2,12 @@
 
 Notable changes to SkyTask. Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
+## [1.13.5] — 2026-10-12
+
+### Changed
+- Calendar top bar and filters match Day Plan mock (month title, nav circles, context card, source chips, view segments)
+- Home greeting subtitle without sparkle; shortcut tiles show title only
+
 ## [1.13.4] — 2026-10-08
 
 ### Fixed
