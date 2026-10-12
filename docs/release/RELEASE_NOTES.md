@@ -300,13 +300,17 @@ APKs are debug-signed for sideload testing (not Play Store builds). Older notes 
 
 ### Screenshots
 
-| Home | Tasks | Calendar |
-|:----:|:-----:|:--------:|
-| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Tasks](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_tasks.png) | ![Calendar](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_calendar.png) |
+| Home | Home (dark) | Day Plan |
+|:----:|:-----------:|:--------:|
+| ![Home](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/01_home.png) | ![Home dark](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/02_home_dark.png) | ![Day Plan](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/03_calendar.png) |
 
-| New Task | Settings |
-|:--------:|:--------:|
-| ![New Task](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_new_task.png) | ![Settings](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/06_settings.png) |
+| New Task | Create menu | Settings |
+|:--------:|:-----------:|:--------:|
+| ![New Task](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/04_new_task.png) | ![Create menu](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/05_create_menu.png) | ![Settings](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/06_settings.png) |
+
+| About & help |
+|:------------:|
+| ![About](https://raw.githubusercontent.com/preshan/SkyTask/main/docs/release/screenshots/07_about.png) |
 
 ---
 

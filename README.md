@@ -6,13 +6,17 @@ Built with Flutter by **Preshan Pradeepa Kariyawasam**.
 
 ## Screenshots
 
-| Home | Tasks | Calendar |
-|:----:|:-----:|:--------:|
-| ![Home](docs/release/screenshots/01_home.png) | ![Tasks](docs/release/screenshots/02_tasks.png) | ![Calendar](docs/release/screenshots/03_calendar.png) |
+| Home | Home (dark) | Day Plan |
+|:----:|:-----------:|:--------:|
+| ![Home](docs/release/screenshots/01_home.png) | ![Home dark](docs/release/screenshots/02_home_dark.png) | ![Day Plan](docs/release/screenshots/03_calendar.png) |
 
-| New Task | Settings |
-|:--------:|:--------:|
-| ![New Task](docs/release/screenshots/04_new_task.png) | ![Settings](docs/release/screenshots/06_settings.png) |
+| New Task | Create menu | Settings |
+|:--------:|:-----------:|:--------:|
+| ![New Task](docs/release/screenshots/04_new_task.png) | ![Create menu](docs/release/screenshots/05_create_menu.png) | ![Settings](docs/release/screenshots/06_settings.png) |
+
+| About & help |
+|:------------:|
+| ![About](docs/release/screenshots/07_about.png) |
 
 Latest release: [v1.13.4](https://github.com/preshan/SkyTask/releases/tag/v1.13.4)
 
